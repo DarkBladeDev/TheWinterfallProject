@@ -7,12 +7,15 @@ import org.bukkit.ChatColor;
 import org.bukkit.Color;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
+import org.bukkit.Sound;
 import org.bukkit.enchantments.Enchantment;
+import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.ShapedRecipe;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.LeatherArmorMeta;
+import org.bukkit.inventory.meta.components.EquippableComponent;
 import org.bukkit.persistence.PersistentDataType;
 
 import java.util.ArrayList;
@@ -92,25 +95,39 @@ public class ItemManager {
     
     /**
      * Crea el casco aislante
+     * Utiliza un casco de cuero con apariencia de cristal
      */
     private void createIsolationHelmet() {
+        //net.minecraft.world.item.ItemStack nmsItem = new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.GLASS);
+
         ItemStack helmet = new ItemStack(Material.GLASS);
-        LeatherArmorMeta meta = (LeatherArmorMeta) helmet.getItemMeta();
+        ItemMeta meta = helmet.getItemMeta();
+        EquippableComponent equippableComponent = meta.getEquippable();
         
+        //ResourceLocation itemModel = nmsItem.getItem().components().get(DataComponents.ITEM_MODEL);
+
+        equippableComponent.setSlot(EquipmentSlot.HEAD);
+        equippableComponent.setEquipSound(Sound.ITEM_ARMOR_EQUIP_LEATHER);
+    
         // Establecer propiedades
         meta.setDisplayName(ChatColor.WHITE + "Casco Aislante");
-        meta.setColor(Color.WHITE);
+
+        // Cambiar textura a GLASS
+        // meta.setCustomModelDataComponent(nmsItem.getComponents().get());
+        
         
         // Lore
         List<String> lore = new ArrayList<>();
         lore.add(ChatColor.GRAY + "Parte del traje aislante");
         lore.add(ChatColor.GRAY + "Protege contra la nieve tóxica");
-        lore.add(ChatColor.DARK_PURPLE + "Usado por Juan Salvo en El Eternauta");
+        lore.add(ChatColor.GRAY + "Fabricado con cristal reforzado");
         meta.setLore(lore);
         
-        // Añadir encantamiento visual
+        // Añadir encantamiento visual para efecto brillante como cristal
         meta.addEnchant(Enchantment.UNBREAKING, 1, true);
         meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+        meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
+        meta.addItemFlags(ItemFlag.HIDE_DYE); // Ocultar que está teñido
         
         // Añadir tag personalizado para identificación
         NamespacedKey key = new NamespacedKey(plugin, "custom_item");
@@ -135,7 +152,6 @@ public class ItemManager {
         List<String> lore = new ArrayList<>();
         lore.add(ChatColor.GRAY + "Parte del traje aislante");
         lore.add(ChatColor.GRAY + "Protege contra la nieve tóxica");
-        lore.add(ChatColor.DARK_PURPLE + "Usado por Juan Salvo en El Eternauta");
         meta.setLore(lore);
         
         // Añadir encantamiento visual
@@ -165,7 +181,6 @@ public class ItemManager {
         List<String> lore = new ArrayList<>();
         lore.add(ChatColor.GRAY + "Parte del traje aislante");
         lore.add(ChatColor.GRAY + "Protege contra la nieve tóxica");
-        lore.add(ChatColor.DARK_PURPLE + "Usado por Juan Salvo en El Eternauta");
         meta.setLore(lore);
         
         // Añadir encantamiento visual
@@ -195,7 +210,6 @@ public class ItemManager {
         List<String> lore = new ArrayList<>();
         lore.add(ChatColor.GRAY + "Parte del traje aislante");
         lore.add(ChatColor.GRAY + "Protege contra la nieve tóxica");
-        lore.add(ChatColor.DARK_PURPLE + "Usado por Juan Salvo en El Eternauta");
         meta.setLore(lore);
         
         // Añadir encantamiento visual
@@ -224,7 +238,6 @@ public class ItemManager {
         List<String> lore = new ArrayList<>();
         lore.add(ChatColor.GRAY + "Arma efectiva contra los Gurbos");
         lore.add(ChatColor.GRAY + "Dispara una ráfaga de fuego");
-        lore.add(ChatColor.DARK_PURPLE + "Usado por la resistencia en El Eternauta");
         meta.setLore(lore);
         
         // Añadir encantamiento visual
@@ -252,7 +265,6 @@ public class ItemManager {
         List<String> lore = new ArrayList<>();
         lore.add(ChatColor.GRAY + "Arma efectiva contra las Manos");
         lore.add(ChatColor.GRAY + "Dispara una descarga eléctrica");
-        lore.add(ChatColor.DARK_PURPLE + "Usado por la resistencia en El Eternauta");
         meta.setLore(lore);
         
         // Añadir encantamiento visual

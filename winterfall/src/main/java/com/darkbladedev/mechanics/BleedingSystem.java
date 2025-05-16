@@ -278,6 +278,24 @@ public class BleedingSystem implements Listener {
     }
     
     /**
+     * Verifica si un jugador está sangrando
+     * @param player Jugador a verificar
+     * @return true si está sangrando, false en caso contrario
+     */
+    public boolean isPlayerBleeding(Player player) {
+        return isBleeding(player);
+    }
+    
+    /**
+     * Obtiene el nivel de sangrado de un jugador
+     * @param player Jugador a verificar
+     * @return Nivel de sangrado (0 si no está sangrando)
+     */
+    public int getPlayerBleedingLevel(Player player) {
+        return getBleedingSeverity(player);
+    }
+    
+    /**
      * Obtiene la severidad del sangrado de una entidad
      * @param entity Entidad a verificar
      * @return Severidad del sangrado (0 si no está sangrando)

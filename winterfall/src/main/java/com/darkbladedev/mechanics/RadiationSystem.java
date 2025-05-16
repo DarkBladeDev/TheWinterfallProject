@@ -171,6 +171,17 @@ public class RadiationSystem {
     }
     
     /**
+     * Obtiene el nivel de radiación de un jugador en porcentaje (0-100)
+     * @param player Jugador a verificar
+     * @return Nivel de radiación en porcentaje
+     */
+    public int getPlayerRadiationLevel(Player player) {
+        int level = getRadiationLevel(player);
+        // Convertir el nivel a un porcentaje (considerando 20 como el 100%)
+        return Math.min(100, (level * 5));
+    }
+    
+    /**
      * Establece el nivel de radiación de un jugador
      * @param player Jugador a modificar
      * @param level Nuevo nivel de radiación

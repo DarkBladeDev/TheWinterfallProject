@@ -2,6 +2,7 @@ package com.darkbladedev.events;
 
 import com.darkbladedev.WinterfallMain;
 import com.darkbladedev.mobs.MobManager;
+import com.darkbladedev.mechanics.LimbDamageSystem.LimbType;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -64,6 +65,11 @@ public class PlayerEvents implements Listener {
         // Mensaje de reaparición temático
         player.sendMessage(ChatColor.RED + "Has muerto en el mundo post-apocalíptico de El Eternauta.");
         player.sendMessage(ChatColor.YELLOW + "La lucha contra los invasores continúa...");
+        
+        // Curar todas las extremidades al reaparecer
+        if (plugin.getLimbDamageSystem().isActive()) {
+            plugin.getLimbDamageSystem().healAllLimbs(player);
+        }
     }
     
     /**
@@ -134,16 +140,42 @@ public class PlayerEvents implements Listener {
                 
                 switch (mobType) {
                     case MobManager.MOB_MANO:
-                        // Las Manos causan sangrado leve
+                        // Las Manos causan sangrado leve y daño en brazos
                         plugin.getBleedingSystem().applyBleeding(player, 1, 15);
+                        // Daño en brazos aleatorio
+                        if (Math.random() < 0.7) { // 70% de probabilidad
+                            LimbType targetLimb = Math.random() < 0.5 ? LimbType.LEFT_ARM : LimbType.RIGHT_ARM;
+                            plugin.getLimbDamageSystem().applyDamageToLimb(player, targetLimb, event.getDamage());
+                            player.sendMessage(ChatColor.RED + "¡La Mano ha dañado tu " + targetLimb.getDisplayName() + "!");
+                        }
                         break;
                     case MobManager.MOB_CASCARUDO:
-                        // Los Cascarudos causan sangrado moderado
+                        // Los Cascarudos causan sangrado moderado y daño en piernas
                         plugin.getBleedingSystem().applyBleeding(player, 2, 20);
+                        // Daño en piernas aleatorio
+                        if (Math.random() < 0.6) { // 60% de probabilidad
+                            LimbType targetLimb = Math.random() < 0.5 ? LimbType.LEFT_LEG : LimbType.RIGHT_LEG;
+                            plugin.getLimbDamageSystem().applyDamageToLimb(player, targetLimb, event.getDamage() * 1.5);
+                            player.sendMessage(ChatColor.RED + "¡El Cascarudo ha dañado tu " + targetLimb.getDisplayName() + "!");
+                        }
                         break;
                     case MobManager.MOB_GURBO:
-                        // Los Gurbos causan sangrado grave
+                        // Los Gurbos causan sangrado grave y daño en múltiples extremidades
                         plugin.getBleedingSystem().applyBleeding(player, 3, 30);
+                        // Daño en múltiples extremidades
+                        if (Math.random() < 0.8) { // 80% de probabilidad
+                            // Seleccionar 2 extremidades aleatorias para dañar
+                            LimbType[] limbs = LimbType.values();
+                            LimbType firstLimb = limbs[(int)(Math.random() * limbs.length)];
+                            LimbType secondLimb;
+                            do {
+                                secondLimb = limbs[(int)(Math.random() * limbs.length)];
+                            } while (secondLimb == firstLimb);
+                            
+                            plugin.getLimbDamageSystem().applyDamageToLimb(player, firstLimb, event.getDamage() * 2.0);
+                            plugin.getLimbDamageSystem().applyDamageToLimb(player, secondLimb, event.getDamage() * 1.5);
+                            player.sendMessage(ChatColor.DARK_RED + "¡El Gurbo ha dañado gravemente tus extremidades!");
+                        }
                         break;
                 }
             }

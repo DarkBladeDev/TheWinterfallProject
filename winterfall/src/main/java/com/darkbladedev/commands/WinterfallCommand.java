@@ -65,6 +65,10 @@ public class WinterfallCommand implements CommandExecutor {
                 handleBleedingCommand(sender, args);
                 break;
                 
+            case "status":
+                handleStatusCommand(sender, args);
+                break;
+                
             default:
                 sender.sendMessage(ChatColor.RED + "Subcomando desconocido. Usa /winterfall help para ver los comandos disponibles.");
                 break;
@@ -86,6 +90,7 @@ public class WinterfallCommand implements CommandExecutor {
         sender.sendMessage(ChatColor.YELLOW + "/winterfall snow <on/off>" + ChatColor.GRAY + " - Activa/desactiva la nevada tóxica");
         sender.sendMessage(ChatColor.YELLOW + "/winterfall radiation <on/off>" + ChatColor.GRAY + " - Activa/desactiva la radiación");
         sender.sendMessage(ChatColor.YELLOW + "/winterfall bleeding <cure> [jugador]" + ChatColor.GRAY + " - Cura el sangrado");
+        sender.sendMessage(ChatColor.YELLOW + "/winterfall status [jugador]" + ChatColor.GRAY + " - Muestra el estado físico del jugador");
         sender.sendMessage(ChatColor.GRAY + "----------------------------------------");
     }
     
@@ -371,6 +376,111 @@ public class WinterfallCommand implements CommandExecutor {
             }
         } else {
             sender.sendMessage(ChatColor.RED + "Acción desconocida. Usa 'cure'.");
+        }
+    }
+    
+    /**
+     * Maneja el subcomando "status"
+     * @param sender Remitente del comando
+     * @param args Argumentos del comando
+     */
+    private void handleStatusCommand(CommandSender sender, String[] args) {
+        // Verificar permisos
+        if (!sender.hasPermission("winterfall.status")) {
+            sender.sendMessage(ChatColor.RED + "No tienes permiso para usar este comando.");
+            return;
+        }
+        
+        Player target;
+        
+        // Determinar el jugador objetivo
+        if (args.length >= 2) {
+            // Ver estado de un jugador específico (requiere permiso adicional)
+            if (!sender.hasPermission("winterfall.status.others")) {
+                sender.sendMessage(ChatColor.RED + "No tienes permiso para ver el estado de otros jugadores.");
+                return;
+            }
+            
+            String playerName = args[1];
+            target = Bukkit.getPlayer(playerName);
+            
+            if (target == null) {
+                sender.sendMessage(ChatColor.RED + "Jugador no encontrado: " + playerName);
+                return;
+            }
+        } else if (sender instanceof Player) {
+            // Ver estado propio
+            target = (Player) sender;
+        } else {
+            sender.sendMessage(ChatColor.RED + "Debes especificar un jugador cuando ejecutas desde la consola.");
+            return;
+        }
+        
+        // Mostrar información de estado
+        showPlayerStatus(sender, target);
+    }
+    
+    /**
+     * Muestra el estado completo de un jugador
+     * @param sender Remitente del comando
+     * @param target Jugador objetivo
+     */
+    private void showPlayerStatus(CommandSender sender, Player target) {
+        sender.sendMessage(ChatColor.GRAY + "----------------------------------------");
+        sender.sendMessage(ChatColor.AQUA + "Estado de " + target.getName() + ":");
+        
+        // Estado de radiación
+        if (plugin.getRadiationSystem().isActive()) {
+            int radiationLevel = plugin.getRadiationSystem().getPlayerRadiationLevel(target);
+            String radiationStatus;
+            
+            if (radiationLevel <= 0) {
+                radiationStatus = ChatColor.GREEN + "Sin radiación";
+            } else if (radiationLevel < 30) {
+                radiationStatus = ChatColor.YELLOW + "Radiación leve (" + radiationLevel + "%)";
+            } else if (radiationLevel < 70) {
+                radiationStatus = ChatColor.GOLD + "Radiación moderada (" + radiationLevel + "%)";
+            } else {
+                radiationStatus = ChatColor.RED + "Radiación grave (" + radiationLevel + "%)";
+            }
+            
+            sender.sendMessage(ChatColor.YELLOW + "Nivel de radiación: " + radiationStatus);
+        } else {
+            sender.sendMessage(ChatColor.YELLOW + "Nivel de radiación: " + ChatColor.GRAY + "Sistema inactivo");
+        }
+        
+        // Estado de sangrado
+        if (plugin.getBleedingSystem().isActive()) {
+            boolean isBleeding = plugin.getBleedingSystem().isPlayerBleeding(target);
+            int bleedingLevel = plugin.getBleedingSystem().getPlayerBleedingLevel(target);
+            
+            if (isBleeding) {
+                String bleedingStatus;
+                
+                if (bleedingLevel == 1) {
+                    bleedingStatus = ChatColor.YELLOW + "Leve";
+                } else if (bleedingLevel == 2) {
+                    bleedingStatus = ChatColor.GOLD + "Moderado";
+                } else {
+                    bleedingStatus = ChatColor.RED + "Grave";
+                }
+                
+                sender.sendMessage(ChatColor.YELLOW + "Estado de sangrado: " + bleedingStatus);
+            } else {
+                sender.sendMessage(ChatColor.YELLOW + "Estado de sangrado: " + ChatColor.GREEN + "Sin sangrado");
+            }
+        } else {
+            sender.sendMessage(ChatColor.YELLOW + "Estado de sangrado: " + ChatColor.GRAY + "Sistema inactivo");
+        }
+        
+        // Estado de extremidades
+        if (plugin.getLimbDamageSystem().isActive()) {
+            // Mostrar estado de cada extremidad
+            String limbStatus = plugin.getLimbDamageSystem().getLimbStatusMessage(target);
+            sender.sendMessage(limbStatus);
+        } else {
+            sender.sendMessage(ChatColor.YELLOW + "Estado de extremidades: " + ChatColor.GRAY + "Sistema inactivo");
+            sender.sendMessage(ChatColor.GRAY + "----------------------------------------");
         }
     }
 }

@@ -5,6 +5,7 @@ import com.darkbladedev.events.PlayerEvents;
 import com.darkbladedev.mechanics.SnowfallSystem;
 import com.darkbladedev.mechanics.BleedingSystem;
 import com.darkbladedev.mechanics.RadiationSystem;
+import com.darkbladedev.mechanics.LimbDamageSystem;
 import com.darkbladedev.items.ItemManager;
 import com.darkbladedev.mobs.MobManager;
 
@@ -23,6 +24,7 @@ public class WinterfallMain extends JavaPlugin {
     private SnowfallSystem snowfallSystem;
     private BleedingSystem bleedingSystem;
     private RadiationSystem radiationSystem;
+    private LimbDamageSystem limbDamageSystem;
     private ItemManager itemManager;
     private MobManager mobManager;
     
@@ -66,6 +68,7 @@ public class WinterfallMain extends JavaPlugin {
         snowfallSystem = new SnowfallSystem(this);
         bleedingSystem = new BleedingSystem(this);
         radiationSystem = new RadiationSystem(this);
+        limbDamageSystem = new LimbDamageSystem(this);
         
         // Inicializar gestores
         itemManager = new ItemManager(this);
@@ -75,6 +78,7 @@ public class WinterfallMain extends JavaPlugin {
         snowfallSystem.initialize();
         bleedingSystem.initialize();
         radiationSystem.initialize();
+        limbDamageSystem.initialize();
     }
     
     /**
@@ -122,6 +126,14 @@ public class WinterfallMain extends JavaPlugin {
      */
     public RadiationSystem getRadiationSystem() {
         return radiationSystem;
+    }
+    
+    /**
+     * Obtiene el sistema de daño por extremidades
+     * @return Sistema de daño por extremidades
+     */
+    public LimbDamageSystem getLimbDamageSystem() {
+        return limbDamageSystem;
     }
     
     /**
