@@ -97,6 +97,7 @@ public class ItemManager {
      * Crea el casco aislante
      * Utiliza un casco de cuero con apariencia de cristal
      */
+    @SuppressWarnings("deprecation")
     private void createIsolationHelmet() {
         //net.minecraft.world.item.ItemStack nmsItem = new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.GLASS);
 
@@ -106,7 +107,18 @@ public class ItemManager {
         
         //ResourceLocation itemModel = nmsItem.getItem().components().get(DataComponents.ITEM_MODEL);
 
+
+
+
         equippableComponent.setSlot(EquipmentSlot.HEAD);
+        if (Bukkit.getServer().getVersion().contains("1.21.5")) {
+            equippableComponent.setEquipOnInteract(true);
+        }
+        if (Bukkit.getServer().getVersion().contains("1.21.4")) {
+            equippableComponent.setModel(Material.GLASS.getKey());
+        } else {
+            equippableComponent.setModel(Material.GLASS.getKeyOrNull());
+        }
         equippableComponent.setEquipSound(Sound.ITEM_ARMOR_EQUIP_LEATHER);
     
         // Establecer propiedades
@@ -114,7 +126,6 @@ public class ItemManager {
 
         // Cambiar textura a GLASS
         // meta.setCustomModelDataComponent(nmsItem.getComponents().get());
-        
         
         // Lore
         List<String> lore = new ArrayList<>();
@@ -157,6 +168,7 @@ public class ItemManager {
         // Añadir encantamiento visual
         meta.addEnchant(Enchantment.UNBREAKING, 1, true);
         meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+        meta.addItemFlags(ItemFlag.HIDE_BASE_COLOR);
         
         // Añadir tag personalizado para identificación
         NamespacedKey key = new NamespacedKey(plugin, "custom_item");
@@ -186,6 +198,7 @@ public class ItemManager {
         // Añadir encantamiento visual
         meta.addEnchant(Enchantment.UNBREAKING, 1, true);
         meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+        meta.addItemFlags(ItemFlag.HIDE_BASE_COLOR);
         
         // Añadir tag personalizado para identificación
         NamespacedKey key = new NamespacedKey(plugin, "custom_item");
@@ -215,6 +228,7 @@ public class ItemManager {
         // Añadir encantamiento visual
         meta.addEnchant(Enchantment.UNBREAKING, 1, true);
         meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+        meta.addItemFlags(ItemFlag.HIDE_BASE_COLOR);
         
         // Añadir tag personalizado para identificación
         NamespacedKey key = new NamespacedKey(plugin, "custom_item");

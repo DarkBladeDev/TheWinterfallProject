@@ -6,8 +6,11 @@ import com.darkbladedev.mechanics.SnowfallSystem;
 import com.darkbladedev.mechanics.BleedingSystem;
 import com.darkbladedev.mechanics.RadiationSystem;
 import com.darkbladedev.mechanics.LimbDamageSystem;
+import com.darkbladedev.mechanics.HydrationSystem;
+import com.darkbladedev.mechanics.NutritionSystem;
 import com.darkbladedev.items.ItemManager;
 import com.darkbladedev.mobs.MobManager;
+import com.darkbladedev.placeholders.WinterfallPlaceholders;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -25,8 +28,11 @@ public class WinterfallMain extends JavaPlugin {
     private BleedingSystem bleedingSystem;
     private RadiationSystem radiationSystem;
     private LimbDamageSystem limbDamageSystem;
+    private HydrationSystem hydrationSystem;
+    private NutritionSystem nutritionSystem;
     private ItemManager itemManager;
     private MobManager mobManager;
+    private WinterfallPlaceholders placeholders;
     
     @Override
     public void onEnable() {
@@ -42,6 +48,15 @@ public class WinterfallMain extends JavaPlugin {
         // Registrar comandos
         registerCommands();
         
+        // Registrar placeholders si PlaceholderAPI está presente
+        if (Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null) {
+            placeholders = new WinterfallPlaceholders(this);
+            placeholders.register();
+            Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN + "[Winterfall] PlaceholderAPI detectado y placeholders registrados");
+        } else {
+            Bukkit.getConsoleSender().sendMessage(ChatColor.YELLOW + "[Winterfall] PlaceholderAPI no detectado. Los placeholders no estarán disponibles.");
+        }
+        
         // Mensaje de inicio
         Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN + "[Winterfall] El plugin ha sido activado! La nevada mortal comienza...");
     }
@@ -51,6 +66,21 @@ public class WinterfallMain extends JavaPlugin {
         // Desactivar sistemas
         if (snowfallSystem != null) {
             snowfallSystem.shutdown();
+        }
+        if (bleedingSystem != null) {
+            bleedingSystem.shutdown();
+        }
+        if (radiationSystem != null) {
+            radiationSystem.shutdown();
+        }
+        if (limbDamageSystem != null) {
+            limbDamageSystem.shutdown();
+        }
+        if (hydrationSystem != null) {
+            hydrationSystem.shutdown();
+        }
+        if (nutritionSystem != null) {
+            nutritionSystem.shutdown();
         }
         
         // Mensaje de cierre
@@ -69,9 +99,11 @@ public class WinterfallMain extends JavaPlugin {
         bleedingSystem = new BleedingSystem(this);
         radiationSystem = new RadiationSystem(this);
         limbDamageSystem = new LimbDamageSystem(this);
+        hydrationSystem = new HydrationSystem(this);
+        nutritionSystem = new NutritionSystem(this);
         
         // Inicializar gestores
-        itemManager = new ItemManager(this);
+        //itemManager = new ItemManager(this);
         mobManager = new MobManager(this);
         
         // Activar sistemas
@@ -79,6 +111,8 @@ public class WinterfallMain extends JavaPlugin {
         bleedingSystem.initialize();
         radiationSystem.initialize();
         limbDamageSystem.initialize();
+        hydrationSystem.initialize();
+        nutritionSystem.initialize();
     }
     
     /**
@@ -93,7 +127,9 @@ public class WinterfallMain extends JavaPlugin {
      * Registra todos los comandos del plugin
      */
     private void registerCommands() {
-        getCommand("winterfall").setExecutor(new WinterfallCommand(this));
+        WinterfallCommand winterfallCommand = new WinterfallCommand(this);
+        getCommand("winterfall").setExecutor(winterfallCommand);
+        getCommand("winterfall").setTabCompleter(winterfallCommand);
     }
     
     /**
@@ -150,5 +186,21 @@ public class WinterfallMain extends JavaPlugin {
      */
     public MobManager getMobManager() {
         return mobManager;
+    }
+    
+    /**
+     * Obtiene el sistema de hidratación
+     * @return Sistema de hidratación
+     */
+    public HydrationSystem getHydrationSystem() {
+        return hydrationSystem;
+    }
+    
+    /**
+     * Obtiene el sistema de nutrición
+     * @return Sistema de nutrición
+     */
+    public NutritionSystem getNutritionSystem() {
+        return nutritionSystem;
     }
 }

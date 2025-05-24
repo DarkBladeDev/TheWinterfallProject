@@ -7,14 +7,20 @@ import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Manejador de comandos para "El Eternauta"
  * Permite a los jugadores interactuar con las funcionalidades del plugin
+ * Implementa TabCompleter para proporcionar autocompletado de comandos
  */
-public class WinterfallCommand implements CommandExecutor {
+public class WinterfallCommand implements CommandExecutor, TabCompleter {
 
     private final WinterfallMain plugin;
     
@@ -69,6 +75,14 @@ public class WinterfallCommand implements CommandExecutor {
                 handleStatusCommand(sender, args);
                 break;
                 
+            case "hydration":
+                handleHydrationCommand(sender, args);
+                break;
+                
+            case "nutrition":
+                handleNutritionCommand(sender, args);
+                break;
+                
             default:
                 sender.sendMessage(ChatColor.RED + "Subcomando desconocido. Usa /winterfall help para ver los comandos disponibles.");
                 break;
@@ -90,6 +104,8 @@ public class WinterfallCommand implements CommandExecutor {
         sender.sendMessage(ChatColor.YELLOW + "/winterfall snow <on/off>" + ChatColor.GRAY + " - Activa/desactiva la nevada tóxica");
         sender.sendMessage(ChatColor.YELLOW + "/winterfall radiation <on/off>" + ChatColor.GRAY + " - Activa/desactiva la radiación");
         sender.sendMessage(ChatColor.YELLOW + "/winterfall bleeding <cure> [jugador]" + ChatColor.GRAY + " - Cura el sangrado");
+        sender.sendMessage(ChatColor.YELLOW + "/winterfall hydration <set/add/remove> <cantidad> [jugador]" + ChatColor.GRAY + " - Gestiona la hidratación");
+        sender.sendMessage(ChatColor.YELLOW + "/winterfall nutrition <protein/fat/carbs/vitamins> <set/add/remove> <cantidad> [jugador]" + ChatColor.GRAY + " - Gestiona la nutrición");
         sender.sendMessage(ChatColor.YELLOW + "/winterfall status [jugador]" + ChatColor.GRAY + " - Muestra el estado físico del jugador");
         sender.sendMessage(ChatColor.GRAY + "----------------------------------------");
     }
@@ -437,11 +453,11 @@ public class WinterfallCommand implements CommandExecutor {
             if (radiationLevel <= 0) {
                 radiationStatus = ChatColor.GREEN + "Sin radiación";
             } else if (radiationLevel < 30) {
-                radiationStatus = ChatColor.YELLOW + "Radiación leve (" + radiationLevel + "%)";
+                radiationStatus = ChatColor.YELLOW + "Radiación leve (" + radiationLevel + "%)"; 
             } else if (radiationLevel < 70) {
-                radiationStatus = ChatColor.GOLD + "Radiación moderada (" + radiationLevel + "%)";
+                radiationStatus = ChatColor.GOLD + "Radiación moderada (" + radiationLevel + "%)"; 
             } else {
-                radiationStatus = ChatColor.RED + "Radiación grave (" + radiationLevel + "%)";
+                radiationStatus = ChatColor.RED + "Radiación grave (" + radiationLevel + "%)"; 
             }
             
             sender.sendMessage(ChatColor.YELLOW + "Nivel de radiación: " + radiationStatus);
@@ -473,6 +489,54 @@ public class WinterfallCommand implements CommandExecutor {
             sender.sendMessage(ChatColor.YELLOW + "Estado de sangrado: " + ChatColor.GRAY + "Sistema inactivo");
         }
         
+        // Estado de hidratación
+        if (plugin.getHydrationSystem().isActive()) {
+            @SuppressWarnings("unused")
+            int hydrationLevel = plugin.getHydrationSystem().getHydrationLevel(target);
+            int hydrationPercent = plugin.getHydrationSystem().getHydrationPercentage(target);
+            String hydrationBar = plugin.getHydrationSystem().getHydrationBar(target);
+            String hydrationStatus;
+            
+            if (hydrationPercent > 70) {
+                hydrationStatus = ChatColor.AQUA + "Bien hidratado (" + hydrationPercent + "%)"; 
+            } else if (hydrationPercent > 30) {
+                hydrationStatus = ChatColor.YELLOW + "Deshidratación leve (" + hydrationPercent + "%)"; 
+            } else {
+                hydrationStatus = ChatColor.RED + "Deshidratación grave (" + hydrationPercent + "%)"; 
+            }
+            
+            sender.sendMessage(ChatColor.YELLOW + "Nivel de hidratación: " + hydrationStatus);
+            sender.sendMessage(ChatColor.YELLOW + "Barra de hidratación: " + hydrationBar);
+        } else {
+            sender.sendMessage(ChatColor.YELLOW + "Nivel de hidratación: " + ChatColor.GRAY + "Sistema inactivo");
+        }
+        
+        // Estado de nutrición
+        if (plugin.getNutritionSystem().isActive()) {
+            sender.sendMessage(ChatColor.YELLOW + "Estado nutricional:");
+            
+            // Mostrar cada tipo de nutriente
+            for (com.darkbladedev.mechanics.NutritionSystem.NutrientType nutrient : 
+                    com.darkbladedev.mechanics.NutritionSystem.NutrientType.values()) {
+                int level = plugin.getNutritionSystem().getNutrientLevel(target, nutrient);
+                String bar = plugin.getNutritionSystem().getNutrientBar(target, nutrient);
+                
+                String status;
+                if (level > 70) {
+                    status = ChatColor.GREEN + "Óptimo";
+                } else if (level > 30) {
+                    status = ChatColor.YELLOW + "Deficiente";
+                } else {
+                    status = ChatColor.RED + "Crítico";
+                }
+                
+                sender.sendMessage(ChatColor.GRAY + "  " + nutrient.getDisplayName() + ": " + 
+                        status + ChatColor.GRAY + " (" + level + "%) " + bar);
+            }
+        } else {
+            sender.sendMessage(ChatColor.YELLOW + "Estado nutricional: " + ChatColor.GRAY + "Sistema inactivo");
+        }
+        
         // Estado de extremidades
         if (plugin.getLimbDamageSystem().isActive()) {
             // Mostrar estado de cada extremidad
@@ -480,7 +544,345 @@ public class WinterfallCommand implements CommandExecutor {
             sender.sendMessage(limbStatus);
         } else {
             sender.sendMessage(ChatColor.YELLOW + "Estado de extremidades: " + ChatColor.GRAY + "Sistema inactivo");
-            sender.sendMessage(ChatColor.GRAY + "----------------------------------------");
         }
+        
+        sender.sendMessage(ChatColor.GRAY + "----------------------------------------");
+    }
+    
+    /**
+     * Maneja el subcomando "hydration"
+     * @param sender Remitente del comando
+     * @param args Argumentos del comando
+     */
+    private void handleHydrationCommand(CommandSender sender, String[] args) {
+        // Verificar permisos
+        if (!sender.hasPermission("winterfall.hydration")) {
+            sender.sendMessage(ChatColor.RED + "No tienes permiso para usar este comando.");
+            return;
+        }
+        
+        // Verificar argumentos
+        if (args.length < 3) {
+            sender.sendMessage(ChatColor.RED + "Uso: /winterfall hydration <set/add/remove> <cantidad> [jugador]");
+            return;
+        }
+        
+        // Obtener acción
+        String action = args[1].toLowerCase();
+        if (!action.equals("set") && !action.equals("add") && !action.equals("remove")) {
+            sender.sendMessage(ChatColor.RED + "Acción inválida. Usa set, add o remove.");
+            return;
+        }
+        
+        // Obtener cantidad
+        int amount;
+        try {
+            amount = Integer.parseInt(args[2]);
+            if (amount < 0 || amount > 20) {
+                sender.sendMessage(ChatColor.RED + "La cantidad debe estar entre 0 y 20.");
+                return;
+            }
+        } catch (NumberFormatException e) {
+            sender.sendMessage(ChatColor.RED + "La cantidad debe ser un número válido.");
+            return;
+        }
+        
+        // Determinar el jugador objetivo
+        Player target;
+        if (args.length >= 4) {
+            // Modificar hidratación de un jugador específico (requiere permiso adicional)
+            if (!sender.hasPermission("winterfall.hydration.others")) {
+                sender.sendMessage(ChatColor.RED + "No tienes permiso para modificar la hidratación de otros jugadores.");
+                return;
+            }
+            
+            String playerName = args[3];
+            target = Bukkit.getPlayer(playerName);
+            
+            if (target == null) {
+                sender.sendMessage(ChatColor.RED + "Jugador no encontrado: " + playerName);
+                return;
+            }
+        } else if (sender instanceof Player) {
+            // Modificar hidratación propia
+            target = (Player) sender;
+        } else {
+            sender.sendMessage(ChatColor.RED + "Debes especificar un jugador cuando ejecutas desde la consola.");
+            return;
+        }
+        
+        // Aplicar cambios según la acción
+        switch (action) {
+            case "set":
+                plugin.getHydrationSystem().setHydrationLevel(target, amount);
+                sender.sendMessage(ChatColor.GREEN + "Nivel de hidratación de " + target.getName() + " establecido a " + amount + ".");
+                break;
+                
+            case "add":
+                plugin.getHydrationSystem().increaseHydration(target, amount);
+                sender.sendMessage(ChatColor.GREEN + "Aumentado el nivel de hidratación de " + target.getName() + " en " + amount + ".");
+                break;
+                
+            case "remove":
+                plugin.getHydrationSystem().decreaseHydration(target, amount);
+                sender.sendMessage(ChatColor.GREEN + "Reducido el nivel de hidratación de " + target.getName() + " en " + amount + ".");
+                break;
+        }
+    }
+    
+    /**
+     * Maneja el subcomando "nutrition"
+     * @param sender Remitente del comando
+     * @param args Argumentos del comando
+     */
+    private void handleNutritionCommand(CommandSender sender, String[] args) {
+        // Verificar permisos
+        if (!sender.hasPermission("winterfall.nutrition")) {
+            sender.sendMessage(ChatColor.RED + "No tienes permiso para usar este comando.");
+            return;
+        }
+        
+        // Verificar argumentos
+        if (args.length < 4) {
+            sender.sendMessage(ChatColor.RED + "Uso: /winterfall nutrition <protein/fat/carbs/vitamins> <set/add/remove> <cantidad> [jugador]");
+            return;
+        }
+        
+        // Obtener tipo de nutriente
+        String nutrientTypeStr = args[1].toLowerCase();
+        com.darkbladedev.mechanics.NutritionSystem.NutrientType nutrientType;
+        
+        switch (nutrientTypeStr) {
+            case "protein":
+                nutrientType = com.darkbladedev.mechanics.NutritionSystem.NutrientType.PROTEIN;
+                break;
+            case "fat":
+                nutrientType = com.darkbladedev.mechanics.NutritionSystem.NutrientType.FAT;
+                break;
+            case "carbs":
+                nutrientType = com.darkbladedev.mechanics.NutritionSystem.NutrientType.CARBS;
+                break;
+            case "vitamins":
+                nutrientType = com.darkbladedev.mechanics.NutritionSystem.NutrientType.VITAMINS;
+                break;
+            default:
+                sender.sendMessage(ChatColor.RED + "Tipo de nutriente inválido. Usa protein, fat, carbs o vitamins.");
+                return;
+        }
+        
+        // Obtener acción
+        String action = args[2].toLowerCase();
+        if (!action.equals("set") && !action.equals("add") && !action.equals("remove")) {
+            sender.sendMessage(ChatColor.RED + "Acción inválida. Usa set, add o remove.");
+            return;
+        }
+        
+        // Obtener cantidad
+        int amount;
+        try {
+            amount = Integer.parseInt(args[3]);
+            if (amount < 0 || amount > 100) {
+                sender.sendMessage(ChatColor.RED + "La cantidad debe estar entre 0 y 100.");
+                return;
+            }
+        } catch (NumberFormatException e) {
+            sender.sendMessage(ChatColor.RED + "La cantidad debe ser un número válido.");
+            return;
+        }
+        
+        // Determinar el jugador objetivo
+        Player target;
+        if (args.length >= 5) {
+            // Modificar nutrición de un jugador específico (requiere permiso adicional)
+            if (!sender.hasPermission("winterfall.nutrition.others")) {
+                sender.sendMessage(ChatColor.RED + "No tienes permiso para modificar la nutrición de otros jugadores.");
+                return;
+            }
+            
+            String playerName = args[4];
+            target = Bukkit.getPlayer(playerName);
+            
+            if (target == null) {
+                sender.sendMessage(ChatColor.RED + "Jugador no encontrado: " + playerName);
+                return;
+            }
+        } else if (sender instanceof Player) {
+            // Modificar nutrición propia
+            target = (Player) sender;
+        } else {
+            sender.sendMessage(ChatColor.RED + "Debes especificar un jugador cuando ejecutas desde la consola.");
+            return;
+        }
+        
+        // Aplicar cambios según la acción
+        switch (action) {
+            case "set":
+                plugin.getNutritionSystem().setNutrientLevel(target, nutrientType, amount);
+                sender.sendMessage(ChatColor.GREEN + "Nivel de " + nutrientType.getDisplayName() + " de " + target.getName() + " establecido a " + amount + ".");
+                break;
+                
+            case "add":
+                plugin.getNutritionSystem().addNutrient(target, nutrientType, amount);
+                sender.sendMessage(ChatColor.GREEN + "Aumentado el nivel de " + nutrientType.getDisplayName() + " de " + target.getName() + " en " + amount + ".");
+                break;
+                
+            case "remove":
+                plugin.getNutritionSystem().removeNutrient(target, nutrientType, amount);
+                sender.sendMessage(ChatColor.GREEN + "Reducido el nivel de " + nutrientType.getDisplayName() + " de " + target.getName() + " en " + amount + ".");
+                break;
+        }
+    }
+    
+    @Override
+    public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
+        List<String> completions = new ArrayList<>();
+        
+        // Verificar si el comando es "winterfall"
+        if (!command.getName().equalsIgnoreCase("winterfall")) {
+            return null;
+        }
+        
+        // Autocompletar subcomandos
+        if (args.length == 1) {
+            String[] subCommands = {"help", "item", "mob", "snow", "radiation", "bleeding", "hydration", "nutrition", "status"};
+            for (String subCommand : subCommands) {
+                if (subCommand.startsWith(args[0].toLowerCase())) {
+                    completions.add(subCommand);
+                }
+            }
+            return completions;
+        }
+        
+        // Autocompletar argumentos según el subcomando
+        if (args.length >= 2) {
+            switch (args[0].toLowerCase()) {
+                case "item":
+                    if (args.length == 2) {
+                        String[] itemTypes = {"isolation_helmet", "isolation_chestplate", "isolation_leggings", "isolation_boots", "flamethrower", "electric_gun", "full_suit"};
+                        for (String itemType : itemTypes) {
+                            if (itemType.startsWith(args[1].toLowerCase())) {
+                                completions.add(itemType);
+                            }
+                        }
+                    }
+                    break;
+                    
+                case "mob":
+                    if (args.length == 2) {
+                        String[] mobTypes = {"mano", "cascarudo", "gurbo", "random"};
+                        for (String mobType : mobTypes) {
+                            if (mobType.startsWith(args[1].toLowerCase())) {
+                                completions.add(mobType);
+                            }
+                        }
+                    } else if (args.length == 3) {
+                        // Sugerir cantidades comunes
+                        String[] amounts = {"1", "5", "10", "25", "50"};
+                        for (String amount : amounts) {
+                            if (amount.startsWith(args[2])) {
+                                completions.add(amount);
+                            }
+                        }
+                    }
+                    break;
+                    
+                case "snow":
+                case "radiation":
+                    if (args.length == 2) {
+                        String[] states = {"on", "off"};
+                        for (String state : states) {
+                            if (state.startsWith(args[1].toLowerCase())) {
+                                completions.add(state);
+                            }
+                        }
+                    }
+                    break;
+                    
+                case "bleeding":
+                    if (args.length == 2) {
+                        if ("cure".startsWith(args[1].toLowerCase())) {
+                            completions.add("cure");
+                        }
+                    } else if (args.length == 3 && args[1].equalsIgnoreCase("cure")) {
+                        // Autocompletar nombres de jugadores
+                        for (Player player : Bukkit.getOnlinePlayers()) {
+                            if (player.getName().toLowerCase().startsWith(args[2].toLowerCase())) {
+                                completions.add(player.getName());
+                            }
+                        }
+                    }
+                    break;
+                    
+                case "status":
+                    if (args.length == 2) {
+                        // Autocompletar nombres de jugadores
+                        for (Player player : Bukkit.getOnlinePlayers()) {
+                            if (player.getName().toLowerCase().startsWith(args[1].toLowerCase())) {
+                                completions.add(player.getName());
+                            }
+                        }
+                    }
+                    break;
+                    
+                case "hydration":
+                    // Segundo argumento - acción
+                    if (args.length == 2) {
+                        completions.add("set");
+                        completions.add("add");
+                        completions.add("remove");
+                    }
+                    // Tercer argumento - cantidad
+                    else if (args.length == 3) {
+                        completions.add("5");
+                        completions.add("10");
+                        completions.add("15");
+                        completions.add("20");
+                    }
+                    // Cuarto argumento - nombre de jugador (opcional)
+                    else if (args.length == 4) {
+                        for (Player player : Bukkit.getOnlinePlayers()) {
+                            if (player.getName().toLowerCase().startsWith(args[3].toLowerCase())) {
+                                completions.add(player.getName());
+                            }
+                        }
+                    }
+                    break;
+                    
+                case "nutrition":
+                    // Segundo argumento - tipo de nutriente
+                    if (args.length == 2) {
+                        completions.add("protein");
+                        completions.add("fat");
+                        completions.add("carbs");
+                        completions.add("vitamins");
+                    }
+                    // Tercer argumento - acción
+                    else if (args.length == 3) {
+                        completions.add("set");
+                        completions.add("add");
+                        completions.add("remove");
+                    }
+                    // Cuarto argumento - cantidad
+                    else if (args.length == 4) {
+                        completions.add("25");
+                        completions.add("50");
+                        completions.add("75");
+                        completions.add("100");
+                    }
+                    // Quinto argumento - nombre de jugador (opcional)
+                    else if (args.length == 5) {
+                        for (Player player : Bukkit.getOnlinePlayers()) {
+                            if (player.getName().toLowerCase().startsWith(args[4].toLowerCase())) {
+                                completions.add(player.getName());
+                            }
+                        }
+                    }
+                    break;
+            }
+        }
+        
+        // Ordenar completions alfabéticamente
+        Collections.sort(completions);
+        return completions;
     }
 }
