@@ -6,6 +6,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.Sound;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -36,10 +37,11 @@ public class NutritionSystem implements Listener {
     private final Map<UUID, Map<NutrientType, Integer>> playerNutrients;
     private boolean isActive;
     
-    // Constantes
-    private static final int MAX_NUTRIENT_LEVEL = 100;
-    private static final int DEFAULT_NUTRIENT_LEVEL = 70;
-    private static final int CRITICAL_NUTRIENT_LEVEL = 20;
+    // Variables configurables
+    private int MAX_NUTRIENT_LEVEL = 100;
+    private int DEFAULT_NUTRIENT_LEVEL = 70;
+    private int CRITICAL_NUTRIENT_LEVEL = 20;
+    private long UPDATE_INTERVAL = 100L; // Intervalo de actualización en ticks
     
     // Factores de disminución (configurables)
     private double normalDecreaseRate = 0.05; // Probabilidad base de disminución (5%)
@@ -86,8 +88,26 @@ public class NutritionSystem implements Listener {
         this.foodNutrients = new HashMap<>();
         this.isActive = false;
         
+        // Cargar configuración
+        loadConfig();
+        
         // Inicializar valores nutricionales de alimentos
         initFoodNutrients();
+    }
+    
+    /**
+     * Carga la configuración desde config.yml
+     */
+    private void loadConfig() {
+        FileConfiguration config = plugin.getConfig();
+        
+        // Cargar valores de configuración
+        MAX_NUTRIENT_LEVEL = config.getInt("nutrition.max_nutrient_level", 100);
+        DEFAULT_NUTRIENT_LEVEL = config.getInt("nutrition.default_nutrient_level", 70);
+        CRITICAL_NUTRIENT_LEVEL = config.getInt("nutrition.critical_nutrient_level", 20);
+        normalDecreaseRate = config.getDouble("nutrition.normal_decrease_rate", 0.05);
+        activityDecreaseRate = config.getDouble("nutrition.activity_decrease_rate", 0.15);
+        UPDATE_INTERVAL = config.getLong("nutrition.update_interval", 100L);
     }
     
     /**
@@ -153,6 +173,12 @@ public class NutritionSystem implements Listener {
      * Inicializa el sistema de nutrición
      */
     public void initialize() {
+        // Verificar si el sistema está habilitado en la configuración
+        if (!plugin.getConfig().getBoolean("nutrition.enabled", true)) {
+            Bukkit.getConsoleSender().sendMessage(ChatColor.YELLOW + "[Winterfall] Sistema de nutrición deshabilitado en la configuración");
+            return;
+        }
+        
         startNutritionSystem();
         isActive = true;
         
@@ -180,19 +206,22 @@ public class NutritionSystem implements Listener {
                     // Reducir nutrientes gradualmente
                     Map<NutrientType, Integer> nutrients = playerNutrients.get(playerId);
                     
-                    // Aplicar reducción a cada nutriente
-                    for (NutrientType type : NutrientType.values()) {
-                        // Probabilidad de reducción basada en actividad
-                        double currentRate = normalDecreaseRate;
-                        if (player.isSprinting()) {
-                            currentRate = activityDecreaseRate;
-                        }
-                        
-                        // Aplicar reducción según la tasa configurada
-                        if (Math.random() < currentRate) {
-                            int currentLevel = nutrients.get(type);
-                            int newLevel = Math.max(0, currentLevel - 1);
-                            nutrients.put(type, newLevel);
+                    // Verificar si el jugador tiene permiso para bypass de nutrientes
+                    if (!player.hasPermission("winterfall.bypass.nutrients")) {
+                        // Aplicar reducción a cada nutriente solo si no tiene el permiso
+                        for (NutrientType type : NutrientType.values()) {
+                            // Probabilidad de reducción basada en actividad
+                            double currentRate = normalDecreaseRate;
+                            if (player.isSprinting()) {
+                                currentRate = activityDecreaseRate;
+                            }
+                            
+                            // Aplicar reducción según la tasa configurada
+                            if (Math.random() < currentRate) {
+                                int currentLevel = nutrients.get(type);
+                                int newLevel = Math.max(0, currentLevel - 1);
+                                nutrients.put(type, newLevel);
+                            }
                         }
                     }
                     
@@ -200,7 +229,7 @@ public class NutritionSystem implements Listener {
                     applyNutritionEffects(player, nutrients);
                 }
             }
-        }.runTaskTimer(plugin, 100L, 100L); // Ejecutar cada 5 segundos (100 ticks)
+        }.runTaskTimer(plugin, UPDATE_INTERVAL, UPDATE_INTERVAL); // Ejecutar según el intervalo configurado
     }
     
     /**
@@ -224,6 +253,11 @@ public class NutritionSystem implements Listener {
      * @param nutrients Mapa de nutrientes del jugador
      */
     private void applyNutritionEffects(Player player, Map<NutrientType, Integer> nutrients) {
+        // Verificar si el jugador tiene permiso para bypass
+        if (player.hasPermission("winterfall.bypass.nutrients")) {
+            return; // No aplicar efectos si tiene el permiso
+        }
+        
         // Contar nutrientes críticos
         int criticalCount = 0;
         
@@ -368,6 +402,8 @@ public class NutritionSystem implements Listener {
      * @return Nivel del nutriente (0-100)
      */
     public int getNutrientLevel(Player player, NutrientType type) {
+        if (player == null) return 0;
+        
         UUID playerId = player.getUniqueId();
         
         // Inicializar nutrientes si es necesario
@@ -376,6 +412,24 @@ public class NutritionSystem implements Listener {
         }
         
         return playerNutrients.get(playerId).get(type);
+    }
+    
+    /**
+     * Obtiene todos los niveles de nutrientes de un jugador
+     * @param player Jugador
+     * @return Mapa con los niveles de todos los nutrientes
+     */
+    public Map<NutrientType, Integer> getAllNutrientLevels(Player player) {
+        if (player == null) return null;
+        
+        UUID playerId = player.getUniqueId();
+        
+        // Inicializar nutrientes si es necesario
+        if (!playerNutrients.containsKey(playerId)) {
+            initializePlayerNutrients(playerId);
+        }
+        
+        return new EnumMap<>(playerNutrients.get(playerId));
     }
     
     /**
@@ -413,6 +467,8 @@ public class NutritionSystem implements Listener {
      * @param level Nivel a establecer (0-100)
      */
     public void setNutrientLevel(Player player, NutrientType type, int level) {
+        if (player == null) return;
+        
         UUID playerId = player.getUniqueId();
         
         // Inicializar nutrientes si es necesario
@@ -429,6 +485,42 @@ public class NutritionSystem implements Listener {
         
         // Aplicar efectos si el nivel es crítico
         if (newLevel <= CRITICAL_NUTRIENT_LEVEL) {
+            applyNutritionEffects(player, nutrients);
+        }
+    }
+    
+    /**
+     * Establece todos los niveles de nutrientes para un jugador
+     * @param player Jugador
+     * @param levels Mapa con los niveles de todos los nutrientes
+     */
+    public void setAllNutrientLevels(Player player, Map<NutrientType, Integer> levels) {
+        if (player == null || levels == null) return;
+        
+        UUID playerId = player.getUniqueId();
+        
+        // Crear un nuevo mapa para almacenar los valores
+        Map<NutrientType, Integer> nutrients = new EnumMap<>(NutrientType.class);
+        
+        // Copiar y validar cada nivel
+        for (NutrientType type : NutrientType.values()) {
+            int level = levels.containsKey(type) ? levels.get(type) : DEFAULT_NUTRIENT_LEVEL;
+            nutrients.put(type, Math.max(0, Math.min(MAX_NUTRIENT_LEVEL, level)));
+        }
+        
+        // Actualizar todos los niveles
+        playerNutrients.put(playerId, nutrients);
+        
+        // Verificar si hay niveles críticos y aplicar efectos
+        boolean hasCriticalLevel = false;
+        for (int level : nutrients.values()) {
+            if (level <= CRITICAL_NUTRIENT_LEVEL) {
+                hasCriticalLevel = true;
+                break;
+            }
+        }
+        
+        if (hasCriticalLevel) {
             applyNutritionEffects(player, nutrients);
         }
     }

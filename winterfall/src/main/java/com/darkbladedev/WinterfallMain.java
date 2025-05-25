@@ -1,6 +1,7 @@
 package com.darkbladedev;
 
 import com.darkbladedev.commands.WinterfallCommand;
+import com.darkbladedev.database.DatabaseManager;
 import com.darkbladedev.events.PlayerEvents;
 import com.darkbladedev.mechanics.SnowfallSystem;
 import com.darkbladedev.mechanics.BleedingSystem;
@@ -32,6 +33,7 @@ public class WinterfallMain extends JavaPlugin {
     private LimbDamageSystem limbDamageSystem;
     private HydrationSystem hydrationSystem;
     private NutritionSystem nutritionSystem;
+    private DatabaseManager databaseManager;
     private ItemManager itemManager;
     private MobManager mobManager;
     private WinterfallPlaceholders placeholders;
@@ -95,6 +97,9 @@ public class WinterfallMain extends JavaPlugin {
         if (nutritionSystem != null) {
             nutritionSystem.shutdown();
         }
+        if (databaseManager != null) {
+            databaseManager.shutdown();
+        }
         
         // Mensaje de cierre
         Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[Winterfall] El plugin ha sido desactivado! La nevada ha cesado temporalmente...");
@@ -118,6 +123,7 @@ public class WinterfallMain extends JavaPlugin {
         // Inicializar gestores
         //itemManager = new ItemManager(this);
         mobManager = new MobManager(this);
+        databaseManager = new DatabaseManager(this);
         
         // Activar sistemas
         snowfallSystem.initialize();
@@ -126,6 +132,7 @@ public class WinterfallMain extends JavaPlugin {
         limbDamageSystem.initialize();
         hydrationSystem.initialize();
         nutritionSystem.initialize();
+        databaseManager.initialize();
     }
     
     /**
@@ -215,5 +222,13 @@ public class WinterfallMain extends JavaPlugin {
      */
     public NutritionSystem getNutritionSystem() {
         return nutritionSystem;
+    }
+    
+    /**
+     * Obtiene el gestor de base de datos
+     * @return Gestor de base de datos
+     */
+    public DatabaseManager getDatabaseManager() {
+        return databaseManager;
     }
 }

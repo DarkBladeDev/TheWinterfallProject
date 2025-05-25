@@ -10,3 +10,11 @@ commands:
     description: Comando principal del plugin Winterfall
     usage: /winterfall <subcomando>
     aliases: [wf]
+
+permissions:
+  winterfall.bypass.water:
+    description: Permiso para bypasear el sistema de hidratación
+    default: op
+  winterfall.bypass.nutrients:
+    description: Permiso para bypasear el sistema de nutrición
+    default: op

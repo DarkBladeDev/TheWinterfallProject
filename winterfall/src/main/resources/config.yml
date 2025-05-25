@@ -1,0 +1,93 @@
+# Configuración del plugin Winterfall
+
+# Configuración de la base de datos
+database:
+  # Tipo de base de datos (sqlite)
+  type: sqlite
+  # Ruta del archivo de la base de datos
+  file: "Winterfall/database.db"
+  # Intervalo de guardado automático en segundos
+  save_interval: 300
+
+# Configuración del sistema de hidratación
+hydration:
+  # Activar o desactivar el sistema de hidratación
+  enabled: true
+  # Nivel máximo de hidratación
+  max_level: 20
+  # Cantidad de hidratación que proporciona una botella de agua
+  water_bottle_hydration: 6
+  # Nivel por debajo del cual se empiezan a aplicar efectos negativos
+  damage_threshold: 6
+  # Tasa de disminución normal (probabilidad por tick)
+  normal_decrease_rate: 0.1
+  # Tasa de disminución durante actividad (probabilidad por tick)
+  activity_decrease_rate: 0.3
+  # Intervalo de actualización en ticks (60 = 3 segundos)
+  update_interval: 60
+
+# Configuración del sistema de nutrición
+nutrition:
+  # Activar o desactivar el sistema de nutrición
+  enabled: true
+  # Nivel máximo de cada nutriente
+  max_nutrient_level: 100
+  # Nivel inicial de cada nutriente para nuevos jugadores
+  default_nutrient_level: 70
+  # Nivel por debajo del cual se consideran críticos los nutrientes
+  critical_nutrient_level: 20
+  # Tasa de disminución normal (probabilidad por tick)
+  normal_decrease_rate: 0.05
+  # Tasa de disminución durante actividad (probabilidad por tick)
+  activity_decrease_rate: 0.15
+  # Intervalo de actualización en ticks (100 = 5 segundos)
+  update_interval: 100
+
+# Configuración del sistema de daño en extremidades
+limb_damage:
+  # Activar o desactivar el sistema de daño en extremidades
+  enabled: true
+  # Probabilidad de daño en extremidades por caída
+  fall_damage_chance: 0.7
+  # Probabilidad de daño en extremidades por ataque
+  attack_damage_chance: 0.3
+  # Probabilidad de daño en extremidades por explosión
+  explosion_damage_chance: 0.8
+  # Tiempo de curación natural en segundos
+  natural_healing_time: 1200
+
+# Configuración del sistema de sangrado
+bleeding:
+  # Activar o desactivar el sistema de sangrado
+  enabled: true
+  # Probabilidad de sangrado por daño
+  bleeding_chance: 0.3
+  # Daño por tick de sangrado
+  bleeding_damage: 1.0
+  # Intervalo de daño por sangrado en ticks
+  bleeding_interval: 100
+
+# Configuración del sistema de radiación
+radiation:
+  # Activar o desactivar el sistema de radiación
+  enabled: true
+  # Daño por tick de radiación
+  radiation_damage: 1.0
+  # Intervalo de daño por radiación en ticks
+  radiation_interval: 60
+
+# Configuración del sistema de nieve
+snow:
+  # Activar o desactivar el sistema de nieve
+  enabled: true
+  # Daño por tick de congelación
+  freezing_damage: 1.0
+  # Intervalo de daño por congelación en ticks
+  freezing_interval: 80
+
+# Configuración de permisos
+permissions:
+  # Permiso para bypass de hidratación
+  bypass_water: "winterfall.bypass.water"
+  # Permiso para bypass de nutrientes
+  bypass_nutrients: "winterfall.bypass.nutrients"

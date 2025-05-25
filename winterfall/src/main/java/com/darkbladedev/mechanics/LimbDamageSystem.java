@@ -2,6 +2,7 @@ package com.darkbladedev.mechanics;
 
 import com.darkbladedev.WinterfallMain;
 import org.bukkit.ChatColor;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -85,12 +86,30 @@ public class LimbDamageSystem implements Listener {
         this.plugin = plugin;
         this.limbDamage = new HashMap<>();
         this.isActive = false;
+        
+        // Cargar configuración
+        loadConfig();
+    }
+    
+    /**
+     * Carga la configuración desde config.yml
+     */
+    private void loadConfig() {
+        @SuppressWarnings("unused")
+        FileConfiguration config = plugin.getConfig();
+        // Aquí se cargarían valores de configuración específicos si los hubiera
     }
     
     /**
      * Inicializa el sistema de daño por extremidades
      */
     public void initialize() {
+        // Verificar si el sistema está habilitado en la configuración
+        if (!plugin.getConfig().getBoolean("limb_damage.enabled", true)) {
+            plugin.getServer().getConsoleSender().sendMessage(ChatColor.YELLOW + "[Winterfall] Sistema de daño por extremidades deshabilitado en la configuración");
+            return;
+        }
+        
         if (!isActive) {
             plugin.getServer().getPluginManager().registerEvents(this, plugin);
             isActive = true;
@@ -430,5 +449,72 @@ public class LimbDamageSystem implements Listener {
         Map<LimbType, Integer> playerLimbDamage = limbDamage.get(playerId);
         
         return playerLimbDamage.getOrDefault(limbType, 0);
+    }
+    
+    /**
+     * Obtiene todos los niveles de daño de un jugador
+     * @param player Jugador a consultar
+     * @return Mapa con los niveles de daño de todas las extremidades
+     */
+    public Map<LimbType, Integer> getAllLimbDamageLevels(Player player) {
+        if (player == null) {
+            return null;
+        }
+        
+        UUID playerId = player.getUniqueId();
+        
+        if (!limbDamage.containsKey(playerId)) {
+            Map<LimbType, Integer> newDamageMap = new HashMap<>();
+            for (LimbType type : LimbType.values()) {
+                newDamageMap.put(type, 0);
+            }
+            return newDamageMap;
+        }
+        
+        // Crear una copia del mapa para evitar modificaciones externas
+        Map<LimbType, Integer> result = new HashMap<>(limbDamage.get(playerId));
+        
+        // Asegurar que todas las extremidades estén incluidas
+        for (LimbType type : LimbType.values()) {
+            if (!result.containsKey(type)) {
+                result.put(type, 0);
+            }
+        }
+        
+        return result;
+    }
+    
+    /**
+     * Establece todos los niveles de daño para un jugador
+     * @param player Jugador al que se le aplicarán los cambios
+     * @param damageLevels Mapa con los niveles de daño para cada extremidad
+     */
+    public void setAllLimbDamageLevels(Player player, Map<LimbType, Integer> damageLevels) {
+        if (player == null || damageLevels == null) {
+            return;
+        }
+        
+        UUID playerId = player.getUniqueId();
+        
+        // Crear un nuevo mapa para almacenar los valores
+        Map<LimbType, Integer> newDamageMap = new HashMap<>();
+        
+        // Copiar y validar cada nivel de daño
+        for (LimbType type : LimbType.values()) {
+            int level = damageLevels.containsKey(type) ? damageLevels.get(type) : 0;
+            newDamageMap.put(type, Math.max(0, Math.min(100, level)));
+        }
+        
+        // Actualizar todos los niveles
+        limbDamage.put(playerId, newDamageMap);
+        
+        // Aplicar efectos para cada extremidad si es necesario
+        for (LimbType type : LimbType.values()) {
+            int level = newDamageMap.get(type);
+            if (level > 0) {
+                DamageState state = getDamageState(level);
+                applyEffectsForLimbDamage(player, type, state);
+            }
+        }
     }
 }

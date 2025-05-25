@@ -6,6 +6,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.Sound;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -38,14 +39,15 @@ public class HydrationSystem implements Listener {
     private final Map<UUID, Integer> hydrationLevel;
     private boolean isActive;
     
-    // Constantes
-    private static final int MAX_HYDRATION = 20;
-    private static final int WATER_BOTTLE_HYDRATION = 6; // Cantidad de hidratación que da una botella de agua
-    private static final int HYDRATION_DAMAGE_THRESHOLD = 6; // Nivel por debajo del cual se empieza a recibir daño
+    // Constantes y configuraciones
+    private int MAX_HYDRATION;
+    private int WATER_BOTTLE_HYDRATION; // Cantidad de hidratación que da una botella de agua
+    private int HYDRATION_DAMAGE_THRESHOLD; // Nivel por debajo del cual se empieza a recibir daño
+    private int UPDATE_INTERVAL; // Intervalo de actualización en ticks
     
     // Factores de disminución (configurables)
-    private double normalDecreaseRate = 0.1; // Probabilidad base de disminución (10%)
-    private double activityDecreaseRate = 0.3; // Probabilidad de disminución durante actividad (30%)
+    private double normalDecreaseRate; // Probabilidad base de disminución
+    private double activityDecreaseRate; // Probabilidad de disminución durante actividad
     
     /**
      * Constructor del sistema de hidratación
@@ -55,12 +57,38 @@ public class HydrationSystem implements Listener {
         this.plugin = plugin;
         this.hydrationLevel = new HashMap<>();
         this.isActive = false;
+        
+        // Cargar configuración
+        loadConfig();
+    }
+    
+    /**
+     * Carga la configuración desde config.yml
+     */
+    private void loadConfig() {
+        FileConfiguration config = plugin.getConfig();
+        
+        // Cargar valores desde la configuración
+        MAX_HYDRATION = config.getInt("hydration.max_level", 20);
+        WATER_BOTTLE_HYDRATION = config.getInt("hydration.water_bottle_hydration", 6);
+        HYDRATION_DAMAGE_THRESHOLD = config.getInt("hydration.damage_threshold", 6);
+        UPDATE_INTERVAL = config.getInt("hydration.update_interval", 60);
+        
+        // Cargar tasas de disminución
+        normalDecreaseRate = config.getDouble("hydration.normal_decrease_rate", 0.1);
+        activityDecreaseRate = config.getDouble("hydration.activity_decrease_rate", 0.3);
     }
     
     /**
      * Inicializa el sistema de hidratación
      */
     public void initialize() {
+        // Verificar si el sistema está habilitado en la configuración
+        if (!plugin.getConfig().getBoolean("hydration.enabled", true)) {
+            Bukkit.getConsoleSender().sendMessage(ChatColor.YELLOW + "[Winterfall] Sistema de hidratación deshabilitado en la configuración");
+            return;
+        }
+        
         startHydrationSystem();
         isActive = true;
         
@@ -107,7 +135,7 @@ public class HydrationSystem implements Listener {
                     }
                 }
             }
-        }.runTaskTimer(plugin, 60L, 60L); // Ejecutar cada 3 segundos (60 ticks)
+        }.runTaskTimer(plugin, UPDATE_INTERVAL, UPDATE_INTERVAL); // Ejecutar según el intervalo configurado
     }
     
     /**
@@ -116,6 +144,11 @@ public class HydrationSystem implements Listener {
      * @param level Nivel de hidratación
      */
     private void applyDehydrationEffects(Player player, int level) {
+        // Verificar si el jugador tiene permiso para bypass
+        if (player.hasPermission("winterfall.bypass.water")) {
+            return; // No aplicar efectos si tiene el permiso
+        }
+        
         // Efectos según el nivel de hidratación
         if (level <= 0) {
             // Deshidratación severa: daño y efectos graves
@@ -154,6 +187,11 @@ public class HydrationSystem implements Listener {
      * @param amount Cantidad a disminuir
      */
     public void decreaseHydration(Player player, int amount) {
+        // Verificar si el jugador tiene permiso para bypass
+        if (player.hasPermission("winterfall.bypass.water")) {
+            return; // No disminuir hidratación si tiene el permiso
+        }
+        
         UUID playerId = player.getUniqueId();
         
         // Inicializar si es necesario
@@ -201,6 +239,8 @@ public class HydrationSystem implements Listener {
      * @return Nivel de hidratación (0-20)
      */
     public int getHydrationLevel(Player player) {
+        if (player == null) return 0;
+        
         UUID playerId = player.getUniqueId();
         
         // Inicializar si es necesario

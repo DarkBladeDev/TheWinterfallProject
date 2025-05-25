@@ -16,7 +16,7 @@ import java.util.Map;
 import java.util.Optional;
 
 /**
- * Gestor de ítems personalizados para "El Eternauta"
+ * Gestor de ítems personalizados del plugin
  */
 public class ItemManager {
 
@@ -66,26 +66,26 @@ public class ItemManager {
      */
     private void registerRecipes() {
         // Receta para el casco aislante
-        ShapedRecipe helmetRecipe = new ShapedRecipe(new NamespacedKey(plugin, "isolation_helmet"), basic_prot_mask.buildItem(1, Optional.empty(), Optional.empty()));
+        ShapedRecipe helmetRecipe = new ShapedRecipe(new NamespacedKey(plugin, "basic_prot_mask"), basic_prot_mask.buildItem(1, Optional.empty(), Optional.empty()));
         helmetRecipe.shape("WWW", "WGW", "   ");
         helmetRecipe.setIngredient('W', Material.WHITE_WOOL);
         helmetRecipe.setIngredient('G', Material.GLASS);
         Bukkit.addRecipe(helmetRecipe);
         
         // Receta para el peto aislante
-        ShapedRecipe chestplateRecipe = new ShapedRecipe(new NamespacedKey(plugin, "isolation_chestplate"), basic_prot_chestplate.buildItem(1, Optional.empty()));
+        ShapedRecipe chestplateRecipe = new ShapedRecipe(new NamespacedKey(plugin, "basic_prot_chestplate"), basic_prot_chestplate.buildItem(1, Optional.empty()));
         chestplateRecipe.shape("W W", "WWW", "WWW");
         chestplateRecipe.setIngredient('W', Material.WHITE_WOOL);
         Bukkit.addRecipe(chestplateRecipe);
         
         // Receta para las polainas aislantes
-        ShapedRecipe leggingsRecipe = new ShapedRecipe(new NamespacedKey(plugin, "isolation_leggings"), basic_prot_pants.buildItem(1, Optional.empty()));
+        ShapedRecipe leggingsRecipe = new ShapedRecipe(new NamespacedKey(plugin, "basic_prot_pants"), basic_prot_pants.buildItem(1, Optional.empty()));
         leggingsRecipe.shape("WWW", "W W", "W W");
         leggingsRecipe.setIngredient('W', Material.WHITE_WOOL);
         Bukkit.addRecipe(leggingsRecipe);
         
         // Receta para las botas aislantes
-        ShapedRecipe bootsRecipe = new ShapedRecipe(new NamespacedKey(plugin, "isolation_boots"), basic_prot_boots.buildItem(1, Optional.empty()));
+        ShapedRecipe bootsRecipe = new ShapedRecipe(new NamespacedKey(plugin, "basic_prot_boots"), basic_prot_boots.buildItem(1, Optional.empty()));
         bootsRecipe.shape("   ", "W W", "W W");
         bootsRecipe.setIngredient('W', Material.WHITE_WOOL);
         Bukkit.addRecipe(bootsRecipe);

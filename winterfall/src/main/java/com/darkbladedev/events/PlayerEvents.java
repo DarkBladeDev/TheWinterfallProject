@@ -4,7 +4,6 @@ import com.darkbladedev.WinterfallMain;
 import com.darkbladedev.mobs.MobManager;
 import com.darkbladedev.mechanics.LimbDamageSystem.LimbType;
 
-import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.entity.Entity;
@@ -19,6 +18,7 @@ import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -47,12 +47,21 @@ public class PlayerEvents implements Listener {
     public void onPlayerJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
         
-        // Mensaje de bienvenida temático
-        player.sendMessage(ChatColor.GRAY + "----------------------------------------");
-        player.sendMessage(ChatColor.AQUA + "Bienvenido a " + ChatColor.WHITE + Bukkit.getServer().getName());
-        player.sendMessage(ChatColor.YELLOW + "La nieve mortal ha comenzado a caer...");
-        player.sendMessage(ChatColor.RED + "¡Encuentra un traje aislante para sobrevivir!");
-        player.sendMessage(ChatColor.GRAY + "----------------------------------------");
+        // Cargar datos del jugador desde la base de datos
+        plugin.getDatabaseManager().loadPlayerData(player);
+        
+    }
+    
+    /**
+     * Maneja el evento de desconexión de un jugador
+     * @param event Evento de desconexión
+     */
+    @EventHandler
+    public void onPlayerQuit(PlayerQuitEvent event) {
+        Player player = event.getPlayer();
+        
+        // Guardar datos del jugador en la base de datos
+        plugin.getDatabaseManager().savePlayerData(player.getUniqueId());
     }
     
     /**
