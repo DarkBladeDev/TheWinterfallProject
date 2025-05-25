@@ -3,7 +3,7 @@ version: 1.0.0
 main: com.darkbladedev.WinterfallMain
 api-version: 1.21
 description: Plugin que recrea el mundo de "El Eternauta" con mecánicas, items y mobs realistas.
-authors: [DarkBladeDev]
+author: DarkBladeDev
 depend: [PlaceholderAPI]
 commands:
   winterfall:

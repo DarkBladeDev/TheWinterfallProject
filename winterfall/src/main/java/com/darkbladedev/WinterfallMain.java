@@ -11,9 +11,11 @@ import com.darkbladedev.mechanics.NutritionSystem;
 import com.darkbladedev.items.ItemManager;
 import com.darkbladedev.mobs.MobManager;
 import com.darkbladedev.placeholders.WinterfallPlaceholders;
+import com.ssomar.score.SCore;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -33,6 +35,8 @@ public class WinterfallMain extends JavaPlugin {
     private ItemManager itemManager;
     private MobManager mobManager;
     private WinterfallPlaceholders placeholders;
+    public static boolean hasExecutableItems = false;
+    public static final String NAME = "Winterfall";
     
     @Override
     public void onEnable() {
@@ -56,9 +60,18 @@ public class WinterfallMain extends JavaPlugin {
         } else {
             Bukkit.getConsoleSender().sendMessage(ChatColor.YELLOW + "[Winterfall] PlaceholderAPI no detectado. Los placeholders no estarán disponibles.");
         }
+
+
+        // INicializar EI-API
+        Plugin executableItems = Bukkit.getPluginManager().getPlugin("ExecutableItems");
+        if(executableItems != null && executableItems.isEnabled()) {
+            SCore.plugin.getServer().getLogger().info("["+NAME+"] ExecutableItems hooked !");
+            hasExecutableItems = true;
+            itemManager = new ItemManager(this);
+        }
         
         // Mensaje de inicio
-        Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN + "[Winterfall] El plugin ha sido activado! La nevada mortal comienza...");
+        Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN + "[Winterfall] El plugin ha sido activado!");
     }
 
     @Override

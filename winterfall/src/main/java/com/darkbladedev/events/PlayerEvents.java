@@ -183,7 +183,7 @@ public class PlayerEvents implements Listener {
      * Maneja el evento de muerte de entidades
      * @param event Evento de muerte
      */
-    @EventHandler
+    //@EventHandler
     public void onEntityDeath(EntityDeathEvent event) {
         LivingEntity entity = event.getEntity();
         
@@ -222,7 +222,7 @@ public class PlayerEvents implements Listener {
      * Maneja el evento de interacción del jugador
      * @param event Evento de interacción
      */
-    @EventHandler
+    //@EventHandler
     public void onPlayerInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
         ItemStack item = event.getItem();

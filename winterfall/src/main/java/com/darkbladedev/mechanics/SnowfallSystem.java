@@ -152,12 +152,12 @@ public class SnowfallSystem {
         // Nivel 11-15: Efectos graves (daño, ceguera)
         if (level >= 11) {
             player.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 60, 0));
-            player.damage(1.0); // 0.5 corazones de daño
+            player.damage(10.0); // 5 corazones de daño
         }
         
         // Nivel 16+: Efectos mortales (daño severo)
         if (level >= 16) {
-            player.damage(2.0); // 1 corazón de daño
+            player.damage(15.0); // 7.5 corazones de daño
             player.sendMessage(ChatColor.DARK_RED + "¡La nieve tóxica está penetrando en tu piel! ¡Necesitas protección urgentemente!");
         }
     }

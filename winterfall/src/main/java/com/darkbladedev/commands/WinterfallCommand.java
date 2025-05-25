@@ -9,14 +9,12 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 /**
- * Manejador de comandos para "El Eternauta"
+ * Manejador de comandos para TWFP
  * Permite a los jugadores interactuar con las funcionalidades del plugin
  * Implementa TabCompleter para proporcionar autocompletado de comandos
  */
@@ -49,10 +47,6 @@ public class WinterfallCommand implements CommandExecutor, TabCompleter {
         switch (args[0].toLowerCase()) {
             case "help":
                 showHelp(sender);
-                break;
-                
-            case "item":
-                handleItemCommand(sender, args);
                 break;
                 
             case "mob":
@@ -111,73 +105,17 @@ public class WinterfallCommand implements CommandExecutor, TabCompleter {
         sender.sendMessage(ChatColor.GRAY + "----------------------------------------");
         sender.sendMessage(ChatColor.AQUA + "Winterfall - El Eternauta" + ChatColor.GRAY + " - Comandos:");
         sender.sendMessage(ChatColor.YELLOW + "/winterfall help" + ChatColor.GRAY + " - Muestra esta ayuda");
-        sender.sendMessage(ChatColor.YELLOW + "/winterfall item <tipo>" + ChatColor.GRAY + " - Obtiene un ítem especial");
         sender.sendMessage(ChatColor.YELLOW + "/winterfall mob <tipo> [cantidad]" + ChatColor.GRAY + " - Genera mobs alienígenas");
         sender.sendMessage(ChatColor.YELLOW + "/winterfall snow <on/off>" + ChatColor.GRAY + " - Activa/desactiva la nevada tóxica");
         sender.sendMessage(ChatColor.YELLOW + "/winterfall radiation <on/off>" + ChatColor.GRAY + " - Activa/desactiva la radiación");
         sender.sendMessage(ChatColor.YELLOW + "/winterfall bleeding <cure> [jugador]" + ChatColor.GRAY + " - Cura el sangrado");
         sender.sendMessage(ChatColor.YELLOW + "/winterfall hydration <set/add/remove> <cantidad> [jugador]" + ChatColor.GRAY + " - Gestiona la hidratación");
         sender.sendMessage(ChatColor.YELLOW + "/winterfall nutrition <protein/fat/carbs/vitamins> <set/add/remove> <cantidad> [jugador]" + ChatColor.GRAY + " - Gestiona la nutrición");
-        sender.sendMessage(ChatColor.YELLOW + "/winterfall limb <set/heal> <extremidad> <nivel> [jugador]" + ChatColor.GRAY + " - Gestiona el daño de extremidades");
+        sender.sendMessage(ChatColor.YELLOW + "/winterfall limb <set/heal> <extremidad/all> <nivel> [jugador]" + ChatColor.GRAY + " - Gestiona el daño de extremidades");
         sender.sendMessage(ChatColor.YELLOW + "/winterfall status [jugador]" + ChatColor.GRAY + " - Muestra el estado físico del jugador");
         sender.sendMessage(ChatColor.YELLOW + "/winterfall hydrationrate <normal/activity> <tasa>" + ChatColor.GRAY + " - Ajusta la velocidad de disminución de hidratación");
         sender.sendMessage(ChatColor.YELLOW + "/winterfall nutritionrate <normal/activity> <tasa>" + ChatColor.GRAY + " - Ajusta la velocidad de disminución de nutrientes");
         sender.sendMessage(ChatColor.GRAY + "----------------------------------------");
-    }
-    
-    /**
-     * Maneja el subcomando "item"
-     * @param sender Remitente del comando
-     * @param args Argumentos del comando
-     */
-    private void handleItemCommand(CommandSender sender, String[] args) {
-        // Verificar si el remitente es un jugador
-        if (!(sender instanceof Player)) {
-            sender.sendMessage(ChatColor.RED + "Este comando solo puede ser ejecutado por un jugador.");
-            return;
-        }
-        
-        Player player = (Player) sender;
-        
-        // Verificar permisos
-        if (!player.hasPermission("winterfall.item")) {
-            player.sendMessage(ChatColor.RED + "No tienes permiso para usar este comando.");
-            return;
-        }
-        
-        // Verificar argumentos
-        if (args.length < 2) {
-            player.sendMessage(ChatColor.RED + "Uso: /winterfall item <tipo>");
-            player.sendMessage(ChatColor.GRAY + "Tipos disponibles: isolation_helmet, isolation_chestplate, isolation_leggings, isolation_boots, flamethrower, electric_gun, full_suit");
-            return;
-        }
-        
-        // Procesar tipo de ítem
-        String itemType = args[1].toLowerCase();
-        ItemStack item = null;
-        
-        if (itemType.equals("full_suit")) {
-            // Dar traje completo
-            player.getInventory().addItem(plugin.getItemManager().getItem("isolation_helmet"));
-            player.getInventory().addItem(plugin.getItemManager().getItem("isolation_chestplate"));
-            player.getInventory().addItem(plugin.getItemManager().getItem("isolation_leggings"));
-            player.getInventory().addItem(plugin.getItemManager().getItem("isolation_boots"));
-            player.sendMessage(ChatColor.GREEN + "Has recibido el traje aislante completo.");
-            return;
-        } else {
-            // Dar ítem individual
-            item = plugin.getItemManager().getItem(itemType);
-        }
-        
-        // Verificar si el ítem existe
-        if (item == null) {
-            player.sendMessage(ChatColor.RED + "El ítem especificado no existe.");
-            return;
-        }
-        
-        // Dar ítem al jugador
-        player.getInventory().addItem(item);
-        player.sendMessage(ChatColor.GREEN + "Has recibido el ítem: " + item.getItemMeta().getDisplayName());
     }
     
     /**
@@ -885,7 +823,7 @@ public class WinterfallCommand implements CommandExecutor, TabCompleter {
         // Verificar argumentos
         if (args.length < 4) {
             sender.sendMessage(ChatColor.RED + "Uso: /winterfall limb <set/heal> <extremidad> <nivel> [jugador]");
-            sender.sendMessage(ChatColor.YELLOW + "Extremidades disponibles: head, left_arm, right_arm, left_leg, right_leg");
+            sender.sendMessage(ChatColor.YELLOW + "Extremidades disponibles: head, left_arm, right_arm, left_leg, right_leg, all");
             return;
         }
         
@@ -899,26 +837,31 @@ public class WinterfallCommand implements CommandExecutor, TabCompleter {
         // Obtener tipo de extremidad
         String limbTypeStr = args[2].toLowerCase();
         com.darkbladedev.mechanics.LimbDamageSystem.LimbType limbType = null;
+        boolean isAllLimbs = false;
         
-        switch (limbTypeStr) {
-            case "head":
-                limbType = com.darkbladedev.mechanics.LimbDamageSystem.LimbType.HEAD;
-                break;
-            case "left_arm":
-                limbType = com.darkbladedev.mechanics.LimbDamageSystem.LimbType.LEFT_ARM;
-                break;
-            case "right_arm":
-                limbType = com.darkbladedev.mechanics.LimbDamageSystem.LimbType.RIGHT_ARM;
-                break;
-            case "left_leg":
-                limbType = com.darkbladedev.mechanics.LimbDamageSystem.LimbType.LEFT_LEG;
-                break;
-            case "right_leg":
-                limbType = com.darkbladedev.mechanics.LimbDamageSystem.LimbType.RIGHT_LEG;
-                break;
-            default:
-                sender.sendMessage(ChatColor.RED + "Extremidad inválida. Opciones: head, left_arm, right_arm, left_leg, right_leg");
-                return;
+        if (limbTypeStr.equals("all")) {
+            isAllLimbs = true;
+        } else {
+            switch (limbTypeStr) {
+                case "head":
+                    limbType = com.darkbladedev.mechanics.LimbDamageSystem.LimbType.HEAD;
+                    break;
+                case "left_arm":
+                    limbType = com.darkbladedev.mechanics.LimbDamageSystem.LimbType.LEFT_ARM;
+                    break;
+                case "right_arm":
+                    limbType = com.darkbladedev.mechanics.LimbDamageSystem.LimbType.RIGHT_ARM;
+                    break;
+                case "left_leg":
+                    limbType = com.darkbladedev.mechanics.LimbDamageSystem.LimbType.LEFT_LEG;
+                    break;
+                case "right_leg":
+                    limbType = com.darkbladedev.mechanics.LimbDamageSystem.LimbType.RIGHT_LEG;
+                    break;
+                default:
+                    sender.sendMessage(ChatColor.RED + "Extremidad inválida. Opciones: head, left_arm, right_arm, left_leg, right_leg, all");
+                    return;
+            }
         }
         
         // Determinar el jugador objetivo
@@ -953,11 +896,20 @@ public class WinterfallCommand implements CommandExecutor, TabCompleter {
         
         // Ejecutar la acción correspondiente
         if (action.equals("heal")) {
-            // Curar la extremidad
-            plugin.getLimbDamageSystem().healLimb(target, limbType);
-            
-            if (sender != target) {
-                sender.sendMessage(ChatColor.GREEN + "Has curado la " + limbType.getDisplayName() + " de " + target.getName() + ".");
+            if (isAllLimbs) {
+                // Curar todas las extremidades
+                plugin.getLimbDamageSystem().healAllLimbs(target);
+                
+                if (sender != target) {
+                    sender.sendMessage(ChatColor.GREEN + "Has curado todas las extremidades de " + target.getName() + ".");
+                }
+            } else {
+                // Curar una extremidad específica
+                plugin.getLimbDamageSystem().healLimb(target, limbType);
+                
+                if (sender != target) {
+                    sender.sendMessage(ChatColor.GREEN + "Has curado la " + limbType.getDisplayName() + " de " + target.getName() + ".");
+                }
             }
         } else { // action.equals("set")
             // Obtener nivel de daño
@@ -973,13 +925,27 @@ public class WinterfallCommand implements CommandExecutor, TabCompleter {
                 return;
             }
             
-            // Establecer el nivel de daño
-            com.darkbladedev.mechanics.LimbDamageSystem.DamageState newState = 
-                    plugin.getLimbDamageSystem().setLimbDamage(target, limbType, damageLevel);
-            
-            if (sender != target) {
-                sender.sendMessage(ChatColor.GREEN + "Has establecido el daño de la " + limbType.getDisplayName() + 
-                        " de " + target.getName() + " a " + damageLevel + "% (" + newState.getDisplayName() + ").");
+            if (isAllLimbs) {
+                // Establecer el nivel de daño para todas las extremidades
+                com.darkbladedev.mechanics.LimbDamageSystem.DamageState newState = null;
+                
+                for (com.darkbladedev.mechanics.LimbDamageSystem.LimbType limb : com.darkbladedev.mechanics.LimbDamageSystem.LimbType.values()) {
+                    newState = plugin.getLimbDamageSystem().setLimbDamage(target, limb, damageLevel);
+                }
+                
+                if (sender != target) {
+                    sender.sendMessage(ChatColor.GREEN + "Has establecido el daño de todas las extremidades de " + 
+                            target.getName() + " a " + damageLevel + "% (" + newState.getDisplayName() + ").");
+                }
+            } else {
+                // Establecer el nivel de daño para una extremidad específica
+                com.darkbladedev.mechanics.LimbDamageSystem.DamageState newState = 
+                        plugin.getLimbDamageSystem().setLimbDamage(target, limbType, damageLevel);
+                
+                if (sender != target) {
+                    sender.sendMessage(ChatColor.GREEN + "Has establecido el daño de la " + limbType.getDisplayName() + 
+                            " de " + target.getName() + " a " + damageLevel + "% (" + newState.getDisplayName() + ").");
+                }
             }
         }
     }
@@ -995,7 +961,7 @@ public class WinterfallCommand implements CommandExecutor, TabCompleter {
         
         // Autocompletar subcomandos
         if (args.length == 1) {
-            String[] subCommands = {"help", "item", "mob", "snow", "radiation", "bleeding", "hydration", "nutrition", "status", "limb", "hydrationrate", "nutritionrate"};
+            String[] subCommands = {"help", "mob", "snow", "radiation", "bleeding", "hydration", "nutrition", "status", "limb", "hydrationrate", "nutritionrate"};
             for (String subCommand : subCommands) {
                 if (subCommand.startsWith(args[0].toLowerCase())) {
                     completions.add(subCommand);
@@ -1007,17 +973,6 @@ public class WinterfallCommand implements CommandExecutor, TabCompleter {
         // Autocompletar argumentos según el subcomando
         if (args.length >= 2) {
             switch (args[0].toLowerCase()) {
-                case "item":
-                    if (args.length == 2) {
-                        String[] itemTypes = {"isolation_helmet", "isolation_chestplate", "isolation_leggings", "isolation_boots", "flamethrower", "electric_gun", "full_suit"};
-                        for (String itemType : itemTypes) {
-                            if (itemType.startsWith(args[1].toLowerCase())) {
-                                completions.add(itemType);
-                            }
-                        }
-                    }
-                    break;
-                    
                 case "mob":
                     if (args.length == 2) {
                         String[] mobTypes = {"mano", "cascarudo", "gurbo", "random"};
@@ -1142,7 +1097,7 @@ public class WinterfallCommand implements CommandExecutor, TabCompleter {
                     }
                     // Tercer argumento - tipo de extremidad
                     else if (args.length == 3) {
-                        String[] limbTypes = {"head", "left_arm", "right_arm", "left_leg", "right_leg"};
+                        String[] limbTypes = {"head", "left_arm", "right_arm", "left_leg", "right_leg", "all"};
                         for (String limbType : limbTypes) {
                             if (limbType.startsWith(args[2].toLowerCase())) {
                                 completions.add(limbType);

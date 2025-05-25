@@ -12,8 +12,6 @@ Este plugin recrea el mundo post-apocalíptico de la serie "El Eternauta" en Min
 
 ### Ítems Especiales
 - **Traje Aislante**: Conjunto de armadura que protege contra la nevada tóxica, similar al usado por Juan Salvo y sus compañeros.
-- **Lanzallamas**: Arma efectiva contra los Gurbos.
-- **Pistola Eléctrica**: Arma efectiva contra las Manos.
 
 ### Mobs Alienígenas
 - **Manos**: Invasores básicos, rápidos y letales.
