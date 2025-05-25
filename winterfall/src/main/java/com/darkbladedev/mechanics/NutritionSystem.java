@@ -41,6 +41,10 @@ public class NutritionSystem implements Listener {
     private static final int DEFAULT_NUTRIENT_LEVEL = 70;
     private static final int CRITICAL_NUTRIENT_LEVEL = 20;
     
+    // Factores de disminución (configurables)
+    private double normalDecreaseRate = 0.05; // Probabilidad base de disminución (5%)
+    private double activityDecreaseRate = 0.15; // Probabilidad de disminución durante actividad (15%)
+    
     /**
      * Tipos de nutrientes que maneja el sistema
      */
@@ -176,16 +180,16 @@ public class NutritionSystem implements Listener {
                     // Reducir nutrientes gradualmente
                     Map<NutrientType, Integer> nutrients = playerNutrients.get(playerId);
                     
-                    // Reducción basada en actividad
-                    double reductionFactor = 1.0;
-                    if (player.isSprinting()) {
-                        reductionFactor = 1.5; // Mayor consumo al correr
-                    }
-                    
                     // Aplicar reducción a cada nutriente
                     for (NutrientType type : NutrientType.values()) {
-                        // Probabilidad de reducción
-                        if (Math.random() < 0.15 * reductionFactor) { // 15% base, modificado por actividad
+                        // Probabilidad de reducción basada en actividad
+                        double currentRate = normalDecreaseRate;
+                        if (player.isSprinting()) {
+                            currentRate = activityDecreaseRate;
+                        }
+                        
+                        // Aplicar reducción según la tasa configurada
+                        if (Math.random() < currentRate) {
                             int currentLevel = nutrients.get(type);
                             int newLevel = Math.max(0, currentLevel - 1);
                             nutrients.put(type, newLevel);
@@ -463,21 +467,52 @@ public class NutritionSystem implements Listener {
     
     /**
      * Verifica si el sistema está activo
-     * @return true si está activo, false en caso contrario
+     * @return true si el sistema está activo, false en caso contrario
      */
     public boolean isActive() {
         return isActive;
     }
     
     /**
-     * Desactiva el sistema de nutrición
+     * Establece la tasa de disminución normal de nutrientes
+     * @param rate Tasa de disminución (0.0 - 1.0)
+     */
+    public void setNormalDecreaseRate(double rate) {
+        this.normalDecreaseRate = Math.max(0.0, Math.min(1.0, rate));
+    }
+    
+    /**
+     * Obtiene la tasa de disminución normal de nutrientes
+     * @return Tasa de disminución normal
+     */
+    public double getNormalDecreaseRate() {
+        return normalDecreaseRate;
+    }
+    
+    /**
+     * Establece la tasa de disminución de nutrientes durante actividad física
+     * @param rate Tasa de disminución (0.0 - 1.0)
+     */
+    public void setActivityDecreaseRate(double rate) {
+        this.activityDecreaseRate = Math.max(0.0, Math.min(1.0, rate));
+    }
+    
+    /**
+     * Obtiene la tasa de disminución de nutrientes durante actividad física
+     * @return Tasa de disminución durante actividad
+     */
+    public double getActivityDecreaseRate() {
+        return activityDecreaseRate;
+    }
+    
+    /**
+     * Detiene el sistema de nutrición
      */
     public void shutdown() {
         if (nutritionTask != null) {
             nutritionTask.cancel();
         }
-        
         isActive = false;
-        Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[Winterfall] Sistema de nutrición desactivado");
+        Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN + "[Winterfall] Sistema de nutrición desactivado");
     }
 }

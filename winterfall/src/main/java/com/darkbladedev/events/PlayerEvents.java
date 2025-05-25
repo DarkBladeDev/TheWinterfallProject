@@ -4,6 +4,7 @@ import com.darkbladedev.WinterfallMain;
 import com.darkbladedev.mobs.MobManager;
 import com.darkbladedev.mechanics.LimbDamageSystem.LimbType;
 
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.entity.Entity;
@@ -48,7 +49,7 @@ public class PlayerEvents implements Listener {
         
         // Mensaje de bienvenida temático
         player.sendMessage(ChatColor.GRAY + "----------------------------------------");
-        player.sendMessage(ChatColor.AQUA + "Bienvenido a " + ChatColor.WHITE + "El Eternauta");
+        player.sendMessage(ChatColor.AQUA + "Bienvenido a " + ChatColor.WHITE + Bukkit.getServer().getName());
         player.sendMessage(ChatColor.YELLOW + "La nieve mortal ha comenzado a caer...");
         player.sendMessage(ChatColor.RED + "¡Encuentra un traje aislante para sobrevivir!");
         player.sendMessage(ChatColor.GRAY + "----------------------------------------");
@@ -61,10 +62,6 @@ public class PlayerEvents implements Listener {
     @EventHandler
     public void onPlayerRespawn(PlayerRespawnEvent event) {
         Player player = event.getPlayer();
-        
-        // Mensaje de reaparición temático
-        player.sendMessage(ChatColor.RED + "Has muerto en el mundo post-apocalíptico de El Eternauta.");
-        player.sendMessage(ChatColor.YELLOW + "La lucha contra los invasores continúa...");
         
         // Curar todas las extremidades al reaparecer
         if (plugin.getLimbDamageSystem().isActive()) {

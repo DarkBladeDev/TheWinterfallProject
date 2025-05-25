@@ -162,23 +162,32 @@ public class WinterfallPlaceholders extends PlaceholderExpansion {
 
         // Placeholders de daño de extremidades
         if (identifier.startsWith("limb_")) {
-            String limbType = identifier.substring(5);
+            String fullIdentifier = identifier.substring(5);
+            String[] parts = fullIdentifier.split("_");
+            
+            String limbTypeStr = parts[0];
+            boolean isLevel = parts.length > 1 && parts[1].equals("level");
+            
             LimbDamageSystem.LimbType type = null;
             
-            switch (limbType) {
+            switch (limbTypeStr) {
                 case "head":
                     type = LimbDamageSystem.LimbType.HEAD;
                     break;
                 case "left_arm":
+                case "leftarm":
                     type = LimbDamageSystem.LimbType.LEFT_ARM;
                     break;
                 case "right_arm":
+                case "rightarm":
                     type = LimbDamageSystem.LimbType.RIGHT_ARM;
                     break;
                 case "left_leg":
+                case "leftleg":
                     type = LimbDamageSystem.LimbType.LEFT_LEG;
                     break;
                 case "right_leg":
+                case "rightleg":
                     type = LimbDamageSystem.LimbType.RIGHT_LEG;
                     break;
                 default:
@@ -186,8 +195,14 @@ public class WinterfallPlaceholders extends PlaceholderExpansion {
             }
             
             if (type != null) {
-                LimbDamageSystem.DamageState state = limbDamageSystem.getLimbDamageState(player, type);
-                return state.getDisplayName();
+                if (isLevel) {
+                    // Devolver el nivel numérico de daño
+                    return String.valueOf(limbDamageSystem.getLimbDamageLevel(player, type));
+                } else {
+                    // Devolver el estado de daño como texto
+                    LimbDamageSystem.DamageState state = limbDamageSystem.getLimbDamageState(player, type);
+                    return state.getDisplayName();
+                }
             }
             return "";
         }

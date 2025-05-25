@@ -43,6 +43,10 @@ public class HydrationSystem implements Listener {
     private static final int WATER_BOTTLE_HYDRATION = 6; // Cantidad de hidratación que da una botella de agua
     private static final int HYDRATION_DAMAGE_THRESHOLD = 6; // Nivel por debajo del cual se empieza a recibir daño
     
+    // Factores de disminución (configurables)
+    private double normalDecreaseRate = 0.1; // Probabilidad base de disminución (10%)
+    private double activityDecreaseRate = 0.3; // Probabilidad de disminución durante actividad (30%)
+    
     /**
      * Constructor del sistema de hidratación
      * @param plugin Instancia del plugin principal
@@ -87,12 +91,12 @@ public class HydrationSystem implements Listener {
                     // Reducir hidratación basado en actividad
                     if (player.isSprinting() || (player.isFlying() && player.getGameMode().equals(org.bukkit.GameMode.SURVIVAL))) {
                         // Reducir más rápido si está corriendo o saltando
-                        if (Math.random() < 0.3) { // 30% de probabilidad
+                        if (Math.random() < activityDecreaseRate) {
                             decreaseHydration(player, 1);
                         }
                     } else {
-                        // Reducción normal cada 30 segundos aproximadamente
-                        if (Math.random() < 0.1) { // 10% de probabilidad
+                        // Reducción normal
+                        if (Math.random() < normalDecreaseRate) {
                             decreaseHydration(player, 1);
                         }
                     }
@@ -310,22 +314,53 @@ public class HydrationSystem implements Listener {
     
     /**
      * Verifica si el sistema está activo
-     * @return true si está activo, false en caso contrario
+     * @return true si el sistema está activo, false en caso contrario
      */
     public boolean isActive() {
         return isActive;
     }
     
     /**
-     * Desactiva el sistema de hidratación
+     * Establece la tasa de disminución normal de hidratación
+     * @param rate Tasa de disminución (0.0 - 1.0)
+     */
+    public void setNormalDecreaseRate(double rate) {
+        this.normalDecreaseRate = Math.max(0.0, Math.min(1.0, rate));
+    }
+    
+    /**
+     * Obtiene la tasa de disminución normal de hidratación
+     * @return Tasa de disminución normal
+     */
+    public double getNormalDecreaseRate() {
+        return normalDecreaseRate;
+    }
+    
+    /**
+     * Establece la tasa de disminución de hidratación durante actividad física
+     * @param rate Tasa de disminución (0.0 - 1.0)
+     */
+    public void setActivityDecreaseRate(double rate) {
+        this.activityDecreaseRate = Math.max(0.0, Math.min(1.0, rate));
+    }
+    
+    /**
+     * Obtiene la tasa de disminución de hidratación durante actividad física
+     * @return Tasa de disminución durante actividad
+     */
+    public double getActivityDecreaseRate() {
+        return activityDecreaseRate;
+    }
+    
+    /**
+     * Detiene el sistema de hidratación
      */
     public void shutdown() {
         if (hydrationTask != null) {
             hydrationTask.cancel();
         }
-        
         isActive = false;
-        Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[Winterfall] Sistema de hidratación desactivado");
+        Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA + "[Winterfall] Sistema de hidratación desactivado");
     }
 
     /**

@@ -55,7 +55,6 @@ Este plugin recrea el mundo post-apocalíptico de la serie "El Eternauta" en Min
 ## Recomendaciones
 - Para una experiencia más inmersiva, se recomienda jugar en modo supervivencia
 - Configura el clima del servidor para que sea lluvioso o nevado permanentemente
-- Utiliza un paquete de recursos con texturas post-apocalípticas
 
 ## Créditos
 - Plugin desarrollado por DarkBladeDev

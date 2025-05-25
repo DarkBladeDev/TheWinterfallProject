@@ -83,6 +83,18 @@ public class WinterfallCommand implements CommandExecutor, TabCompleter {
                 handleNutritionCommand(sender, args);
                 break;
                 
+            case "limb":
+                handleLimbCommand(sender, args);
+                break;
+                
+            case "hydrationrate":
+                handleHydrationRateCommand(sender, args);
+                break;
+                
+            case "nutritionrate":
+                handleNutritionRateCommand(sender, args);
+                break;
+                
             default:
                 sender.sendMessage(ChatColor.RED + "Subcomando desconocido. Usa /winterfall help para ver los comandos disponibles.");
                 break;
@@ -106,7 +118,10 @@ public class WinterfallCommand implements CommandExecutor, TabCompleter {
         sender.sendMessage(ChatColor.YELLOW + "/winterfall bleeding <cure> [jugador]" + ChatColor.GRAY + " - Cura el sangrado");
         sender.sendMessage(ChatColor.YELLOW + "/winterfall hydration <set/add/remove> <cantidad> [jugador]" + ChatColor.GRAY + " - Gestiona la hidratación");
         sender.sendMessage(ChatColor.YELLOW + "/winterfall nutrition <protein/fat/carbs/vitamins> <set/add/remove> <cantidad> [jugador]" + ChatColor.GRAY + " - Gestiona la nutrición");
+        sender.sendMessage(ChatColor.YELLOW + "/winterfall limb <set/heal> <extremidad> <nivel> [jugador]" + ChatColor.GRAY + " - Gestiona el daño de extremidades");
         sender.sendMessage(ChatColor.YELLOW + "/winterfall status [jugador]" + ChatColor.GRAY + " - Muestra el estado físico del jugador");
+        sender.sendMessage(ChatColor.YELLOW + "/winterfall hydrationrate <normal/activity> <tasa>" + ChatColor.GRAY + " - Ajusta la velocidad de disminución de hidratación");
+        sender.sendMessage(ChatColor.YELLOW + "/winterfall nutritionrate <normal/activity> <tasa>" + ChatColor.GRAY + " - Ajusta la velocidad de disminución de nutrientes");
         sender.sendMessage(ChatColor.GRAY + "----------------------------------------");
     }
     
@@ -733,6 +748,242 @@ public class WinterfallCommand implements CommandExecutor, TabCompleter {
         }
     }
     
+    /**
+     * Maneja el subcomando "hydrationrate"
+     * @param sender Remitente del comando
+     * @param args Argumentos del comando
+     */
+    private void handleHydrationRateCommand(CommandSender sender, String[] args) {
+        // Verificar permisos
+        if (!sender.hasPermission("winterfall.admin")) {
+            sender.sendMessage(ChatColor.RED + "No tienes permiso para usar este comando.");
+            return;
+        }
+        
+        // Verificar si el sistema está activo
+        if (!plugin.getHydrationSystem().isActive()) {
+            sender.sendMessage(ChatColor.RED + "El sistema de hidratación no está activo.");
+            return;
+        }
+        
+        // Mostrar tasas actuales si no hay suficientes argumentos
+        if (args.length < 3) {
+            double normalRate = plugin.getHydrationSystem().getNormalDecreaseRate();
+            double activityRate = plugin.getHydrationSystem().getActivityDecreaseRate();
+            
+            sender.sendMessage(ChatColor.YELLOW + "Tasas de disminución de hidratación actuales:");
+            sender.sendMessage(ChatColor.AQUA + "  Normal: " + ChatColor.WHITE + normalRate + " (" + (normalRate * 100) + "% por tick)");
+            sender.sendMessage(ChatColor.AQUA + "  Actividad: " + ChatColor.WHITE + activityRate + " (" + (activityRate * 100) + "% por tick)");
+            sender.sendMessage(ChatColor.YELLOW + "Uso: /winterfall hydrationrate <normal/activity> <tasa>");
+            sender.sendMessage(ChatColor.GRAY + "La tasa debe ser un número entre 0.0 y 1.0");
+            return;
+        }
+        
+        // Obtener tipo de tasa
+        String rateType = args[1].toLowerCase();
+        if (!rateType.equals("normal") && !rateType.equals("activity")) {
+            sender.sendMessage(ChatColor.RED + "Tipo de tasa inválido. Usa normal o activity.");
+            return;
+        }
+        
+        // Obtener valor de tasa
+        double rate;
+        try {
+            rate = Double.parseDouble(args[2]);
+            if (rate < 0.0 || rate > 1.0) {
+                sender.sendMessage(ChatColor.RED + "La tasa debe estar entre 0.0 y 1.0.");
+                return;
+            }
+        } catch (NumberFormatException e) {
+            sender.sendMessage(ChatColor.RED + "La tasa debe ser un número válido.");
+            return;
+        }
+        
+        // Aplicar cambio según el tipo
+        if (rateType.equals("normal")) {
+            plugin.getHydrationSystem().setNormalDecreaseRate(rate);
+            sender.sendMessage(ChatColor.GREEN + "Tasa de disminución normal de hidratación establecida a " + rate + " (" + (rate * 100) + "% por tick).");
+        } else {
+            plugin.getHydrationSystem().setActivityDecreaseRate(rate);
+            sender.sendMessage(ChatColor.GREEN + "Tasa de disminución de hidratación durante actividad establecida a " + rate + " (" + (rate * 100) + "% por tick).");
+        }
+    }
+    
+    /**
+     * Maneja el subcomando "nutritionrate"
+     * @param sender Remitente del comando
+     * @param args Argumentos del comando
+     */
+    private void handleNutritionRateCommand(CommandSender sender, String[] args) {
+        // Verificar permisos
+        if (!sender.hasPermission("winterfall.admin")) {
+            sender.sendMessage(ChatColor.RED + "No tienes permiso para usar este comando.");
+            return;
+        }
+        
+        // Verificar si el sistema está activo
+        if (!plugin.getNutritionSystem().isActive()) {
+            sender.sendMessage(ChatColor.RED + "El sistema de nutrición no está activo.");
+            return;
+        }
+        
+        // Mostrar tasas actuales si no hay suficientes argumentos
+        if (args.length < 3) {
+            double normalRate = plugin.getNutritionSystem().getNormalDecreaseRate();
+            double activityRate = plugin.getNutritionSystem().getActivityDecreaseRate();
+            
+            sender.sendMessage(ChatColor.YELLOW + "Tasas de disminución de nutrientes actuales:");
+            sender.sendMessage(ChatColor.GREEN + "  Normal: " + ChatColor.WHITE + normalRate + " (" + (normalRate * 100) + "% por tick)");
+            sender.sendMessage(ChatColor.GREEN + "  Actividad: " + ChatColor.WHITE + activityRate + " (" + (activityRate * 100) + "% por tick)");
+            sender.sendMessage(ChatColor.YELLOW + "Uso: /winterfall nutritionrate <normal/activity> <tasa>");
+            sender.sendMessage(ChatColor.GRAY + "La tasa debe ser un número entre 0.0 y 1.0");
+            return;
+        }
+        
+        // Obtener tipo de tasa
+        String rateType = args[1].toLowerCase();
+        if (!rateType.equals("normal") && !rateType.equals("activity")) {
+            sender.sendMessage(ChatColor.RED + "Tipo de tasa inválido. Usa normal o activity.");
+            return;
+        }
+        
+        // Obtener valor de tasa
+        double rate;
+        try {
+            rate = Double.parseDouble(args[2]);
+            if (rate < 0.0 || rate > 1.0) {
+                sender.sendMessage(ChatColor.RED + "La tasa debe estar entre 0.0 y 1.0.");
+                return;
+            }
+        } catch (NumberFormatException e) {
+            sender.sendMessage(ChatColor.RED + "La tasa debe ser un número válido.");
+            return;
+        }
+        
+        // Aplicar cambio según el tipo
+        if (rateType.equals("normal")) {
+            plugin.getNutritionSystem().setNormalDecreaseRate(rate);
+            sender.sendMessage(ChatColor.GREEN + "Tasa de disminución normal de nutrientes establecida a " + rate + " (" + (rate * 100) + "% por tick).");
+        } else {
+            plugin.getNutritionSystem().setActivityDecreaseRate(rate);
+            sender.sendMessage(ChatColor.GREEN + "Tasa de disminución de nutrientes durante actividad establecida a " + rate + " (" + (rate * 100) + "% por tick).");
+        }
+    }
+    
+    /**
+     * Maneja el subcomando "limb" para manipular el estado de daño de extremidades
+     * @param sender Remitente del comando
+     * @param args Argumentos del comando
+     */
+    private void handleLimbCommand(CommandSender sender, String[] args) {
+        // Verificar permisos
+        if (!sender.hasPermission("winterfall.limb")) {
+            sender.sendMessage(ChatColor.RED + "No tienes permiso para usar este comando.");
+            return;
+        }
+        
+        // Verificar argumentos
+        if (args.length < 4) {
+            sender.sendMessage(ChatColor.RED + "Uso: /winterfall limb <set/heal> <extremidad> <nivel> [jugador]");
+            sender.sendMessage(ChatColor.YELLOW + "Extremidades disponibles: head, left_arm, right_arm, left_leg, right_leg");
+            return;
+        }
+        
+        // Obtener acción
+        String action = args[1].toLowerCase();
+        if (!action.equals("set") && !action.equals("heal")) {
+            sender.sendMessage(ChatColor.RED + "Acción inválida. Usa set o heal.");
+            return;
+        }
+        
+        // Obtener tipo de extremidad
+        String limbTypeStr = args[2].toLowerCase();
+        com.darkbladedev.mechanics.LimbDamageSystem.LimbType limbType = null;
+        
+        switch (limbTypeStr) {
+            case "head":
+                limbType = com.darkbladedev.mechanics.LimbDamageSystem.LimbType.HEAD;
+                break;
+            case "left_arm":
+                limbType = com.darkbladedev.mechanics.LimbDamageSystem.LimbType.LEFT_ARM;
+                break;
+            case "right_arm":
+                limbType = com.darkbladedev.mechanics.LimbDamageSystem.LimbType.RIGHT_ARM;
+                break;
+            case "left_leg":
+                limbType = com.darkbladedev.mechanics.LimbDamageSystem.LimbType.LEFT_LEG;
+                break;
+            case "right_leg":
+                limbType = com.darkbladedev.mechanics.LimbDamageSystem.LimbType.RIGHT_LEG;
+                break;
+            default:
+                sender.sendMessage(ChatColor.RED + "Extremidad inválida. Opciones: head, left_arm, right_arm, left_leg, right_leg");
+                return;
+        }
+        
+        // Determinar el jugador objetivo
+        Player target;
+        if (args.length >= 5) {
+            // Modificar extremidad de un jugador específico (requiere permiso adicional)
+            if (!sender.hasPermission("winterfall.limb.others")) {
+                sender.sendMessage(ChatColor.RED + "No tienes permiso para modificar las extremidades de otros jugadores.");
+                return;
+            }
+            
+            String playerName = args[4];
+            target = Bukkit.getPlayer(playerName);
+            
+            if (target == null) {
+                sender.sendMessage(ChatColor.RED + "Jugador no encontrado: " + playerName);
+                return;
+            }
+        } else if (sender instanceof Player) {
+            // Modificar extremidad propia
+            target = (Player) sender;
+        } else {
+            sender.sendMessage(ChatColor.RED + "Debes especificar un jugador cuando ejecutas desde la consola.");
+            return;
+        }
+        
+        // Verificar si el sistema está activo
+        if (!plugin.getLimbDamageSystem().isActive()) {
+            sender.sendMessage(ChatColor.RED + "El sistema de daño de extremidades está desactivado.");
+            return;
+        }
+        
+        // Ejecutar la acción correspondiente
+        if (action.equals("heal")) {
+            // Curar la extremidad
+            plugin.getLimbDamageSystem().healLimb(target, limbType);
+            
+            if (sender != target) {
+                sender.sendMessage(ChatColor.GREEN + "Has curado la " + limbType.getDisplayName() + " de " + target.getName() + ".");
+            }
+        } else { // action.equals("set")
+            // Obtener nivel de daño
+            int damageLevel;
+            try {
+                damageLevel = Integer.parseInt(args[3]);
+                if (damageLevel < 0 || damageLevel > 100) {
+                    sender.sendMessage(ChatColor.RED + "El nivel de daño debe estar entre 0 y 100.");
+                    return;
+                }
+            } catch (NumberFormatException e) {
+                sender.sendMessage(ChatColor.RED + "El nivel de daño debe ser un número válido.");
+                return;
+            }
+            
+            // Establecer el nivel de daño
+            com.darkbladedev.mechanics.LimbDamageSystem.DamageState newState = 
+                    plugin.getLimbDamageSystem().setLimbDamage(target, limbType, damageLevel);
+            
+            if (sender != target) {
+                sender.sendMessage(ChatColor.GREEN + "Has establecido el daño de la " + limbType.getDisplayName() + 
+                        " de " + target.getName() + " a " + damageLevel + "% (" + newState.getDisplayName() + ").");
+            }
+        }
+    }
+    
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
         List<String> completions = new ArrayList<>();
@@ -744,7 +995,7 @@ public class WinterfallCommand implements CommandExecutor, TabCompleter {
         
         // Autocompletar subcomandos
         if (args.length == 1) {
-            String[] subCommands = {"help", "item", "mob", "snow", "radiation", "bleeding", "hydration", "nutrition", "status"};
+            String[] subCommands = {"help", "item", "mob", "snow", "radiation", "bleeding", "hydration", "nutrition", "status", "limb", "hydrationrate", "nutritionrate"};
             for (String subCommand : subCommands) {
                 if (subCommand.startsWith(args[0].toLowerCase())) {
                     completions.add(subCommand);
@@ -874,6 +1125,75 @@ public class WinterfallCommand implements CommandExecutor, TabCompleter {
                         for (Player player : Bukkit.getOnlinePlayers()) {
                             if (player.getName().toLowerCase().startsWith(args[4].toLowerCase())) {
                                 completions.add(player.getName());
+                            }
+                        }
+                    }
+                    break;
+                    
+                case "limb":
+                    // Segundo argumento - acción
+                    if (args.length == 2) {
+                        String[] actions = {"set", "heal"};
+                        for (String action : actions) {
+                            if (action.startsWith(args[1].toLowerCase())) {
+                                completions.add(action);
+                            }
+                        }
+                    }
+                    // Tercer argumento - tipo de extremidad
+                    else if (args.length == 3) {
+                        String[] limbTypes = {"head", "left_arm", "right_arm", "left_leg", "right_leg"};
+                        for (String limbType : limbTypes) {
+                            if (limbType.startsWith(args[2].toLowerCase())) {
+                                completions.add(limbType);
+                            }
+                        }
+                    }
+                    // Cuarto argumento - nivel de daño (solo para set) o nombre de jugador
+                    else if (args.length == 4) {
+                        if (args[1].equalsIgnoreCase("set")) {
+                            String[] levels = {"0", "25", "50", "75", "100"};
+                            for (String level : levels) {
+                                if (level.startsWith(args[3])) {
+                                    completions.add(level);
+                                }
+                            }
+                        } else {
+                            // Autocompletar nombres de jugadores
+                            for (Player player : Bukkit.getOnlinePlayers()) {
+                                if (player.getName().toLowerCase().startsWith(args[3].toLowerCase())) {
+                                    completions.add(player.getName());
+                                }
+                            }
+                        }
+                    }
+                    // Quinto argumento - nombre de jugador (solo para set)
+                    else if (args.length == 5 && args[1].equalsIgnoreCase("set")) {
+                        for (Player player : Bukkit.getOnlinePlayers()) {
+                            if (player.getName().toLowerCase().startsWith(args[4].toLowerCase())) {
+                                completions.add(player.getName());
+                            }
+                        }
+                    }
+                    break;
+                    
+                case "hydrationrate":
+                case "nutritionrate":
+                    // Segundo argumento - tipo de tasa
+                    if (args.length == 2) {
+                        String[] rateTypes = {"normal", "activity"};
+                        for (String rateType : rateTypes) {
+                            if (rateType.startsWith(args[1].toLowerCase())) {
+                                completions.add(rateType);
+                            }
+                        }
+                    }
+                    // Tercer argumento - valor de tasa
+                    else if (args.length == 3) {
+                        String[] rates = {"0.05", "0.1", "0.15", "0.2", "0.3", "0.5"};
+                        for (String rate : rates) {
+                            if (rate.startsWith(args[2])) {
+                                completions.add(rate);
                             }
                         }
                     }

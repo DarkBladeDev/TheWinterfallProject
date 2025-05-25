@@ -47,9 +47,9 @@ public class LimbDamageSystem implements Listener {
     // Estados de daño
     public enum DamageState {
         HEALTHY(0, ChatColor.GREEN + "Sano"),
-        INJURED(1, ChatColor.YELLOW + "Herido"),
-        SEVERELY_INJURED(2, ChatColor.RED + "Gravemente Herido"),
-        DISABLED(3, ChatColor.DARK_RED + "Inutilizado");
+        DAMAGED(1, ChatColor.YELLOW + "Herido"),
+        CRITICAL(2, ChatColor.RED + "Crítico"),
+        BROKEN(3, ChatColor.DARK_RED + "Roto");
         
         private final int level;
         private final String displayName;
@@ -199,7 +199,7 @@ public class LimbDamageSystem implements Listener {
         int currentDamage = playerLimbDamage.get(limbType);
         int damageToAdd = (int) Math.ceil(damage / 4.0); // Convertir daño a niveles de daño de extremidad
         
-        int newDamage = Math.min(currentDamage + damageToAdd, DamageState.DISABLED.getLevel());
+        int newDamage = Math.min(currentDamage + damageToAdd, DamageState.BROKEN.getLevel());
         playerLimbDamage.put(limbType, newDamage);
         
         // Notificar al jugador si el estado de la extremidad ha cambiado
@@ -222,12 +222,12 @@ public class LimbDamageSystem implements Listener {
         switch (limbType) {
             case HEAD:
                 // Daño en la cabeza afecta la visión y causa náuseas
-                if (state == DamageState.INJURED) {
+                if (state == DamageState.DAMAGED) {
                     player.addPotionEffect(new PotionEffect(PotionEffectType.NAUSEA, 200, 0));
-                } else if (state == DamageState.SEVERELY_INJURED) {
+                } else if (state == DamageState.CRITICAL) {
                     player.addPotionEffect(new PotionEffect(PotionEffectType.NAUSEA, 400, 0));
                     player.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 100, 0));
-                } else if (state == DamageState.DISABLED) {
+                } else if (state == DamageState.BROKEN) {
                     player.addPotionEffect(new PotionEffect(PotionEffectType.NAUSEA, 600, 1));
                     player.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 200, 0));
                     player.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, 600, 1));
@@ -237,12 +237,12 @@ public class LimbDamageSystem implements Listener {
             case LEFT_ARM:
             case RIGHT_ARM:
                 // Daño en los brazos afecta la velocidad de ataque y minado
-                if (state == DamageState.INJURED) {
+                if (state == DamageState.DAMAGED) {
                     player.addPotionEffect(new PotionEffect(PotionEffectType.MINING_FATIGUE, 600, 0));
-                } else if (state == DamageState.SEVERELY_INJURED) {
+                } else if (state == DamageState.CRITICAL) {
                     player.addPotionEffect(new PotionEffect(PotionEffectType.MINING_FATIGUE, 1200, 1));
                     player.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, 1200, 0));
-                } else if (state == DamageState.DISABLED) {
+                } else if (state == DamageState.BROKEN) {
                     player.addPotionEffect(new PotionEffect(PotionEffectType.MINING_FATIGUE, 2400, 2));
                     player.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, 2400, 1));
                 }
@@ -251,14 +251,12 @@ public class LimbDamageSystem implements Listener {
             case LEFT_LEG:
             case RIGHT_LEG:
                 // Daño en las piernas afecta la velocidad de movimiento y salto
-                if (state == DamageState.INJURED) {
+                if (state == DamageState.DAMAGED) {
                     player.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 600, 0));
-                } else if (state == DamageState.SEVERELY_INJURED) {
+                } else if (state == DamageState.CRITICAL) {
                     player.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 1200, 1));
-                    player.addPotionEffect(new PotionEffect(PotionEffectType.JUMP_BOOST, 1200, 250));
-                } else if (state == DamageState.DISABLED) {
+                } else if (state == DamageState.BROKEN) {
                     player.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 2400, 3));
-                    player.addPotionEffect(new PotionEffect(PotionEffectType.JUMP_BOOST, 2400, 250));
                 }
                 break;
         }
@@ -344,5 +342,93 @@ public class LimbDamageSystem implements Listener {
         
         message.append(ChatColor.GRAY + "----------------------------------------");
         return message.toString();
+    }
+    
+    /**
+     * Establece el estado de daño de una extremidad específica
+     * @param player Jugador al que se le aplicará el cambio
+     * @param limbType Tipo de extremidad a modificar
+     * @param damageLevel Nivel de daño a establecer (0-100)
+     * @return Estado de daño resultante
+     */
+    public DamageState setLimbDamage(Player player, LimbType limbType, int damageLevel) {
+        if (player == null || limbType == null) {
+            return DamageState.HEALTHY;
+        }
+        
+        // Asegurar que el nivel de daño esté en el rango válido
+        damageLevel = Math.max(0, Math.min(100, damageLevel));
+        
+        UUID playerId = player.getUniqueId();
+        
+        // Inicializar el mapa de daño si no existe
+        if (!limbDamage.containsKey(playerId)) {
+            limbDamage.put(playerId, new java.util.HashMap<>());
+        }
+        
+        Map<LimbType, Integer> playerLimbDamage = limbDamage.get(playerId);
+        
+        // Establecer el nivel de daño
+        playerLimbDamage.put(limbType, damageLevel);
+        
+        // Aplicar efectos basados en el nuevo nivel de daño
+        DamageState newState = getDamageState(damageLevel);
+        applyEffectsForLimbDamage(player, limbType, newState);
+        
+        // Notificar al jugador sobre el cambio
+        String stateMessage;
+        if (newState == DamageState.HEALTHY) {
+            stateMessage = ChatColor.GREEN + "saludable";
+        } else if (newState == DamageState.DAMAGED) {
+            stateMessage = ChatColor.YELLOW + "lesionada";
+        } else if (newState == DamageState.BROKEN) {
+            stateMessage = ChatColor.RED + "fracturada";
+        } else {
+            stateMessage = ChatColor.DARK_RED + "crítica";
+        }
+        
+        player.sendMessage(ChatColor.YELLOW + "Tu " + limbType.getDisplayName() + " ahora está " + stateMessage + 
+                ChatColor.YELLOW + " (" + damageLevel + "%)");
+        
+        return newState;
+    }
+    
+    /**
+     * Determina el estado de daño basado en un nivel numérico
+     * @param damageLevel Nivel de daño (0-100)
+     * @return Estado de daño correspondiente
+     */
+    private DamageState getDamageState(int damageLevel) {
+        if (damageLevel < 30) {
+            return DamageState.HEALTHY;
+        } else if (damageLevel < 60) {
+            return DamageState.DAMAGED;
+        } else if (damageLevel < 90) {
+            return DamageState.BROKEN;
+        } else {
+            return DamageState.CRITICAL;
+        }
+    }
+    
+    /**
+     * Obtiene el nivel de daño numérico de una extremidad
+     * @param player Jugador a consultar
+     * @param limbType Tipo de extremidad
+     * @return Nivel de daño (0-100)
+     */
+    public int getLimbDamageLevel(Player player, LimbType limbType) {
+        if (player == null || limbType == null) {
+            return 0;
+        }
+        
+        UUID playerId = player.getUniqueId();
+        
+        if (!limbDamage.containsKey(playerId)) {
+            return 0;
+        }
+        
+        Map<LimbType, Integer> playerLimbDamage = limbDamage.get(playerId);
+        
+        return playerLimbDamage.getOrDefault(limbType, 0);
     }
 }
