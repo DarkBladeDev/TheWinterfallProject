@@ -302,7 +302,7 @@ public class HydrationSystem implements Listener {
      * Maneja el evento de consumo de items
      * @param event Evento de consumo
      */
-    @SuppressWarnings("deprecation")
+    @SuppressWarnings({ "deprecation", "removal" })
     @EventHandler(priority = EventPriority.NORMAL)
     public void onPlayerItemConsume(PlayerItemConsumeEvent event) {
         Player player = event.getPlayer();

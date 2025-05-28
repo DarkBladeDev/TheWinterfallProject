@@ -7,6 +7,7 @@ import com.darkbladedev.mechanics.NutritionSystem.NutrientType;
 import com.darkbladedev.mechanics.RadiationSystem;
 import com.darkbladedev.mechanics.BleedingSystem;
 import com.darkbladedev.mechanics.LimbDamageSystem;
+import com.darkbladedev.mechanics.TemperatureSystem;
 
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import org.bukkit.Bukkit;
@@ -28,6 +29,7 @@ public class WinterfallPlaceholders extends PlaceholderExpansion {
     private final RadiationSystem radiationSystem;
     private final BleedingSystem bleedingSystem;
     private final LimbDamageSystem limbDamageSystem;
+    private final TemperatureSystem temperatureSystem;
 
     /**
      * Constructor para los placeholders de Winterfall
@@ -40,6 +42,7 @@ public class WinterfallPlaceholders extends PlaceholderExpansion {
         this.radiationSystem = plugin.getRadiationSystem();
         this.bleedingSystem = plugin.getBleedingSystem();
         this.limbDamageSystem = plugin.getLimbDamageSystem();
+        this.temperatureSystem = plugin.getTemperatureSystem();
     }
 
     /**
@@ -205,6 +208,19 @@ public class WinterfallPlaceholders extends PlaceholderExpansion {
                 }
             }
             return "";
+        }
+
+        // Placeholders de temperatura
+        if (identifier.equals("temperature")) {
+            return String.valueOf(temperatureSystem.getTemperatureLevel(player));
+        }
+
+        if (identifier.equals("temperature_percent")) {
+            return String.valueOf(temperatureSystem.getTemperaturePercentage(player));
+        }
+
+        if (identifier.equals("temperature_bar")) {
+            return temperatureSystem.getTemperatureBar(player);
         }
 
         // Placeholder no reconocido

@@ -9,6 +9,8 @@ import com.darkbladedev.mechanics.RadiationSystem;
 import com.darkbladedev.mechanics.LimbDamageSystem;
 import com.darkbladedev.mechanics.HydrationSystem;
 import com.darkbladedev.mechanics.NutritionSystem;
+import com.darkbladedev.mechanics.StaminaSystem;
+import com.darkbladedev.mechanics.TemperatureSystem;
 import com.darkbladedev.items.ItemManager;
 import com.darkbladedev.mobs.MobManager;
 import com.darkbladedev.placeholders.WinterfallPlaceholders;
@@ -33,6 +35,8 @@ public class WinterfallMain extends JavaPlugin {
     private LimbDamageSystem limbDamageSystem;
     private HydrationSystem hydrationSystem;
     private NutritionSystem nutritionSystem;
+    private StaminaSystem staminaSystem;
+    private TemperatureSystem temperatureSystem;
     private DatabaseManager databaseManager;
     private ItemManager itemManager;
     private MobManager mobManager;
@@ -97,6 +101,12 @@ public class WinterfallMain extends JavaPlugin {
         if (nutritionSystem != null) {
             nutritionSystem.shutdown();
         }
+        if (staminaSystem != null) {
+            staminaSystem.shutdown();
+        }
+        if (temperatureSystem != null) {
+            temperatureSystem.shutdown();
+        }
         if (databaseManager != null) {
             databaseManager.shutdown();
         }
@@ -119,6 +129,8 @@ public class WinterfallMain extends JavaPlugin {
         limbDamageSystem = new LimbDamageSystem(this);
         hydrationSystem = new HydrationSystem(this);
         nutritionSystem = new NutritionSystem(this);
+        staminaSystem = new StaminaSystem(this);
+        temperatureSystem = new TemperatureSystem(this);
         
         // Inicializar gestores
         //itemManager = new ItemManager(this);
@@ -132,6 +144,8 @@ public class WinterfallMain extends JavaPlugin {
         limbDamageSystem.initialize();
         hydrationSystem.initialize();
         nutritionSystem.initialize();
+        staminaSystem.initialize();
+        temperatureSystem.initialize();
         databaseManager.initialize();
     }
     
@@ -230,5 +244,21 @@ public class WinterfallMain extends JavaPlugin {
      */
     public DatabaseManager getDatabaseManager() {
         return databaseManager;
+    }
+    
+    /**
+     * Obtiene el sistema de estamina
+     * @return Sistema de estamina
+     */
+    public StaminaSystem getStaminaSystem() {
+        return staminaSystem;
+    }
+    
+    /**
+     * Obtiene el sistema de temperatura
+     * @return Sistema de temperatura
+     */
+    public TemperatureSystem getTemperatureSystem() {
+        return temperatureSystem;
     }
 }

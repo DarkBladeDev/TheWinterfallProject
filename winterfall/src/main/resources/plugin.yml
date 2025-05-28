@@ -14,7 +14,10 @@ commands:
 permissions:
   winterfall.bypass.water:
     description: Permiso para bypasear el sistema de hidratación
-    default: op
+    default: false
   winterfall.bypass.nutrients:
     description: Permiso para bypasear el sistema de nutrición
-    default: op
+    default: false
+  winterfall.bypass.stamina:
+    description: Permiso para bypasear el sistema de estamina
+    default: false

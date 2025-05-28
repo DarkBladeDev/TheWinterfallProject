@@ -85,6 +85,24 @@ snow:
   # Intervalo de daño por congelación en ticks
   freezing_interval: 80
 
+stamina:
+  enabled: true
+  max_level: 20
+  recovery_amount: 1
+  decrease_amount: 1
+  effect_threshold: 6
+  update_interval: 20
+  recovery_rate: 0.3
+  decrease_rate: 0.5
+
+temperature:
+  enabled: true
+  updateInterval: 100
+  decreaseAmount: 1
+  increaseAmount: 2
+  decreaseRate: 0.8
+  increaseRate: 0.5
+
 # Configuración de permisos
 permissions:
   # Permiso para bypass de hidratación
