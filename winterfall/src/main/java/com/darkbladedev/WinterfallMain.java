@@ -3,6 +3,7 @@ package com.darkbladedev;
 import com.darkbladedev.commands.WinterfallCommand;
 import com.darkbladedev.database.DatabaseManager;
 import com.darkbladedev.events.PlayerEvents;
+import com.darkbladedev.integrations.PlaceholderAPIExpansion;
 import com.darkbladedev.mechanics.SnowfallSystem;
 import com.darkbladedev.mechanics.BleedingSystem;
 import com.darkbladedev.mechanics.RadiationSystem;
@@ -13,7 +14,6 @@ import com.darkbladedev.mechanics.StaminaSystem;
 import com.darkbladedev.mechanics.TemperatureSystem;
 import com.darkbladedev.items.ItemManager;
 import com.darkbladedev.mobs.MobManager;
-import com.darkbladedev.placeholders.WinterfallPlaceholders;
 import com.ssomar.score.SCore;
 
 import org.bukkit.Bukkit;
@@ -40,7 +40,7 @@ public class WinterfallMain extends JavaPlugin {
     private DatabaseManager databaseManager;
     private ItemManager itemManager;
     private MobManager mobManager;
-    private WinterfallPlaceholders placeholders;
+    private PlaceholderAPIExpansion placeholders;
     public static boolean hasExecutableItems = false;
     public static final String NAME = "Winterfall";
     
@@ -60,7 +60,7 @@ public class WinterfallMain extends JavaPlugin {
         
         // Registrar placeholders si PlaceholderAPI está presente
         if (Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null) {
-            placeholders = new WinterfallPlaceholders(this);
+            placeholders = new PlaceholderAPIExpansion(this);
             placeholders.register();
             Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN + "[Winterfall] PlaceholderAPI detectado y placeholders registrados");
         } else {

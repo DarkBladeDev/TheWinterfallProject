@@ -1,4 +1,4 @@
-package com.darkbladedev.placeholders;
+package com.darkbladedev.integrations;
 
 import com.darkbladedev.WinterfallMain;
 import com.darkbladedev.mechanics.HydrationSystem;
@@ -21,7 +21,7 @@ import org.bukkit.entity.Player;
  * Permite mostrar información de hidratación, nutrición, radiación, sangrado y daño de extremidades
  * en otros plugins compatibles con PlaceholderAPI
  */
-public class WinterfallPlaceholders extends PlaceholderExpansion {
+public class PlaceholderAPIExpansion extends PlaceholderExpansion {
 
     @SuppressWarnings("unused")
     private final WinterfallMain plugin;
@@ -37,7 +37,7 @@ public class WinterfallPlaceholders extends PlaceholderExpansion {
      * Constructor para los placeholders de Winterfall
      * @param plugin Instancia del plugin principal
      */
-    public WinterfallPlaceholders(WinterfallMain plugin) {
+    public PlaceholderAPIExpansion(WinterfallMain plugin) {
         this.plugin = plugin;
         this.hydrationSystem = plugin.getHydrationSystem();
         this.nutritionSystem = plugin.getNutritionSystem();
