@@ -81,12 +81,27 @@ public class WinterfallCommand implements CommandExecutor, TabCompleter {
                 handleLimbCommand(sender, args);
                 break;
                 
+            case "config":
+                handleConfigCommand(sender, args);
+                break;
+                
+            // Mantener compatibilidad con comandos antiguos
             case "hydrationrate":
-                handleHydrationRateCommand(sender, args);
+                sender.sendMessage(ChatColor.YELLOW + "Este comando está obsoleto. Usa /winterfall config hydration-rate en su lugar.");
+                String[] newArgs = new String[args.length + 1];
+                newArgs[0] = "config";
+                newArgs[1] = "hydration-rate";
+                System.arraycopy(args, 1, newArgs, 2, args.length - 1);
+                handleConfigCommand(sender, newArgs);
                 break;
                 
             case "nutritionrate":
-                handleNutritionRateCommand(sender, args);
+                sender.sendMessage(ChatColor.YELLOW + "Este comando está obsoleto. Usa /winterfall config nutrition-rate en su lugar.");
+                String[] newArgs2 = new String[args.length + 1];
+                newArgs2[0] = "config";
+                newArgs2[1] = "nutrition-rate";
+                System.arraycopy(args, 1, newArgs2, 2, args.length - 1);
+                handleConfigCommand(sender, newArgs2);
                 break;
                 
             default:
@@ -113,8 +128,8 @@ public class WinterfallCommand implements CommandExecutor, TabCompleter {
         sender.sendMessage(ChatColor.YELLOW + "/winterfall nutrition <protein/fat/carbs/vitamins> <set/add/remove> <cantidad> [jugador]" + ChatColor.GRAY + " - Gestiona la nutrición");
         sender.sendMessage(ChatColor.YELLOW + "/winterfall limb <set/heal> <extremidad/all> <nivel> [jugador]" + ChatColor.GRAY + " - Gestiona el daño de extremidades");
         sender.sendMessage(ChatColor.YELLOW + "/winterfall status [jugador]" + ChatColor.GRAY + " - Muestra el estado físico del jugador");
-        sender.sendMessage(ChatColor.YELLOW + "/winterfall hydrationrate <normal/activity> <tasa>" + ChatColor.GRAY + " - Ajusta la velocidad de disminución de hidratación");
-        sender.sendMessage(ChatColor.YELLOW + "/winterfall nutritionrate <normal/activity> <tasa>" + ChatColor.GRAY + " - Ajusta la velocidad de disminución de nutrientes");
+        sender.sendMessage(ChatColor.YELLOW + "/winterfall config hydration-rate <normal/activity> <tasa>" + ChatColor.GRAY + " - Ajusta la velocidad de disminución de hidratación");
+        sender.sendMessage(ChatColor.YELLOW + "/winterfall config nutrition-rate <normal/activity> <tasa>" + ChatColor.GRAY + " - Ajusta la velocidad de disminución de nutrientes");
         sender.sendMessage(ChatColor.GRAY + "----------------------------------------");
     }
     
@@ -687,128 +702,6 @@ public class WinterfallCommand implements CommandExecutor, TabCompleter {
     }
     
     /**
-     * Maneja el subcomando "hydrationrate"
-     * @param sender Remitente del comando
-     * @param args Argumentos del comando
-     */
-    private void handleHydrationRateCommand(CommandSender sender, String[] args) {
-        // Verificar permisos
-        if (!sender.hasPermission("winterfall.admin")) {
-            sender.sendMessage(ChatColor.RED + "No tienes permiso para usar este comando.");
-            return;
-        }
-        
-        // Verificar si el sistema está activo
-        if (!plugin.getHydrationSystem().isActive()) {
-            sender.sendMessage(ChatColor.RED + "El sistema de hidratación no está activo.");
-            return;
-        }
-        
-        // Mostrar tasas actuales si no hay suficientes argumentos
-        if (args.length < 3) {
-            double normalRate = plugin.getHydrationSystem().getNormalDecreaseRate();
-            double activityRate = plugin.getHydrationSystem().getActivityDecreaseRate();
-            
-            sender.sendMessage(ChatColor.YELLOW + "Tasas de disminución de hidratación actuales:");
-            sender.sendMessage(ChatColor.AQUA + "  Normal: " + ChatColor.WHITE + normalRate + " (" + (normalRate * 100) + "% por tick)");
-            sender.sendMessage(ChatColor.AQUA + "  Actividad: " + ChatColor.WHITE + activityRate + " (" + (activityRate * 100) + "% por tick)");
-            sender.sendMessage(ChatColor.YELLOW + "Uso: /winterfall hydrationrate <normal/activity> <tasa>");
-            sender.sendMessage(ChatColor.GRAY + "La tasa debe ser un número entre 0.0 y 1.0");
-            return;
-        }
-        
-        // Obtener tipo de tasa
-        String rateType = args[1].toLowerCase();
-        if (!rateType.equals("normal") && !rateType.equals("activity")) {
-            sender.sendMessage(ChatColor.RED + "Tipo de tasa inválido. Usa normal o activity.");
-            return;
-        }
-        
-        // Obtener valor de tasa
-        double rate;
-        try {
-            rate = Double.parseDouble(args[2]);
-            if (rate < 0.0 || rate > 1.0) {
-                sender.sendMessage(ChatColor.RED + "La tasa debe estar entre 0.0 y 1.0.");
-                return;
-            }
-        } catch (NumberFormatException e) {
-            sender.sendMessage(ChatColor.RED + "La tasa debe ser un número válido.");
-            return;
-        }
-        
-        // Aplicar cambio según el tipo
-        if (rateType.equals("normal")) {
-            plugin.getHydrationSystem().setNormalDecreaseRate(rate);
-            sender.sendMessage(ChatColor.GREEN + "Tasa de disminución normal de hidratación establecida a " + rate + " (" + (rate * 100) + "% por tick).");
-        } else {
-            plugin.getHydrationSystem().setActivityDecreaseRate(rate);
-            sender.sendMessage(ChatColor.GREEN + "Tasa de disminución de hidratación durante actividad establecida a " + rate + " (" + (rate * 100) + "% por tick).");
-        }
-    }
-    
-    /**
-     * Maneja el subcomando "nutritionrate"
-     * @param sender Remitente del comando
-     * @param args Argumentos del comando
-     */
-    private void handleNutritionRateCommand(CommandSender sender, String[] args) {
-        // Verificar permisos
-        if (!sender.hasPermission("winterfall.admin")) {
-            sender.sendMessage(ChatColor.RED + "No tienes permiso para usar este comando.");
-            return;
-        }
-        
-        // Verificar si el sistema está activo
-        if (!plugin.getNutritionSystem().isActive()) {
-            sender.sendMessage(ChatColor.RED + "El sistema de nutrición no está activo.");
-            return;
-        }
-        
-        // Mostrar tasas actuales si no hay suficientes argumentos
-        if (args.length < 3) {
-            double normalRate = plugin.getNutritionSystem().getNormalDecreaseRate();
-            double activityRate = plugin.getNutritionSystem().getActivityDecreaseRate();
-            
-            sender.sendMessage(ChatColor.YELLOW + "Tasas de disminución de nutrientes actuales:");
-            sender.sendMessage(ChatColor.GREEN + "  Normal: " + ChatColor.WHITE + normalRate + " (" + (normalRate * 100) + "% por tick)");
-            sender.sendMessage(ChatColor.GREEN + "  Actividad: " + ChatColor.WHITE + activityRate + " (" + (activityRate * 100) + "% por tick)");
-            sender.sendMessage(ChatColor.YELLOW + "Uso: /winterfall nutritionrate <normal/activity> <tasa>");
-            sender.sendMessage(ChatColor.GRAY + "La tasa debe ser un número entre 0.0 y 1.0");
-            return;
-        }
-        
-        // Obtener tipo de tasa
-        String rateType = args[1].toLowerCase();
-        if (!rateType.equals("normal") && !rateType.equals("activity")) {
-            sender.sendMessage(ChatColor.RED + "Tipo de tasa inválido. Usa normal o activity.");
-            return;
-        }
-        
-        // Obtener valor de tasa
-        double rate;
-        try {
-            rate = Double.parseDouble(args[2]);
-            if (rate < 0.0 || rate > 1.0) {
-                sender.sendMessage(ChatColor.RED + "La tasa debe estar entre 0.0 y 1.0.");
-                return;
-            }
-        } catch (NumberFormatException e) {
-            sender.sendMessage(ChatColor.RED + "La tasa debe ser un número válido.");
-            return;
-        }
-        
-        // Aplicar cambio según el tipo
-        if (rateType.equals("normal")) {
-            plugin.getNutritionSystem().setNormalDecreaseRate(rate);
-            sender.sendMessage(ChatColor.GREEN + "Tasa de disminución normal de nutrientes establecida a " + rate + " (" + (rate * 100) + "% por tick).");
-        } else {
-            plugin.getNutritionSystem().setActivityDecreaseRate(rate);
-            sender.sendMessage(ChatColor.GREEN + "Tasa de disminución de nutrientes durante actividad establecida a " + rate + " (" + (rate * 100) + "% por tick).");
-        }
-    }
-    
-    /**
      * Maneja el subcomando "limb" para manipular el estado de daño de extremidades
      * @param sender Remitente del comando
      * @param args Argumentos del comando
@@ -950,6 +843,152 @@ public class WinterfallCommand implements CommandExecutor, TabCompleter {
         }
     }
     
+    /**
+     * Maneja el subcomando "config" para configurar diferentes aspectos del plugin
+     * @param sender Remitente del comando
+     * @param args Argumentos del comando
+     */
+    private void handleConfigCommand(CommandSender sender, String[] args) {
+        // Verificar permisos
+        if (!sender.hasPermission("winterfall.admin")) {
+            sender.sendMessage(ChatColor.RED + "No tienes permiso para usar este comando.");
+            return;
+        }
+        
+        // Verificar argumentos
+        if (args.length < 2) {
+            sender.sendMessage(ChatColor.RED + "Uso: /winterfall config <hydration-rate|nutrition-rate> <normal/activity> <tasa>");
+            return;
+        }
+        
+        // Procesar subcomandos de configuración
+        String configType = args[1].toLowerCase();
+        
+        switch (configType) {
+            case "hydration-rate":
+                handleHydrationRateConfig(sender, args);
+                break;
+                
+            case "nutrition-rate":
+                handleNutritionRateConfig(sender, args);
+                break;
+                
+            default:
+                sender.sendMessage(ChatColor.RED + "Opción de configuración desconocida. Opciones disponibles: hydration-rate, nutrition-rate");
+                break;
+        }
+    }
+    
+    /**
+     * Maneja la configuración de la tasa de hidratación
+     * @param sender Remitente del comando
+     * @param args Argumentos del comando
+     */
+    private void handleHydrationRateConfig(CommandSender sender, String[] args) {
+        // Verificar si el sistema está activo
+        if (!plugin.getHydrationSystem().isActive()) {
+            sender.sendMessage(ChatColor.RED + "El sistema de hidratación no está activo.");
+            return;
+        }
+        
+        // Mostrar tasas actuales si no hay suficientes argumentos
+        if (args.length < 4) {
+            double normalRate = plugin.getHydrationSystem().getNormalDecreaseRate();
+            double activityRate = plugin.getHydrationSystem().getActivityDecreaseRate();
+            
+            sender.sendMessage(ChatColor.YELLOW + "Tasas de disminución de hidratación actuales:");
+            sender.sendMessage(ChatColor.AQUA + "  Normal: " + ChatColor.WHITE + normalRate + " (" + (normalRate * 100) + "% por tick)");
+            sender.sendMessage(ChatColor.AQUA + "  Actividad: " + ChatColor.WHITE + activityRate + " (" + (activityRate * 100) + "% por tick)");
+            sender.sendMessage(ChatColor.YELLOW + "Uso: /winterfall config hydration-rate <normal/activity> <tasa>");
+            sender.sendMessage(ChatColor.GRAY + "La tasa debe ser un número entre 0.0 y 1.0");
+            return;
+        }
+        
+        // Obtener tipo de tasa
+        String rateType = args[2].toLowerCase();
+        if (!rateType.equals("normal") && !rateType.equals("activity")) {
+            sender.sendMessage(ChatColor.RED + "Tipo de tasa inválido. Usa normal o activity.");
+            return;
+        }
+        
+        // Obtener valor de tasa
+        double rate;
+        try {
+            rate = Double.parseDouble(args[3]);
+            if (rate < 0.0 || rate > 1.0) {
+                sender.sendMessage(ChatColor.RED + "La tasa debe estar entre 0.0 y 1.0.");
+                return;
+            }
+        } catch (NumberFormatException e) {
+            sender.sendMessage(ChatColor.RED + "La tasa debe ser un número válido.");
+            return;
+        }
+        
+        // Aplicar cambio según el tipo
+        if (rateType.equals("normal")) {
+            plugin.getHydrationSystem().setNormalDecreaseRate(rate);
+            sender.sendMessage(ChatColor.GREEN + "Tasa de disminución normal de hidratación establecida a " + rate + " (" + (rate * 100) + "% por tick).");
+        } else {
+            plugin.getHydrationSystem().setActivityDecreaseRate(rate);
+            sender.sendMessage(ChatColor.GREEN + "Tasa de disminución de hidratación durante actividad establecida a " + rate + " (" + (rate * 100) + "% por tick).");
+        }
+    }
+    
+    /**
+     * Maneja la configuración de la tasa de nutrición
+     * @param sender Remitente del comando
+     * @param args Argumentos del comando
+     */
+    private void handleNutritionRateConfig(CommandSender sender, String[] args) {
+        // Verificar si el sistema está activo
+        if (!plugin.getNutritionSystem().isActive()) {
+            sender.sendMessage(ChatColor.RED + "El sistema de nutrición no está activo.");
+            return;
+        }
+        
+        // Mostrar tasas actuales si no hay suficientes argumentos
+        if (args.length < 4) {
+            double normalRate = plugin.getNutritionSystem().getNormalDecreaseRate();
+            double activityRate = plugin.getNutritionSystem().getActivityDecreaseRate();
+            
+            sender.sendMessage(ChatColor.YELLOW + "Tasas de disminución de nutrientes actuales:");
+            sender.sendMessage(ChatColor.GREEN + "  Normal: " + ChatColor.WHITE + normalRate + " (" + (normalRate * 100) + "% por tick)");
+            sender.sendMessage(ChatColor.GREEN + "  Actividad: " + ChatColor.WHITE + activityRate + " (" + (activityRate * 100) + "% por tick)");
+            sender.sendMessage(ChatColor.YELLOW + "Uso: /winterfall config nutrition-rate <normal/activity> <tasa>");
+            sender.sendMessage(ChatColor.GRAY + "La tasa debe ser un número entre 0.0 y 1.0");
+            return;
+        }
+        
+        // Obtener tipo de tasa
+        String rateType = args[2].toLowerCase();
+        if (!rateType.equals("normal") && !rateType.equals("activity")) {
+            sender.sendMessage(ChatColor.RED + "Tipo de tasa inválido. Usa normal o activity.");
+            return;
+        }
+        
+        // Obtener valor de tasa
+        double rate;
+        try {
+            rate = Double.parseDouble(args[3]);
+            if (rate < 0.0 || rate > 1.0) {
+                sender.sendMessage(ChatColor.RED + "La tasa debe estar entre 0.0 y 1.0.");
+                return;
+            }
+        } catch (NumberFormatException e) {
+            sender.sendMessage(ChatColor.RED + "La tasa debe ser un número válido.");
+            return;
+        }
+        
+        // Aplicar cambio según el tipo
+        if (rateType.equals("normal")) {
+            plugin.getNutritionSystem().setNormalDecreaseRate(rate);
+            sender.sendMessage(ChatColor.GREEN + "Tasa de disminución normal de nutrientes establecida a " + rate + " (" + (rate * 100) + "% por tick).");
+        } else {
+            plugin.getNutritionSystem().setActivityDecreaseRate(rate);
+            sender.sendMessage(ChatColor.GREEN + "Tasa de disminución de nutrientes durante actividad establecida a " + rate + " (" + (rate * 100) + "% por tick).");
+        }
+    }
+    
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
         List<String> completions = new ArrayList<>();
@@ -961,7 +1000,7 @@ public class WinterfallCommand implements CommandExecutor, TabCompleter {
         
         // Autocompletar subcomandos
         if (args.length == 1) {
-            String[] subCommands = {"help", "mob", "snow", "radiation", "bleeding", "hydration", "nutrition", "status", "limb", "hydrationrate", "nutritionrate"};
+            String[] subCommands = {"help", "mob", "snow", "radiation", "bleeding", "hydration", "nutrition", "status", "limb", "config", "hydrationrate", "nutritionrate"};
             for (String subCommand : subCommands) {
                 if (subCommand.startsWith(args[0].toLowerCase())) {
                     completions.add(subCommand);
@@ -1132,6 +1171,37 @@ public class WinterfallCommand implements CommandExecutor, TabCompleter {
                     }
                     break;
                     
+                case "config":
+                    // Segundo argumento - tipo de configuración
+                    if (args.length == 2) {
+                        String[] configTypes = {"hydration-rate", "nutrition-rate"};
+                        for (String configType : configTypes) {
+                            if (configType.startsWith(args[1].toLowerCase())) {
+                                completions.add(configType);
+                            }
+                        }
+                    }
+                    // Tercer argumento - tipo de tasa
+                    else if (args.length == 3 && (args[1].equalsIgnoreCase("hydration-rate") || args[1].equalsIgnoreCase("nutrition-rate"))) {
+                        String[] rateTypes = {"normal", "activity"};
+                        for (String rateType : rateTypes) {
+                            if (rateType.startsWith(args[2].toLowerCase())) {
+                                completions.add(rateType);
+                            }
+                        }
+                    }
+                    // Cuarto argumento - valor de tasa
+                    else if (args.length == 4 && (args[1].equalsIgnoreCase("hydration-rate") || args[1].equalsIgnoreCase("nutrition-rate"))) {
+                        String[] rates = {"0.05", "0.1", "0.15", "0.2", "0.3", "0.5"};
+                        for (String rate : rates) {
+                            if (rate.startsWith(args[3])) {
+                                completions.add(rate);
+                            }
+                        }
+                    }
+                    break;
+                    
+                // Mantener compatibilidad con comandos antiguos
                 case "hydrationrate":
                 case "nutritionrate":
                     // Segundo argumento - tipo de tasa

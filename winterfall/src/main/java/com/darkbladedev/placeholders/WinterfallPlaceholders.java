@@ -7,6 +7,7 @@ import com.darkbladedev.mechanics.NutritionSystem.NutrientType;
 import com.darkbladedev.mechanics.RadiationSystem;
 import com.darkbladedev.mechanics.BleedingSystem;
 import com.darkbladedev.mechanics.LimbDamageSystem;
+import com.darkbladedev.mechanics.StaminaSystem;
 import com.darkbladedev.mechanics.TemperatureSystem;
 
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
@@ -29,6 +30,7 @@ public class WinterfallPlaceholders extends PlaceholderExpansion {
     private final RadiationSystem radiationSystem;
     private final BleedingSystem bleedingSystem;
     private final LimbDamageSystem limbDamageSystem;
+    private final StaminaSystem staminaSystem;
     private final TemperatureSystem temperatureSystem;
 
     /**
@@ -42,6 +44,7 @@ public class WinterfallPlaceholders extends PlaceholderExpansion {
         this.radiationSystem = plugin.getRadiationSystem();
         this.bleedingSystem = plugin.getBleedingSystem();
         this.limbDamageSystem = plugin.getLimbDamageSystem();
+        this.staminaSystem = plugin.getStaminaSystem();
         this.temperatureSystem = plugin.getTemperatureSystem();
     }
 
@@ -221,6 +224,19 @@ public class WinterfallPlaceholders extends PlaceholderExpansion {
 
         if (identifier.equals("temperature_bar")) {
             return temperatureSystem.getTemperatureBar(player);
+        }
+        
+        // Placeholders de estamina
+        if (identifier.equals("stamina")) {
+            return String.valueOf(staminaSystem.getStaminaLevel(player));
+        }
+        
+        if (identifier.equals("stamina_percent")) {
+            return String.valueOf(staminaSystem.getStaminaPercentage(player));
+        }
+        
+        if (identifier.equals("stamina_bar")) {
+            return staminaSystem.getStaminaBar(player);
         }
 
         // Placeholder no reconocido
