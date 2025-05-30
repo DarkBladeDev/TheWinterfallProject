@@ -339,9 +339,9 @@ public class TemperatureSystem implements Listener {
         
         for (int i = 0; i < 10; i++) {
             if (i < bars) {
-                bar.append("|");
+                bar.append("■");
             } else {
-                bar.append(".");
+                bar.append("▢");
             }
         }
         
