@@ -2,6 +2,9 @@ package com.darkbladedev.mechanics;
 
 import com.darkbladedev.WinterfallMain;
 
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.MiniMessage;
+
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -272,15 +275,15 @@ public class StaminaSystem implements Listener {
         int percentage = getStaminaPercentage(player);
         
         StringBuilder bar = new StringBuilder();
-        
+        MiniMessage mm = MiniMessage.miniMessage();
         // Determinar color según nivel
-        ChatColor barColor;
+        Component barColor;
         if (percentage > 70) {
-            barColor = ChatColor.GREEN; // Buena estamina
+            barColor = mm.deserialize("<green>"); // Buena estamina
         } else if (percentage > 30) {
-            barColor = ChatColor.YELLOW; // Estamina media
+            barColor = mm.deserialize("<yellow>"); // Estamina media
         } else {
-            barColor = ChatColor.RED; // Estamina baja
+            barColor = mm.deserialize("<red>"); // Estamina baja
         }
         
         // Construir barra de progreso

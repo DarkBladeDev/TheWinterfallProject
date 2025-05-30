@@ -23,6 +23,9 @@ import org.bukkit.potion.PotionType;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.MiniMessage;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -272,15 +275,16 @@ public class HydrationSystem implements Listener {
         int percentage = getHydrationPercentage(player);
         
         StringBuilder bar = new StringBuilder();
+        MiniMessage mm = MiniMessage.miniMessage();
         
         // Determinar color según nivel
-        ChatColor barColor;
+        Component barColor;
         if (percentage > 70) {
-            barColor = ChatColor.AQUA; // Bien hidratado
+            barColor = mm.deserialize("<aqua>"); // Bien hidratado
         } else if (percentage > 30) {
-            barColor = ChatColor.YELLOW; // Hidratación media
+            barColor = mm.deserialize("<yellow>"); // Hidratación media
         } else {
-            barColor = ChatColor.RED; // Deshidratado
+            barColor = mm.deserialize("<red>"); // Deshidratado
         }
         
         // Construir barra de progreso

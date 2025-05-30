@@ -19,6 +19,9 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerChangedWorldEvent;
 
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.MiniMessage;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -322,15 +325,16 @@ public class TemperatureSystem implements Listener {
         int percentage = getTemperaturePercentage(player);
         
         StringBuilder bar = new StringBuilder();
+        MiniMessage mm = MiniMessage.miniMessage();
         
         // Determinar color según nivel
-        ChatColor barColor;
+        Component barColor;
         if (percentage > 70) {
-            barColor = ChatColor.GREEN; // Temperatura normal
+            barColor = mm.deserialize("<green>"); // Temperatura normal
         } else if (percentage > 30) {
-            barColor = ChatColor.YELLOW; // Temperatura baja
+            barColor = mm.deserialize("<yellow>"); // Temperatura baja
         } else {
-            barColor = ChatColor.RED; // Hipotermia
+            barColor = mm.deserialize("<red>"); // Hipotermia
         }
         
         // Construir barra de progreso

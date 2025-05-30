@@ -21,6 +21,9 @@ import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.MiniMessage;
+
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Map;
@@ -51,21 +54,25 @@ public class NutritionSystem implements Listener {
      * Tipos de nutrientes que maneja el sistema
      */
     public enum NutrientType {
-        PROTEIN(ChatColor.RED, "Proteínas"),
-        FAT(ChatColor.YELLOW, "Grasas"),
-        CARBS(ChatColor.GOLD, "Carbohidratos"),
-        VITAMINS(ChatColor.GREEN, "Vitaminas");
+        PROTEIN("<red>", "Proteínas"),
+        FAT("<yellow>", "Grasas"),
+        CARBS("<gold>", "Carbohidratos"),
+        VITAMINS("<green>", "Vitaminas");
         
-        private final ChatColor color;
+        private final String colorCode;
         private final String displayName;
         
-        NutrientType(ChatColor color, String displayName) {
-            this.color = color;
+        NutrientType(String colorCode, String displayName) {
+            this.colorCode = colorCode;
             this.displayName = displayName;
         }
         
-        public ChatColor getColor() {
-            return color;
+        public String getColorCode() {
+            return colorCode;
+        }
+        
+        public Component getColor() {
+            return MiniMessage.miniMessage().deserialize(colorCode);
         }
         
         public String getDisplayName() {
@@ -269,7 +276,8 @@ public class NutritionSystem implements Listener {
                 
                 // Enviar mensaje de advertencia (con probabilidad para no spamear)
                 if (Math.random() < 0.1) {
-                    player.sendMessage(type.getColor() + "Tienes deficiencia de " + type.getDisplayName() + ". Deberías consumir alimentos ricos en este nutriente.");
+                    Component message = MiniMessage.miniMessage().deserialize(type.getColorCode() + "Tienes deficiencia de " + type.getDisplayName() + ". Deberías consumir alimentos ricos en este nutriente.");
+                    player.sendMessage(message.toString());
                 }
             }
         }
@@ -345,7 +353,8 @@ public class NutritionSystem implements Listener {
                 
                 // Mostrar información si hay un aumento significativo
                 if (nutritionValue >= 10) {
-                    player.sendMessage(type.getColor() + "Has consumido un alimento rico en " + type.getDisplayName() + ".");
+                    Component message = MiniMessage.miniMessage().deserialize(type.getColorCode() + "Has consumido un alimento rico en " + type.getDisplayName() + ".");
+                    player.sendMessage(message.toString());
                 }
             }
             
@@ -442,9 +451,11 @@ public class NutritionSystem implements Listener {
         int level = getNutrientLevel(player, type);
         
         StringBuilder bar = new StringBuilder();
+        MiniMessage mm = MiniMessage.miniMessage();
         
         // Usar el color específico del nutriente
-        bar.append(type.getColor());
+        Component barColor = mm.deserialize(type.getColorCode());
+        bar.append(barColor);
         
         // Construir barra de progreso
         int bars = (int) Math.round(level / 10.0);
@@ -537,7 +548,8 @@ public class NutritionSystem implements Listener {
         
         // Notificar al jugador si el aumento es significativo
         if (amount >= 10) {
-            player.sendMessage(type.getColor() + "Has aumentado significativamente tu nivel de " + type.getDisplayName() + ".");
+            Component message = MiniMessage.miniMessage().deserialize(type.getColorCode() + "Has aumentado significativamente tu nivel de " + type.getDisplayName() + ".");
+            player.sendMessage(message.toString());
         }
     }
     
@@ -553,7 +565,8 @@ public class NutritionSystem implements Listener {
         
         // Notificar al jugador si la reducción es significativa y el nivel es bajo
         if (amount >= 10 && currentLevel - amount <= CRITICAL_NUTRIENT_LEVEL) {
-            player.sendMessage(type.getColor() + "Tu nivel de " + type.getDisplayName() + " ha disminuido significativamente.");
+            Component message = MiniMessage.miniMessage().deserialize(type.getColorCode() + "Tu nivel de " + type.getDisplayName() + " ha disminuido significativamente.");
+            player.sendMessage(message.toString());
         }
     }
     
