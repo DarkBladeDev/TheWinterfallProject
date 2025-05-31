@@ -25,6 +25,8 @@ import org.bukkit.scheduler.BukkitTask;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
+import net.kyori.adventure.text.minimessage.tag.standard.StandardTags;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -269,37 +271,41 @@ public class HydrationSystem implements Listener {
      * @param player Jugador
      * @return Barra de progreso como texto
      */
-    public String getHydrationBar(Player player) {
+    public Component getHydrationBar(Player player) {
         @SuppressWarnings("unused")
         int level = getHydrationLevel(player);
         int percentage = getHydrationPercentage(player);
         
-        StringBuilder bar = new StringBuilder();
-        MiniMessage mm = MiniMessage.miniMessage();
+        MiniMessage serializer = MiniMessage.builder()
+            .tags(TagResolver.builder()
+              .resolver(StandardTags.color())
+                .build())
+            .build();
         
         // Determinar color según nivel
-        Component barColor;
+        String colorTag;
         if (percentage > 70) {
-            barColor = mm.deserialize("<aqua>"); // Bien hidratado
+            colorTag = "<aqua>"; // Bien hidratado
         } else if (percentage > 30) {
-            barColor = mm.deserialize("<yellow>"); // Hidratación media
+            colorTag = "<yellow>"; // Hidratación media
         } else {
-            barColor = mm.deserialize("<red>"); // Deshidratado
+            colorTag = "<red>"; // Deshidratado
         }
         
         // Construir barra de progreso
         int bars = (int) Math.round(percentage / 10.0);
-        bar.append(barColor);
+        StringBuilder barContent = new StringBuilder();
         
         for (int i = 0; i < 10; i++) {
             if (i < bars) {
-                bar.append("■");
+                barContent.append("■");
             } else {
-                bar.append("▢");
+                barContent.append("▢");
             }
         }
         
-        return bar.toString();
+        // Crear el componente con el color y el contenido
+        return serializer.deserialize(colorTag + barContent.toString());
     }
     
     /**

@@ -3,7 +3,6 @@ package com.darkbladedev.mechanics;
 import com.darkbladedev.WinterfallMain;
 
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -21,6 +20,7 @@ import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
+import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 
@@ -182,7 +182,7 @@ public class NutritionSystem implements Listener {
     public void initialize() {
         // Verificar si el sistema está habilitado en la configuración
         if (!plugin.getConfig().getBoolean("nutrition.enabled", true)) {
-            Bukkit.getConsoleSender().sendMessage(ChatColor.YELLOW + "[Winterfall] Sistema de nutrición deshabilitado en la configuración");
+            ((Audience) Bukkit.getConsoleSender()).sendMessage(MiniMessage.miniMessage().deserialize("<yellow>[Winterfall] Sistema de nutrición deshabilitado en la configuración"));
             return;
         }
         
@@ -192,7 +192,7 @@ public class NutritionSystem implements Listener {
         // Registrar eventos
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
         
-        Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN + "[Winterfall] Sistema de nutrición inicializado");
+        ((Audience) Bukkit.getConsoleSender()).sendMessage(MiniMessage.miniMessage().deserialize("<green>[Winterfall] Sistema de nutrición inicializado"));
     }
     
     /**
@@ -277,7 +277,7 @@ public class NutritionSystem implements Listener {
                 // Enviar mensaje de advertencia (con probabilidad para no spamear)
                 if (Math.random() < 0.1) {
                     Component message = MiniMessage.miniMessage().deserialize(type.getColorCode() + "Tienes deficiencia de " + type.getDisplayName() + ". Deberías consumir alimentos ricos en este nutriente.");
-                    player.sendMessage(message.toString());
+                    ((Audience) player).sendMessage(message);
                 }
             }
         }
@@ -292,7 +292,7 @@ public class NutritionSystem implements Listener {
             // Daño por desnutrición severa
             if (criticalCount == 4 && Math.random() < 0.2) { // 20% de probabilidad con los 4 nutrientes críticos
                 player.damage(1.0); // Medio corazón de daño
-                player.sendMessage(ChatColor.DARK_RED + "¡Estás severamente desnutrido! Necesitas una dieta equilibrada urgentemente.");
+                ((Audience) player).sendMessage(MiniMessage.miniMessage().deserialize("<dark_red>¡Estás severamente desnutrido! Necesitas una dieta equilibrada urgentemente."));
             }
         } else if (criticalCount >= 1) {
             // Deficiencia moderada (1-2 nutrientes críticos)
@@ -315,7 +315,7 @@ public class NutritionSystem implements Listener {
             
             // Mensaje ocasional
             if (Math.random() < 0.05) { // 5% de probabilidad
-                player.sendMessage(ChatColor.GREEN + "Te sientes lleno de energía gracias a tu dieta equilibrada.");
+                ((Audience) player).sendMessage(MiniMessage.miniMessage().deserialize("<green>Te sientes lleno de energía gracias a tu dieta equilibrada."));
             }
         }
     }
@@ -354,7 +354,7 @@ public class NutritionSystem implements Listener {
                 // Mostrar información si hay un aumento significativo
                 if (nutritionValue >= 10) {
                     Component message = MiniMessage.miniMessage().deserialize(type.getColorCode() + "Has consumido un alimento rico en " + type.getDisplayName() + ".");
-                    player.sendMessage(message.toString());
+                    ((Audience) player).sendMessage(message);
                 }
             }
             
@@ -549,7 +549,7 @@ public class NutritionSystem implements Listener {
         // Notificar al jugador si el aumento es significativo
         if (amount >= 10) {
             Component message = MiniMessage.miniMessage().deserialize(type.getColorCode() + "Has aumentado significativamente tu nivel de " + type.getDisplayName() + ".");
-            player.sendMessage(message.toString());
+            ((Audience) player).sendMessage(message);
         }
     }
     
@@ -566,7 +566,7 @@ public class NutritionSystem implements Listener {
         // Notificar al jugador si la reducción es significativa y el nivel es bajo
         if (amount >= 10 && currentLevel - amount <= CRITICAL_NUTRIENT_LEVEL) {
             Component message = MiniMessage.miniMessage().deserialize(type.getColorCode() + "Tu nivel de " + type.getDisplayName() + " ha disminuido significativamente.");
-            player.sendMessage(message.toString());
+            ((Audience) player).sendMessage(message);
         }
     }
     
@@ -618,6 +618,6 @@ public class NutritionSystem implements Listener {
             nutritionTask.cancel();
         }
         isActive = false;
-        Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN + "[Winterfall] Sistema de nutrición desactivado");
+        ((Audience) Bukkit.getConsoleSender()).sendMessage(MiniMessage.miniMessage().deserialize("<green>[Winterfall] Sistema de nutrición desactivado"));
     }
 }

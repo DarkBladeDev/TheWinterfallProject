@@ -2,13 +2,18 @@ package com.darkbladedev.commands;
 
 import com.darkbladedev.WinterfallMain;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
+
+import net.kyori.adventure.audience.Audience;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.minimessage.MiniMessage;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -87,7 +92,7 @@ public class WinterfallCommand implements CommandExecutor, TabCompleter {
                 
             // Mantener compatibilidad con comandos antiguos
             case "hydrationrate":
-                sender.sendMessage(ChatColor.YELLOW + "Este comando está obsoleto. Usa /winterfall config hydration-rate en su lugar.");
+                ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<yellow>Este comando está obsoleto. Usa /winterfall config hydration-rate en su lugar."));
                 String[] newArgs = new String[args.length + 1];
                 newArgs[0] = "config";
                 newArgs[1] = "hydration-rate";
@@ -96,7 +101,7 @@ public class WinterfallCommand implements CommandExecutor, TabCompleter {
                 break;
                 
             case "nutritionrate":
-                sender.sendMessage(ChatColor.YELLOW + "Este comando está obsoleto. Usa /winterfall config nutrition-rate en su lugar.");
+                ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<yellow>Este comando está obsoleto. Usa /winterfall config nutrition-rate en su lugar."));
                 String[] newArgs2 = new String[args.length + 1];
                 newArgs2[0] = "config";
                 newArgs2[1] = "nutrition-rate";
@@ -105,7 +110,7 @@ public class WinterfallCommand implements CommandExecutor, TabCompleter {
                 break;
                 
             default:
-                sender.sendMessage(ChatColor.RED + "Subcomando desconocido. Usa /winterfall help para ver los comandos disponibles.");
+                ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>Subcomando desconocido. Usa /winterfall help para ver los comandos disponibles."));
                 break;
         }
         
@@ -117,20 +122,20 @@ public class WinterfallCommand implements CommandExecutor, TabCompleter {
      * @param sender Remitente del comando
      */
     private void showHelp(CommandSender sender) {
-        sender.sendMessage(ChatColor.GRAY + "----------------------------------------");
-        sender.sendMessage(ChatColor.AQUA + "Winterfall - El Eternauta" + ChatColor.GRAY + " - Comandos:");
-        sender.sendMessage(ChatColor.YELLOW + "/winterfall help" + ChatColor.GRAY + " - Muestra esta ayuda");
-        sender.sendMessage(ChatColor.YELLOW + "/winterfall mob <tipo> [cantidad]" + ChatColor.GRAY + " - Genera mobs alienígenas");
-        sender.sendMessage(ChatColor.YELLOW + "/winterfall snow <on/off>" + ChatColor.GRAY + " - Activa/desactiva la nevada tóxica");
-        sender.sendMessage(ChatColor.YELLOW + "/winterfall radiation <on/off>" + ChatColor.GRAY + " - Activa/desactiva la radiación");
-        sender.sendMessage(ChatColor.YELLOW + "/winterfall bleeding <cure> [jugador]" + ChatColor.GRAY + " - Cura el sangrado");
-        sender.sendMessage(ChatColor.YELLOW + "/winterfall hydration <set/add/remove> <cantidad> [jugador]" + ChatColor.GRAY + " - Gestiona la hidratación");
-        sender.sendMessage(ChatColor.YELLOW + "/winterfall nutrition <protein/fat/carbs/vitamins> <set/add/remove> <cantidad> [jugador]" + ChatColor.GRAY + " - Gestiona la nutrición");
-        sender.sendMessage(ChatColor.YELLOW + "/winterfall limb <set/heal> <extremidad/all> <nivel> [jugador]" + ChatColor.GRAY + " - Gestiona el daño de extremidades");
-        sender.sendMessage(ChatColor.YELLOW + "/winterfall status [jugador]" + ChatColor.GRAY + " - Muestra el estado físico del jugador");
-        sender.sendMessage(ChatColor.YELLOW + "/winterfall config hydration-rate <normal/activity> <tasa>" + ChatColor.GRAY + " - Ajusta la velocidad de disminución de hidratación");
-        sender.sendMessage(ChatColor.YELLOW + "/winterfall config nutrition-rate <normal/activity> <tasa>" + ChatColor.GRAY + " - Ajusta la velocidad de disminución de nutrientes");
-        sender.sendMessage(ChatColor.GRAY + "----------------------------------------");
+        ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<gray>----------------------------------------"));
+        ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<aqua>Winterfall - El Eternauta<gray> - Comandos:"));
+        ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<yellow>/winterfall help<gray> - Muestra esta ayuda"));
+        ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<yellow>/winterfall mob <tipo> [cantidad]<gray> - Genera mobs alienígenas"));
+        ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<yellow>/winterfall snow <on/off><gray> - Activa/desactiva la nevada tóxica"));
+        ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<yellow>/winterfall radiation <on/off><gray> - Activa/desactiva la radiación"));
+        ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<yellow>/winterfall bleeding <cure> [jugador]<gray> - Cura el sangrado"));
+        ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<yellow>/winterfall hydration <set/add/remove> <cantidad> [jugador]<gray> - Gestiona la hidratación"));
+        ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<yellow>/winterfall nutrition <protein/fat/carbs/vitamins> <set/add/remove> <cantidad> [jugador]<gray> - Gestiona la nutrición"));
+        ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<yellow>/winterfall limb <set/heal> <extremidad/all> <nivel> [jugador]<gray> - Gestiona el daño de extremidades"));
+        ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<yellow>/winterfall status [jugador]<gray> - Muestra el estado físico del jugador"));
+        ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<yellow>/winterfall config hydration-rate <normal/activity> <tasa><gray> - Ajusta la velocidad de disminución de hidratación"));
+        ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<yellow>/winterfall config nutrition-rate <normal/activity> <tasa><gray> - Ajusta la velocidad de disminución de nutrientes"));
+        ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<gray>----------------------------------------"));
     }
     
     /**
@@ -141,77 +146,76 @@ public class WinterfallCommand implements CommandExecutor, TabCompleter {
     private void handleMobCommand(CommandSender sender, String[] args) {
         // Verificar permisos
         if (!sender.hasPermission("winterfall.mob")) {
-            sender.sendMessage(ChatColor.RED + "No tienes permiso para usar este comando.");
+            ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>No tienes permiso para usar este comando."));
             return;
         }
         
         // Verificar argumentos
         if (args.length < 2) {
-            sender.sendMessage(ChatColor.RED + "Uso: /winterfall mob <tipo> [cantidad]");
-            sender.sendMessage(ChatColor.GRAY + "Tipos disponibles: mano, cascarudo, gurbo, random");
+            ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>Uso: /winterfall mob <tipo> [cantidad]"));
+        ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<gray>Tipos disponibles: mano, cascarudo, gurbo, random"));
             return;
         }
-        
-        // Obtener tipo de mob
-        String mobType = args[1].toLowerCase();
         
         // Obtener cantidad (por defecto 1)
         int amount = 1;
         if (args.length >= 3) {
             try {
                 amount = Integer.parseInt(args[2]);
-                amount = Math.max(1, Math.min(amount, 50)); // Limitar entre 1 y 50
+                if (amount <= 0) {
+                    amount = 1;
+                }
             } catch (NumberFormatException e) {
-                sender.sendMessage(ChatColor.RED + "La cantidad debe ser un número válido.");
+                ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>La cantidad debe ser un número válido."));
                 return;
             }
         }
         
-        // Verificar si el remitente es un jugador o consola
+        String mobType = args[1].toLowerCase();
+        
+        // Si el remitente es un jugador, generar en su ubicación
         if (sender instanceof Player) {
             Player player = (Player) sender;
             
-            // Generar mobs según el tipo
             switch (mobType) {
                 case "mano":
                     for (int i = 0; i < amount; i++) {
                         plugin.getMobManager().spawnMano(player.getLocation());
                     }
-                    player.sendMessage(ChatColor.GREEN + "Has generado " + amount + " Mano(s).");
+                    ((Audience) player).sendMessage(MiniMessage.miniMessage().deserialize("<green>Has generado " + amount + " Mano(s)."));
                     break;
                     
                 case "cascarudo":
                     for (int i = 0; i < amount; i++) {
                         plugin.getMobManager().spawnCascarudo(player.getLocation());
                     }
-                    player.sendMessage(ChatColor.GREEN + "Has generado " + amount + " Cascarudo(s).");
+                    ((Audience) player).sendMessage(MiniMessage.miniMessage().deserialize("<green>Has generado " + amount + " Cascarudo(s)."));
                     break;
                     
                 case "gurbo":
                     for (int i = 0; i < amount; i++) {
                         plugin.getMobManager().spawnGurbo(player.getLocation());
                     }
-                    player.sendMessage(ChatColor.GREEN + "Has generado " + amount + " Gurbo(s).");
+                    ((Audience) player).sendMessage(MiniMessage.miniMessage().deserialize("<green>Has generado " + amount + " Gurbo(s)."));
                     break;
                     
                 case "random":
                     plugin.getMobManager().spawnRandomAliens(player.getWorld(), amount);
-                    player.sendMessage(ChatColor.GREEN + "Has generado " + amount + " alienígenas aleatorios.");
+                    ((Audience) player).sendMessage(MiniMessage.miniMessage().deserialize("<green>Has generado " + amount + " alienígenas aleatorios."));
                     break;
                     
                 default:
-                    player.sendMessage(ChatColor.RED + "Tipo de mob desconocido. Usa mano, cascarudo, gurbo o random.");
+                    ((Audience) player).sendMessage(MiniMessage.miniMessage().deserialize("<red>Tipo de mob desconocido. Usa mano, cascarudo, gurbo o random."));
                     break;
             }
         } else {
             // Si es la consola, generar en el mundo principal
-            World world = Bukkit.getWorlds().get(0);
-            
             if (mobType.equals("random")) {
+                World world = Bukkit.getWorlds().get(0); // Mundo principal
                 plugin.getMobManager().spawnRandomAliens(world, amount);
-                sender.sendMessage(ChatColor.GREEN + "Has generado " + amount + " alienígenas aleatorios en el mundo principal.");
+                ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<green>Has generado " + amount + " alienígenas aleatorios en el mundo principal."));
             } else {
-                sender.sendMessage(ChatColor.RED + "La consola solo puede generar mobs aleatorios. Usa /winterfall mob random <cantidad>");
+                ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>La consola solo puede generar mobs aleatorios. Usa /winterfall mob random <cantidad>"));
             }
         }
     }
@@ -224,51 +228,56 @@ public class WinterfallCommand implements CommandExecutor, TabCompleter {
     private void handleSnowCommand(CommandSender sender, String[] args) {
         // Verificar permisos
         if (!sender.hasPermission("winterfall.snow")) {
-            sender.sendMessage(ChatColor.RED + "No tienes permiso para usar este comando.");
+            ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>No tienes permiso para usar este comando."));
             return;
         }
         
         // Verificar argumentos
         if (args.length < 2) {
-            sender.sendMessage(ChatColor.RED + "Uso: /winterfall snow <on/off>");
+            ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>Uso: /winterfall snow <on/off>"));
             return;
         }
         
-        // Procesar estado
         String state = args[1].toLowerCase();
         
-        if (state.equals("on")) {
-            // Activar nevada en el mundo actual o todos los mundos
-            if (sender instanceof Player) {
-                Player player = (Player) sender;
-                String worldName = player.getWorld().getName();
-                
-                plugin.getSnowfallSystem().setWorldEnabled(worldName, true);
-                player.sendMessage(ChatColor.GREEN + "Nevada tóxica activada en el mundo: " + worldName);
-            } else {
-                // Activar en todos los mundos
-                for (World world : Bukkit.getWorlds()) {
-                    plugin.getSnowfallSystem().setWorldEnabled(world.getName(), true);
+        switch (state) {
+            case "on":
+            case "true":
+            case "enable":
+                if (((Audience) sender) instanceof Player) {
+                    Player player = (Player) sender;
+                    String worldName = player.getWorld().getName();
+                    plugin.getSnowfallSystem().setWorldEnabled(worldName, true);
+                    ((Audience) player).sendMessage(MiniMessage.miniMessage().deserialize("<green>Nevada tóxica activada en el mundo: " + worldName));
+                } else {
+                    // Activar en todos los mundos desde consola
+                    for (World world : Bukkit.getWorlds()) {
+                        plugin.getSnowfallSystem().setWorldEnabled(world.getName(), true);
+                    }
+                    ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<green>Nevada tóxica activada en todos los mundos."));
                 }
-                sender.sendMessage(ChatColor.GREEN + "Nevada tóxica activada en todos los mundos.");
-            }
-        } else if (state.equals("off")) {
-            // Desactivar nevada en el mundo actual o todos los mundos
-            if (sender instanceof Player) {
-                Player player = (Player) sender;
-                String worldName = player.getWorld().getName();
+                break;
                 
-                plugin.getSnowfallSystem().setWorldEnabled(worldName, false);
-                player.sendMessage(ChatColor.GREEN + "Nevada tóxica desactivada en el mundo: " + worldName);
-            } else {
-                // Desactivar en todos los mundos
-                for (World world : Bukkit.getWorlds()) {
-                    plugin.getSnowfallSystem().setWorldEnabled(world.getName(), false);
+            case "off":
+            case "false":
+            case "disable":
+                if (sender instanceof Player) {
+                    Player player = (Player) sender;
+                    String worldName = player.getWorld().getName();
+                    plugin.getSnowfallSystem().setWorldEnabled(worldName, false);
+                    ((Audience) player).sendMessage(MiniMessage.miniMessage().deserialize("<green>Nevada tóxica desactivada en el mundo: " + worldName));
+                } else {
+                    // Desactivar en todos los mundos desde consola
+                    for (World world : Bukkit.getWorlds()) {
+                        plugin.getSnowfallSystem().setWorldEnabled(world.getName(), false);
+                    }
+                    ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<green>Nevada tóxica desactivada en todos los mundos."));
                 }
-                sender.sendMessage(ChatColor.GREEN + "Nevada tóxica desactivada en todos los mundos.");
-            }
-        } else {
-            sender.sendMessage(ChatColor.RED + "Estado desconocido. Usa 'on' o 'off'.");
+                break;
+                
+            default:
+                ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>Estado desconocido. Usa 'on' o 'off'."));
+                break;
         }
     }
     
@@ -280,37 +289,44 @@ public class WinterfallCommand implements CommandExecutor, TabCompleter {
     private void handleRadiationCommand(CommandSender sender, String[] args) {
         // Verificar permisos
         if (!sender.hasPermission("winterfall.radiation")) {
-            sender.sendMessage(ChatColor.RED + "No tienes permiso para usar este comando.");
+            ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>No tienes permiso para usar este comando."));
             return;
         }
         
         // Verificar argumentos
         if (args.length < 2) {
-            sender.sendMessage(ChatColor.RED + "Uso: /winterfall radiation <on/off>");
+            ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>Uso: /winterfall radiation <on/off>"));
             return;
         }
         
-        // Procesar estado
         String state = args[1].toLowerCase();
         
-        if (state.equals("on")) {
-            // Activar sistema de radiación
-            if (!plugin.getRadiationSystem().isActive()) {
-                plugin.getRadiationSystem().initialize();
-                sender.sendMessage(ChatColor.GREEN + "Sistema de radiación activado.");
-            } else {
-                sender.sendMessage(ChatColor.YELLOW + "El sistema de radiación ya está activo.");
-            }
-        } else if (state.equals("off")) {
-            // Desactivar sistema de radiación
-            if (plugin.getRadiationSystem().isActive()) {
-                plugin.getRadiationSystem().shutdown();
-                sender.sendMessage(ChatColor.GREEN + "Sistema de radiación desactivado.");
-            } else {
-                sender.sendMessage(ChatColor.YELLOW + "El sistema de radiación ya está inactivo.");
-            }
-        } else {
-            sender.sendMessage(ChatColor.RED + "Estado desconocido. Usa 'on' o 'off'.");
+        switch (state) {
+            case "on":
+            case "true":
+            case "enable":
+                if (plugin.getRadiationSystem().isActive()) {
+                    ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<yellow>El sistema de radiación ya está activo."));
+                } else {
+                    plugin.getRadiationSystem().initialize();
+                    ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<green>Sistema de radiación activado."));
+                }
+                break;
+                
+            case "off":
+            case "false":
+            case "disable":
+                if (!plugin.getRadiationSystem().isActive()) {
+                    ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<yellow>El sistema de radiación ya está inactivo."));
+                } else {
+                    plugin.getRadiationSystem().shutdown();
+                    ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<green>Sistema de radiación desactivado."));
+                }
+                break;
+                
+            default:
+                ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>Estado desconocido. Usa 'on' o 'off'."));
+                break;
         }
     }
     
@@ -322,44 +338,43 @@ public class WinterfallCommand implements CommandExecutor, TabCompleter {
     private void handleBleedingCommand(CommandSender sender, String[] args) {
         // Verificar permisos
         if (!sender.hasPermission("winterfall.bleeding")) {
-            sender.sendMessage(ChatColor.RED + "No tienes permiso para usar este comando.");
+            ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>No tienes permiso para usar este comando."));
             return;
         }
         
         // Verificar argumentos
         if (args.length < 2) {
-            sender.sendMessage(ChatColor.RED + "Uso: /winterfall bleeding <cure> [jugador]");
+            ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>Uso: /winterfall bleeding <cure> [jugador]"));
             return;
         }
         
-        // Procesar acción
         String action = args[1].toLowerCase();
         
         if (action.equals("cure")) {
-            // Curar sangrado
             if (args.length >= 3) {
-                // Curar a un jugador específico
+                // Curar sangrado de otro jugador
                 String playerName = args[2];
                 Player target = Bukkit.getPlayer(playerName);
                 
                 if (target == null) {
-                    sender.sendMessage(ChatColor.RED + "Jugador no encontrado: " + playerName);
+                    ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>Jugador no encontrado: " + playerName));
                     return;
                 }
                 
                 plugin.getBleedingSystem().stopBleeding(target);
-                sender.sendMessage(ChatColor.GREEN + "Has curado el sangrado de " + target.getName() + ".");
-                target.sendMessage(ChatColor.GREEN + "Tu sangrado ha sido curado por " + sender.getName() + ".");
+                ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<green>Has curado el sangrado de " + target.getName() + "."));
+                ((Audience) target).sendMessage(MiniMessage.miniMessage().deserialize("<green>Tu sangrado ha sido curado por " + sender.getName() + "."));
+                
             } else if (sender instanceof Player) {
-                // Curar al remitente
+                // Curar sangrado propio
                 Player player = (Player) sender;
                 plugin.getBleedingSystem().stopBleeding(player);
-                player.sendMessage(ChatColor.GREEN + "Has curado tu sangrado.");
+                ((Audience) player).sendMessage(MiniMessage.miniMessage().deserialize("<green>Has curado tu sangrado."));
             } else {
-                sender.sendMessage(ChatColor.RED + "Debes especificar un jugador cuando ejecutas desde la consola.");
+                ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>Debes especificar un jugador cuando ejecutas desde la consola."));
             }
         } else {
-            sender.sendMessage(ChatColor.RED + "Acción desconocida. Usa 'cure'.");
+            ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>Acción desconocida. Usa 'cure'."));
         }
     }
     
@@ -371,37 +386,37 @@ public class WinterfallCommand implements CommandExecutor, TabCompleter {
     private void handleStatusCommand(CommandSender sender, String[] args) {
         // Verificar permisos
         if (!sender.hasPermission("winterfall.status")) {
-            sender.sendMessage(ChatColor.RED + "No tienes permiso para usar este comando.");
+            ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>No tienes permiso para usar este comando."));
+            return;
+        }
+        
+        // Verificar permisos para ver el estado de otros jugadores
+        if (args.length >= 2 && !sender.hasPermission("winterfall.status.others")) {
+            ((Audience) ((Audience) sender)).sendMessage(MiniMessage.miniMessage().deserialize("<red>No tienes permiso para ver el estado de otros jugadores."));
             return;
         }
         
         Player target;
         
-        // Determinar el jugador objetivo
         if (args.length >= 2) {
-            // Ver estado de un jugador específico (requiere permiso adicional)
-            if (!sender.hasPermission("winterfall.status.others")) {
-                sender.sendMessage(ChatColor.RED + "No tienes permiso para ver el estado de otros jugadores.");
-                return;
-            }
-            
+            // Ver estado de otro jugador
             String playerName = args[1];
             target = Bukkit.getPlayer(playerName);
             
             if (target == null) {
-                sender.sendMessage(ChatColor.RED + "Jugador no encontrado: " + playerName);
+                ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>Jugador no encontrado: " + playerName));
                 return;
             }
         } else if (sender instanceof Player) {
             // Ver estado propio
             target = (Player) sender;
         } else {
-            sender.sendMessage(ChatColor.RED + "Debes especificar un jugador cuando ejecutas desde la consola.");
+            ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>Debes especificar un jugador cuando ejecutas desde la consola."));
             return;
         }
         
-        // Mostrar información de estado
-        showPlayerStatus(sender, target);
+        // Mostrar estado del jugador
+        displayPlayerStatus(sender, target);
     }
     
     /**
@@ -409,9 +424,9 @@ public class WinterfallCommand implements CommandExecutor, TabCompleter {
      * @param sender Remitente del comando
      * @param target Jugador objetivo
      */
-    private void showPlayerStatus(CommandSender sender, Player target) {
-        sender.sendMessage(ChatColor.GRAY + "----------------------------------------");
-        sender.sendMessage(ChatColor.AQUA + "Estado de " + target.getName() + ":");
+    private void displayPlayerStatus(CommandSender sender, Player target) {
+        ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<gray>----------------------------------------"));
+        ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<aqua>Estado de " + target.getName() + ":"));
         
         // Estado de radiación
         if (plugin.getRadiationSystem().isActive()) {
@@ -419,18 +434,18 @@ public class WinterfallCommand implements CommandExecutor, TabCompleter {
             String radiationStatus;
             
             if (radiationLevel <= 0) {
-                radiationStatus = ChatColor.GREEN + "Sin radiación";
+                radiationStatus = "<green>Sin radiación";
             } else if (radiationLevel < 30) {
-                radiationStatus = ChatColor.YELLOW + "Radiación leve (" + radiationLevel + "%)"; 
+                radiationStatus = "<yellow>Radiación leve (" + radiationLevel + "%)"; 
             } else if (radiationLevel < 70) {
-                radiationStatus = ChatColor.GOLD + "Radiación moderada (" + radiationLevel + "%)"; 
+                radiationStatus = "<gold>Radiación moderada (" + radiationLevel + "%)"; 
             } else {
-                radiationStatus = ChatColor.RED + "Radiación grave (" + radiationLevel + "%)"; 
+                radiationStatus = "<red>Radiación grave (" + radiationLevel + "%)"; 
             }
             
-            sender.sendMessage(ChatColor.YELLOW + "Nivel de radiación: " + radiationStatus);
+            ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<yellow>Nivel de radiación: " + radiationStatus));
         } else {
-            sender.sendMessage(ChatColor.YELLOW + "Nivel de radiación: " + ChatColor.GRAY + "Sistema inactivo");
+            ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<yellow>Nivel de radiación: <gray>Sistema inactivo"));
         }
         
         // Estado de sangrado
@@ -442,46 +457,47 @@ public class WinterfallCommand implements CommandExecutor, TabCompleter {
                 String bleedingStatus;
                 
                 if (bleedingLevel == 1) {
-                    bleedingStatus = ChatColor.YELLOW + "Leve";
+                    bleedingStatus = "<yellow>Leve";
                 } else if (bleedingLevel == 2) {
-                    bleedingStatus = ChatColor.GOLD + "Moderado";
+                    bleedingStatus = "<gold>Moderado";
                 } else {
-                    bleedingStatus = ChatColor.RED + "Grave";
+                    bleedingStatus = "<red>Grave";
                 }
                 
-                sender.sendMessage(ChatColor.YELLOW + "Estado de sangrado: " + bleedingStatus);
+                ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<yellow>Estado de sangrado: " + bleedingStatus));
             } else {
-                sender.sendMessage(ChatColor.YELLOW + "Estado de sangrado: " + ChatColor.GREEN + "Sin sangrado");
+                ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<yellow>Estado de sangrado: <green>Sin sangrado"));
             }
         } else {
-            sender.sendMessage(ChatColor.YELLOW + "Estado de sangrado: " + ChatColor.GRAY + "Sistema inactivo");
+            ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<yellow>Estado de sangrado: <gray>Sistema inactivo"));
         }
+    
         
         // Estado de hidratación
         if (plugin.getHydrationSystem().isActive()) {
             @SuppressWarnings("unused")
             int hydrationLevel = plugin.getHydrationSystem().getHydrationLevel(target);
             int hydrationPercent = plugin.getHydrationSystem().getHydrationPercentage(target);
-            String hydrationBar = plugin.getHydrationSystem().getHydrationBar(target);
+            Component hydrationBar = plugin.getHydrationSystem().getHydrationBar(target);
             String hydrationStatus;
             
             if (hydrationPercent > 70) {
-                hydrationStatus = ChatColor.AQUA + "Bien hidratado (" + hydrationPercent + "%)"; 
+                hydrationStatus = "<aqua>Bien hidratado (" + hydrationPercent + "%)";
             } else if (hydrationPercent > 30) {
-                hydrationStatus = ChatColor.YELLOW + "Deshidratación leve (" + hydrationPercent + "%)"; 
+                hydrationStatus = "<yellow>Deshidratación leve (" + hydrationPercent + "%)";
             } else {
-                hydrationStatus = ChatColor.RED + "Deshidratación grave (" + hydrationPercent + "%)"; 
+                hydrationStatus = "<red>Deshidratación grave (" + hydrationPercent + "%)";
             }
             
-            sender.sendMessage(ChatColor.YELLOW + "Nivel de hidratación: " + hydrationStatus);
-            sender.sendMessage(ChatColor.YELLOW + "Barra de hidratación: " + hydrationBar);
+            ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<yellow>Nivel de hidratación: " + hydrationStatus));
+            ((Audience) sender).sendMessage(Component.text("Barra de hidratación: ").color(NamedTextColor.YELLOW).append(hydrationBar));
         } else {
-            sender.sendMessage(ChatColor.YELLOW + "Nivel de hidratación: " + ChatColor.GRAY + "Sistema inactivo");
+            ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<yellow>Nivel de hidratación: <gray>Sistema inactivo"));
         }
         
         // Estado de nutrición
         if (plugin.getNutritionSystem().isActive()) {
-            sender.sendMessage(ChatColor.YELLOW + "Estado nutricional:");
+            ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<yellow>Estado nutricional:"));
             
             // Mostrar cada tipo de nutriente
             for (com.darkbladedev.mechanics.NutritionSystem.NutrientType nutrient : 
@@ -491,18 +507,18 @@ public class WinterfallCommand implements CommandExecutor, TabCompleter {
                 
                 String status;
                 if (level > 70) {
-                    status = ChatColor.GREEN + "Óptimo";
+                    status = "<green>Óptimo";
                 } else if (level > 30) {
-                    status = ChatColor.YELLOW + "Deficiente";
+                    status = "<yellow>Deficiente";
                 } else {
-                    status = ChatColor.RED + "Crítico";
+                    status = "<red>Crítico";
                 }
                 
-                sender.sendMessage(ChatColor.GRAY + "  " + nutrient.getDisplayName() + ": " + 
-                        status + ChatColor.GRAY + " (" + level + "%) " + bar);
+                ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<gray>  " + nutrient.getDisplayName() + ": " + 
+                        status + "<gray> (" + level + "%) " + bar));
             }
         } else {
-            sender.sendMessage(ChatColor.YELLOW + "Estado nutricional: " + ChatColor.GRAY + "Sistema inactivo");
+            ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<yellow>Estado nutricional: <gray>Sistema inactivo"));
         }
         
         // Estado de extremidades
@@ -511,10 +527,10 @@ public class WinterfallCommand implements CommandExecutor, TabCompleter {
             String limbStatus = plugin.getLimbDamageSystem().getLimbStatusMessage(target);
             sender.sendMessage(limbStatus);
         } else {
-            sender.sendMessage(ChatColor.YELLOW + "Estado de extremidades: " + ChatColor.GRAY + "Sistema inactivo");
+            ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<yellow>Estado de extremidades: <gray>Sistema inactivo"));
         }
         
-        sender.sendMessage(ChatColor.GRAY + "----------------------------------------");
+        ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<gray>----------------------------------------"));
     }
     
     /**
@@ -525,20 +541,20 @@ public class WinterfallCommand implements CommandExecutor, TabCompleter {
     private void handleHydrationCommand(CommandSender sender, String[] args) {
         // Verificar permisos
         if (!sender.hasPermission("winterfall.hydration")) {
-            sender.sendMessage(ChatColor.RED + "No tienes permiso para usar este comando.");
+            ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>No tienes permiso para usar este comando."));
             return;
         }
         
         // Verificar argumentos
         if (args.length < 3) {
-            sender.sendMessage(ChatColor.RED + "Uso: /winterfall hydration <set/add/remove> <cantidad> [jugador]");
+            ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>Uso: /winterfall hydration <set/add/remove> <cantidad> [jugador]"));
             return;
         }
         
         // Obtener acción
         String action = args[1].toLowerCase();
         if (!action.equals("set") && !action.equals("add") && !action.equals("remove")) {
-            sender.sendMessage(ChatColor.RED + "Acción inválida. Usa set, add o remove.");
+            ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>Acción inválida. Usa set, add o remove."));
             return;
         }
         
@@ -547,11 +563,11 @@ public class WinterfallCommand implements CommandExecutor, TabCompleter {
         try {
             amount = Integer.parseInt(args[2]);
             if (amount < 0 || amount > 20) {
-                sender.sendMessage(ChatColor.RED + "La cantidad debe estar entre 0 y 20.");
+                ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>La cantidad debe estar entre 0 y 20."));
                 return;
             }
         } catch (NumberFormatException e) {
-            sender.sendMessage(ChatColor.RED + "La cantidad debe ser un número válido.");
+            ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>La cantidad debe ser un número válido."));
             return;
         }
         
@@ -560,7 +576,7 @@ public class WinterfallCommand implements CommandExecutor, TabCompleter {
         if (args.length >= 4) {
             // Modificar hidratación de un jugador específico (requiere permiso adicional)
             if (!sender.hasPermission("winterfall.hydration.others")) {
-                sender.sendMessage(ChatColor.RED + "No tienes permiso para modificar la hidratación de otros jugadores.");
+                ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>No tienes permiso para modificar la hidratación de otros jugadores."));
                 return;
             }
             
@@ -568,14 +584,14 @@ public class WinterfallCommand implements CommandExecutor, TabCompleter {
             target = Bukkit.getPlayer(playerName);
             
             if (target == null) {
-                sender.sendMessage(ChatColor.RED + "Jugador no encontrado: " + playerName);
+                ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>Jugador no encontrado: " + playerName));
                 return;
             }
         } else if (sender instanceof Player) {
             // Modificar hidratación propia
             target = (Player) sender;
         } else {
-            sender.sendMessage(ChatColor.RED + "Debes especificar un jugador cuando ejecutas desde la consola.");
+            ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>Debes especificar un jugador cuando ejecutas desde la consola."));
             return;
         }
         
@@ -583,17 +599,17 @@ public class WinterfallCommand implements CommandExecutor, TabCompleter {
         switch (action) {
             case "set":
                 plugin.getHydrationSystem().setHydrationLevel(target, amount);
-                sender.sendMessage(ChatColor.GREEN + "Nivel de hidratación de " + target.getName() + " establecido a " + amount + ".");
+                ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<green>Nivel de hidratación de " + target.getName() + " establecido a " + amount + "."));
                 break;
                 
             case "add":
                 plugin.getHydrationSystem().increaseHydration(target, amount);
-                sender.sendMessage(ChatColor.GREEN + "Aumentado el nivel de hidratación de " + target.getName() + " en " + amount + ".");
+                ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<green>Aumentado el nivel de hidratación de " + target.getName() + " en " + amount + "."));
                 break;
                 
             case "remove":
                 plugin.getHydrationSystem().decreaseHydration(target, amount);
-                sender.sendMessage(ChatColor.GREEN + "Reducido el nivel de hidratación de " + target.getName() + " en " + amount + ".");
+                ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<green>Reducido el nivel de hidratación de " + target.getName() + " en " + amount + "."));
                 break;
         }
     }
@@ -606,13 +622,13 @@ public class WinterfallCommand implements CommandExecutor, TabCompleter {
     private void handleNutritionCommand(CommandSender sender, String[] args) {
         // Verificar permisos
         if (!sender.hasPermission("winterfall.nutrition")) {
-            sender.sendMessage(ChatColor.RED + "No tienes permiso para usar este comando.");
+            ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>No tienes permiso para usar este comando."));
             return;
         }
         
         // Verificar argumentos
         if (args.length < 4) {
-            sender.sendMessage(ChatColor.RED + "Uso: /winterfall nutrition <protein/fat/carbs/vitamins> <set/add/remove> <cantidad> [jugador]");
+            ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>Uso: /winterfall nutrition <protein/fat/carbs/vitamins> <set/add/remove> <cantidad> [jugador]"));
             return;
         }
         
@@ -634,14 +650,14 @@ public class WinterfallCommand implements CommandExecutor, TabCompleter {
                 nutrientType = com.darkbladedev.mechanics.NutritionSystem.NutrientType.VITAMINS;
                 break;
             default:
-                sender.sendMessage(ChatColor.RED + "Tipo de nutriente inválido. Usa protein, fat, carbs o vitamins.");
+                ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>Tipo de nutriente inválido. Usa protein, fat, carbs o vitamins."));
                 return;
         }
         
         // Obtener acción
         String action = args[2].toLowerCase();
         if (!action.equals("set") && !action.equals("add") && !action.equals("remove")) {
-            sender.sendMessage(ChatColor.RED + "Acción inválida. Usa set, add o remove.");
+            ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>Acción inválida. Usa set, add o remove."));
             return;
         }
         
@@ -650,11 +666,11 @@ public class WinterfallCommand implements CommandExecutor, TabCompleter {
         try {
             amount = Integer.parseInt(args[3]);
             if (amount < 0 || amount > 100) {
-                sender.sendMessage(ChatColor.RED + "La cantidad debe estar entre 0 y 100.");
+                ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>La cantidad debe estar entre 0 y 100."));
                 return;
             }
         } catch (NumberFormatException e) {
-            sender.sendMessage(ChatColor.RED + "La cantidad debe ser un número válido.");
+            ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>La cantidad debe ser un número válido."));
             return;
         }
         
@@ -663,7 +679,7 @@ public class WinterfallCommand implements CommandExecutor, TabCompleter {
         if (args.length >= 5) {
             // Modificar nutrición de un jugador específico (requiere permiso adicional)
             if (!sender.hasPermission("winterfall.nutrition.others")) {
-                sender.sendMessage(ChatColor.RED + "No tienes permiso para modificar la nutrición de otros jugadores.");
+                ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>No tienes permiso para modificar la nutrición de otros jugadores."));
                 return;
             }
             
@@ -671,14 +687,14 @@ public class WinterfallCommand implements CommandExecutor, TabCompleter {
             target = Bukkit.getPlayer(playerName);
             
             if (target == null) {
-                sender.sendMessage(ChatColor.RED + "Jugador no encontrado: " + playerName);
+                ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>Jugador no encontrado: " + playerName));
                 return;
             }
         } else if (sender instanceof Player) {
             // Modificar nutrición propia
             target = (Player) sender;
         } else {
-            sender.sendMessage(ChatColor.RED + "Debes especificar un jugador cuando ejecutas desde la consola.");
+            ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>Debes especificar un jugador cuando ejecutas desde la consola."));
             return;
         }
         
@@ -686,17 +702,17 @@ public class WinterfallCommand implements CommandExecutor, TabCompleter {
         switch (action) {
             case "set":
                 plugin.getNutritionSystem().setNutrientLevel(target, nutrientType, amount);
-                sender.sendMessage(ChatColor.GREEN + "Nivel de " + nutrientType.getDisplayName() + " de " + target.getName() + " establecido a " + amount + ".");
+                ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<green>Nivel de " + nutrientType.getDisplayName() + " de " + target.getName() + " establecido a " + amount + "."));
                 break;
                 
             case "add":
                 plugin.getNutritionSystem().addNutrient(target, nutrientType, amount);
-                sender.sendMessage(ChatColor.GREEN + "Aumentado el nivel de " + nutrientType.getDisplayName() + " de " + target.getName() + " en " + amount + ".");
+                ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<green>Aumentado el nivel de " + nutrientType.getDisplayName() + " de " + target.getName() + " en " + amount + "."));
                 break;
                 
             case "remove":
                 plugin.getNutritionSystem().removeNutrient(target, nutrientType, amount);
-                sender.sendMessage(ChatColor.GREEN + "Reducido el nivel de " + nutrientType.getDisplayName() + " de " + target.getName() + " en " + amount + ".");
+                ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<green>Reducido el nivel de " + nutrientType.getDisplayName() + " de " + target.getName() + " en " + amount + "."));
                 break;
         }
     }
@@ -709,21 +725,21 @@ public class WinterfallCommand implements CommandExecutor, TabCompleter {
     private void handleLimbCommand(CommandSender sender, String[] args) {
         // Verificar permisos
         if (!sender.hasPermission("winterfall.limb")) {
-            sender.sendMessage(ChatColor.RED + "No tienes permiso para usar este comando.");
+            ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>No tienes permiso para usar este comando."));
             return;
         }
         
         // Verificar argumentos
         if (args.length < 4) {
-            sender.sendMessage(ChatColor.RED + "Uso: /winterfall limb <set/heal> <extremidad> <nivel> [jugador]");
-            sender.sendMessage(ChatColor.YELLOW + "Extremidades disponibles: head, left_arm, right_arm, left_leg, right_leg, all");
+            ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>Uso: /winterfall limb <set/heal> <extremidad> <nivel> [jugador]"));
+            ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<yellow>Extremidades disponibles: head, left_arm, right_arm, left_leg, right_leg, all"));
             return;
         }
         
         // Obtener acción
         String action = args[1].toLowerCase();
         if (!action.equals("set") && !action.equals("heal")) {
-            sender.sendMessage(ChatColor.RED + "Acción inválida. Usa set o heal.");
+            ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>Acción inválida. Usa set o heal."));
             return;
         }
         
@@ -752,7 +768,7 @@ public class WinterfallCommand implements CommandExecutor, TabCompleter {
                     limbType = com.darkbladedev.mechanics.LimbDamageSystem.LimbType.RIGHT_LEG;
                     break;
                 default:
-                    sender.sendMessage(ChatColor.RED + "Extremidad inválida. Opciones: head, left_arm, right_arm, left_leg, right_leg, all");
+                    ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>Extremidad inválida. Opciones: head, left_arm, right_arm, left_leg, right_leg, all"));
                     return;
             }
         }
@@ -762,7 +778,7 @@ public class WinterfallCommand implements CommandExecutor, TabCompleter {
         if (args.length >= 5) {
             // Modificar extremidad de un jugador específico (requiere permiso adicional)
             if (!sender.hasPermission("winterfall.limb.others")) {
-                sender.sendMessage(ChatColor.RED + "No tienes permiso para modificar las extremidades de otros jugadores.");
+                ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>No tienes permiso para modificar las extremidades de otros jugadores."));
                 return;
             }
             
@@ -770,20 +786,20 @@ public class WinterfallCommand implements CommandExecutor, TabCompleter {
             target = Bukkit.getPlayer(playerName);
             
             if (target == null) {
-                sender.sendMessage(ChatColor.RED + "Jugador no encontrado: " + playerName);
+                ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>Jugador no encontrado: " + playerName));
                 return;
             }
         } else if (sender instanceof Player) {
             // Modificar extremidad propia
             target = (Player) sender;
         } else {
-            sender.sendMessage(ChatColor.RED + "Debes especificar un jugador cuando ejecutas desde la consola.");
+            ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>Debes especificar un jugador cuando ejecutas desde la consola."));
             return;
         }
         
         // Verificar si el sistema está activo
         if (!plugin.getLimbDamageSystem().isActive()) {
-            sender.sendMessage(ChatColor.RED + "El sistema de daño de extremidades está desactivado.");
+            ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>El sistema de daño de extremidades está desactivado."));
             return;
         }
         
@@ -794,14 +810,14 @@ public class WinterfallCommand implements CommandExecutor, TabCompleter {
                 plugin.getLimbDamageSystem().healAllLimbs(target);
                 
                 if (sender != target) {
-                    sender.sendMessage(ChatColor.GREEN + "Has curado todas las extremidades de " + target.getName() + ".");
+                    ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<green>Has curado todas las extremidades de " + target.getName() + "."));
                 }
             } else {
                 // Curar una extremidad específica
                 plugin.getLimbDamageSystem().healLimb(target, limbType);
                 
                 if (sender != target) {
-                    sender.sendMessage(ChatColor.GREEN + "Has curado la " + limbType.getDisplayName() + " de " + target.getName() + ".");
+                    ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<green>Has curado la " + limbType.getDisplayName() + " de " + target.getName() + "."));
                 }
             }
         } else { // action.equals("set")
@@ -810,11 +826,11 @@ public class WinterfallCommand implements CommandExecutor, TabCompleter {
             try {
                 damageLevel = Integer.parseInt(args[3]);
                 if (damageLevel < 0 || damageLevel > 100) {
-                    sender.sendMessage(ChatColor.RED + "El nivel de daño debe estar entre 0 y 100.");
+                    ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>El nivel de daño debe estar entre 0 y 100."));
                     return;
                 }
             } catch (NumberFormatException e) {
-                sender.sendMessage(ChatColor.RED + "El nivel de daño debe ser un número válido.");
+                ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>El nivel de daño debe ser un número válido."));
                 return;
             }
             
@@ -827,8 +843,8 @@ public class WinterfallCommand implements CommandExecutor, TabCompleter {
                 }
                 
                 if (sender != target) {
-                    sender.sendMessage(ChatColor.GREEN + "Has establecido el daño de todas las extremidades de " + 
-                            target.getName() + " a " + damageLevel + "% (" + newState.getDisplayName() + ").");
+                    ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<green>Has establecido el daño de todas las extremidades de " + 
+                            target.getName() + " a " + damageLevel + "% (" + newState.getDisplayName() + ")."));
                 }
             } else {
                 // Establecer el nivel de daño para una extremidad específica
@@ -836,8 +852,8 @@ public class WinterfallCommand implements CommandExecutor, TabCompleter {
                         plugin.getLimbDamageSystem().setLimbDamage(target, limbType, damageLevel);
                 
                 if (sender != target) {
-                    sender.sendMessage(ChatColor.GREEN + "Has establecido el daño de la " + limbType.getDisplayName() + 
-                            " de " + target.getName() + " a " + damageLevel + "% (" + newState.getDisplayName() + ").");
+                    ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<green>Has establecido el daño de la " + limbType.getDisplayName() + 
+                            " de " + target.getName() + " a " + damageLevel + "% (" + newState.getDisplayName() + ")."));
                 }
             }
         }
@@ -851,13 +867,13 @@ public class WinterfallCommand implements CommandExecutor, TabCompleter {
     private void handleConfigCommand(CommandSender sender, String[] args) {
         // Verificar permisos
         if (!sender.hasPermission("winterfall.admin")) {
-            sender.sendMessage(ChatColor.RED + "No tienes permiso para usar este comando.");
+            ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>No tienes permiso para usar este comando."));
             return;
         }
         
         // Verificar argumentos
         if (args.length < 2) {
-            sender.sendMessage(ChatColor.RED + "Uso: /winterfall config <hydration-rate|nutrition-rate> <normal/activity> <tasa>");
+            ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>Uso: /winterfall config <hydration-rate|nutrition-rate> <normal/activity> <tasa>"));
             return;
         }
         
@@ -874,7 +890,7 @@ public class WinterfallCommand implements CommandExecutor, TabCompleter {
                 break;
                 
             default:
-                sender.sendMessage(ChatColor.RED + "Opción de configuración desconocida. Opciones disponibles: hydration-rate, nutrition-rate");
+                ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>Opción de configuración desconocida. Opciones disponibles: hydration-rate, nutrition-rate"));
                 break;
         }
     }
@@ -887,7 +903,7 @@ public class WinterfallCommand implements CommandExecutor, TabCompleter {
     private void handleHydrationRateConfig(CommandSender sender, String[] args) {
         // Verificar si el sistema está activo
         if (!plugin.getHydrationSystem().isActive()) {
-            sender.sendMessage(ChatColor.RED + "El sistema de hidratación no está activo.");
+            ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>El sistema de hidratación no está activo."));
             return;
         }
         
@@ -896,18 +912,18 @@ public class WinterfallCommand implements CommandExecutor, TabCompleter {
             double normalRate = plugin.getHydrationSystem().getNormalDecreaseRate();
             double activityRate = plugin.getHydrationSystem().getActivityDecreaseRate();
             
-            sender.sendMessage(ChatColor.YELLOW + "Tasas de disminución de hidratación actuales:");
-            sender.sendMessage(ChatColor.AQUA + "  Normal: " + ChatColor.WHITE + normalRate + " (" + (normalRate * 100) + "% por tick)");
-            sender.sendMessage(ChatColor.AQUA + "  Actividad: " + ChatColor.WHITE + activityRate + " (" + (activityRate * 100) + "% por tick)");
-            sender.sendMessage(ChatColor.YELLOW + "Uso: /winterfall config hydration-rate <normal/activity> <tasa>");
-            sender.sendMessage(ChatColor.GRAY + "La tasa debe ser un número entre 0.0 y 1.0");
+            ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<yellow>Tasas de disminución de hidratación actuales:"));
+            ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<aqua>  Normal: <white>" + normalRate + " (" + (normalRate * 100) + "% por tick)"));
+            ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<aqua>  Actividad: <white>" + activityRate + " (" + (activityRate * 100) + "% por tick)"));
+            ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<yellow>Uso: /winterfall config hydration-rate <normal/activity> <tasa>"));
+            ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<gray>La tasa debe ser un número entre 0.0 y 1.0"));
             return;
         }
         
         // Obtener tipo de tasa
         String rateType = args[2].toLowerCase();
         if (!rateType.equals("normal") && !rateType.equals("activity")) {
-            sender.sendMessage(ChatColor.RED + "Tipo de tasa inválido. Usa normal o activity.");
+            ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>Tipo de tasa inválido. Usa normal o activity."));
             return;
         }
         
@@ -916,21 +932,21 @@ public class WinterfallCommand implements CommandExecutor, TabCompleter {
         try {
             rate = Double.parseDouble(args[3]);
             if (rate < 0.0 || rate > 1.0) {
-                sender.sendMessage(ChatColor.RED + "La tasa debe estar entre 0.0 y 1.0.");
+                ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>La tasa debe estar entre 0.0 y 1.0."));
                 return;
             }
         } catch (NumberFormatException e) {
-            sender.sendMessage(ChatColor.RED + "La tasa debe ser un número válido.");
+            ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>La tasa debe ser un número válido."));
             return;
         }
         
         // Aplicar cambio según el tipo
         if (rateType.equals("normal")) {
             plugin.getHydrationSystem().setNormalDecreaseRate(rate);
-            sender.sendMessage(ChatColor.GREEN + "Tasa de disminución normal de hidratación establecida a " + rate + " (" + (rate * 100) + "% por tick).");
+            ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<green>Tasa de disminución normal de hidratación establecida a " + rate + " (" + (rate * 100) + "% por tick)."));
         } else {
             plugin.getHydrationSystem().setActivityDecreaseRate(rate);
-            sender.sendMessage(ChatColor.GREEN + "Tasa de disminución de hidratación durante actividad establecida a " + rate + " (" + (rate * 100) + "% por tick).");
+            ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<green>Tasa de disminución de hidratación durante actividad establecida a " + rate + " (" + (rate * 100) + "% por tick)."));
         }
     }
     
@@ -942,7 +958,7 @@ public class WinterfallCommand implements CommandExecutor, TabCompleter {
     private void handleNutritionRateConfig(CommandSender sender, String[] args) {
         // Verificar si el sistema está activo
         if (!plugin.getNutritionSystem().isActive()) {
-            sender.sendMessage(ChatColor.RED + "El sistema de nutrición no está activo.");
+            ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>El sistema de nutrición no está activo."));
             return;
         }
         
@@ -951,18 +967,18 @@ public class WinterfallCommand implements CommandExecutor, TabCompleter {
             double normalRate = plugin.getNutritionSystem().getNormalDecreaseRate();
             double activityRate = plugin.getNutritionSystem().getActivityDecreaseRate();
             
-            sender.sendMessage(ChatColor.YELLOW + "Tasas de disminución de nutrientes actuales:");
-            sender.sendMessage(ChatColor.GREEN + "  Normal: " + ChatColor.WHITE + normalRate + " (" + (normalRate * 100) + "% por tick)");
-            sender.sendMessage(ChatColor.GREEN + "  Actividad: " + ChatColor.WHITE + activityRate + " (" + (activityRate * 100) + "% por tick)");
-            sender.sendMessage(ChatColor.YELLOW + "Uso: /winterfall config nutrition-rate <normal/activity> <tasa>");
-            sender.sendMessage(ChatColor.GRAY + "La tasa debe ser un número entre 0.0 y 1.0");
+            ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<yellow>Tasas de disminución de nutrientes actuales:"));
+            ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<green>  Normal: <white>" + normalRate + " (" + (normalRate * 100) + "% por tick)"));
+            ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<green>  Actividad: <white>" + activityRate + " (" + (activityRate * 100) + "% por tick)"));
+            ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<yellow>Uso: /winterfall config nutrition-rate <normal/activity> <tasa>"));
+            ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<gray>La tasa debe ser un número entre 0.0 y 1.0"));
             return;
         }
         
         // Obtener tipo de tasa
         String rateType = args[2].toLowerCase();
         if (!rateType.equals("normal") && !rateType.equals("activity")) {
-            sender.sendMessage(ChatColor.RED + "Tipo de tasa inválido. Usa normal o activity.");
+            ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>Tipo de tasa inválido. Usa normal o activity."));
             return;
         }
         
@@ -971,21 +987,21 @@ public class WinterfallCommand implements CommandExecutor, TabCompleter {
         try {
             rate = Double.parseDouble(args[3]);
             if (rate < 0.0 || rate > 1.0) {
-                sender.sendMessage(ChatColor.RED + "La tasa debe estar entre 0.0 y 1.0.");
+                ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>La tasa debe estar entre 0.0 y 1.0."));
                 return;
             }
         } catch (NumberFormatException e) {
-            sender.sendMessage(ChatColor.RED + "La tasa debe ser un número válido.");
+            ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>La tasa debe ser un número válido."));
             return;
         }
         
         // Aplicar cambio según el tipo
         if (rateType.equals("normal")) {
             plugin.getNutritionSystem().setNormalDecreaseRate(rate);
-            sender.sendMessage(ChatColor.GREEN + "Tasa de disminución normal de nutrientes establecida a " + rate + " (" + (rate * 100) + "% por tick).");
+            ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<green>Tasa de disminución normal de nutrientes establecida a " + rate + " (" + (rate * 100) + "% por tick)."));
         } else {
             plugin.getNutritionSystem().setActivityDecreaseRate(rate);
-            sender.sendMessage(ChatColor.GREEN + "Tasa de disminución de nutrientes durante actividad establecida a " + rate + " (" + (rate * 100) + "% por tick).");
+            ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<green>Tasa de disminución de nutrientes durante actividad establecida a " + rate + " (" + (rate * 100) + "% por tick)."));
         }
     }
     

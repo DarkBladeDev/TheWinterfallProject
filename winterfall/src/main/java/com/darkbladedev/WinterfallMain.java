@@ -17,10 +17,12 @@ import com.darkbladedev.mobs.MobManager;
 import com.ssomar.score.SCore;
 
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
+
+import net.kyori.adventure.audience.Audience;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 
 /**
  * Clase principal del plugin Winterfall que recrea el mundo de "El Eternauta"
@@ -62,9 +64,9 @@ public class WinterfallMain extends JavaPlugin {
         if (Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null) {
             placeholders = new PlaceholderAPIExpansion(this);
             placeholders.register();
-            Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN + "[Winterfall] PlaceholderAPI detectado y placeholders registrados");
+            ((Audience) Bukkit.getConsoleSender()).sendMessage(MiniMessage.miniMessage().deserialize("<green>[Winterfall] PlaceholderAPI detectado y placeholders registrados"));
         } else {
-            Bukkit.getConsoleSender().sendMessage(ChatColor.YELLOW + "[Winterfall] PlaceholderAPI no detectado. Los placeholders no estarán disponibles.");
+            ((Audience) Bukkit.getConsoleSender()).sendMessage(MiniMessage.miniMessage().deserialize("<yellow>[Winterfall] PlaceholderAPI no detectado. Los placeholders no estarán disponibles."));
         }
 
 
@@ -77,7 +79,7 @@ public class WinterfallMain extends JavaPlugin {
         }
         
         // Mensaje de inicio
-        Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN + "[Winterfall] El plugin ha sido activado!");
+        ((Audience) Bukkit.getConsoleSender()).sendMessage(MiniMessage.miniMessage().deserialize("<green>[Winterfall] El plugin ha sido activado!"));
     }
 
     @Override
@@ -112,7 +114,7 @@ public class WinterfallMain extends JavaPlugin {
         }
         
         // Mensaje de cierre
-        Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[Winterfall] El plugin ha sido desactivado! La nevada ha cesado temporalmente...");
+        ((Audience) Bukkit.getConsoleSender()).sendMessage(MiniMessage.miniMessage().deserialize("<red>[Winterfall] El plugin ha sido desactivado! La nevada ha cesado temporalmente..."));
         
         // Limpiar instancia
         instance = null;

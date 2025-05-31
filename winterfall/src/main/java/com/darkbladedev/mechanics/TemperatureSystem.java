@@ -4,7 +4,6 @@ import com.darkbladedev.WinterfallMain;
 import com.darkbladedev.items.ItemManager;
 
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.World;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
@@ -19,6 +18,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerChangedWorldEvent;
 
+import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 
@@ -106,9 +106,9 @@ public class TemperatureSystem implements Listener {
             // Iniciar sistema
             startTemperatureSystem();
             
-            Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN + "[Winterfall] Sistema de temperatura activado");
+            ((Audience) (Bukkit.getConsoleSender())).sendMessage(MiniMessage.miniMessage().deserialize("<green>[Winterfall] Sistema de temperatura activado"));
         } else {
-            Bukkit.getConsoleSender().sendMessage(ChatColor.YELLOW + "[Winterfall] Sistema de temperatura desactivado en la configuración");
+            ((Audience) (Bukkit.getConsoleSender())).sendMessage(MiniMessage.miniMessage().deserialize("<yellow>[Winterfall] Sistema de temperatura desactivado en la configuración"));
         }
     }
     
@@ -230,7 +230,7 @@ public class TemperatureSystem implements Listener {
             
             // Daño por hipotermia severa
             player.damage(1.0);
-            player.sendMessage(ChatColor.DARK_RED + "¡Estás sufriendo hipotermia severa! Necesitas protección contra el frío urgentemente.");
+            ((Audience) player).sendMessage(MiniMessage.miniMessage().deserialize("<dark_red>¡Estás sufriendo hipotermia severa! Necesitas protección contra el frío urgentemente."));
         } else if (temperature <= HYPOTHERMIA_THRESHOLD) {
             // Hipotermia moderada - efectos de movimiento y debilidad
             player.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, updateInterval + 20, 1));
@@ -238,7 +238,7 @@ public class TemperatureSystem implements Listener {
             
             // Mensaje de advertencia
             if (temperature % 5 == 0) { // Mostrar mensaje cada 5 puntos de temperatura
-                player.sendMessage(ChatColor.RED + "Estás comenzando a sufrir hipotermia. Necesitas protección contra el frío.");
+                ((Audience) player).sendMessage(MiniMessage.miniMessage().deserialize("<red>Estás comenzando a sufrir hipotermia. Necesitas protección contra el frío."));
             }
         }
     }
@@ -427,7 +427,7 @@ public class TemperatureSystem implements Listener {
             temperatureTask.cancel();
         }
         isActive = false;
-        Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN + "[Winterfall] Sistema de temperatura desactivado");
+        ((Audience) Bukkit.getConsoleSender()).sendMessage(MiniMessage.miniMessage().deserialize("<green>[Winterfall] Sistema de temperatura desactivado"));
     }
     
     /**

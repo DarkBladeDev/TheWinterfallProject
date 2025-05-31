@@ -11,6 +11,9 @@ import com.darkbladedev.mechanics.StaminaSystem;
 import com.darkbladedev.mechanics.TemperatureSystem;
 
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.MiniMessage;
+
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.OfflinePlayer;
@@ -111,7 +114,11 @@ public class PlaceholderAPIExpansion extends PlaceholderExpansion {
         }
 
         if (identifier.equals("hydration_bar")) {
-            return hydrationSystem.getHydrationBar(player);
+            // Obtenemos el Component y lo convertimos a un formato legible para PlaceholderAPI
+            // Usamos MiniMessage para serializar el Component a un string con formato
+            Component hydrationBar = hydrationSystem.getHydrationBar(player);
+            // Convertimos el Component a un string con formato MiniMessage
+            return MiniMessage.miniMessage().serialize(hydrationBar);
         }
 
         // Placeholders de nutrición

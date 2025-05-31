@@ -4,6 +4,7 @@ import com.darkbladedev.WinterfallMain;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Color;
 import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
@@ -112,6 +113,7 @@ public class BleedingSystem implements Listener {
     private void applyBleedingEffects(LivingEntity entity, int severity) {
         // Efectos visuales de sangrado
         Location loc = entity.getLocation();
+        Particle.DustOptions dustOptions = new Particle.DustOptions(Color.RED, 1.0f);
         
         // Partículas de sangrado (más intensas según severidad)
         for (int i = 0; i < severity * 3; i++) {
@@ -119,7 +121,7 @@ public class BleedingSystem implements Listener {
             double y = loc.getY() + 1.0 + (random.nextDouble() * 0.5);
             double z = loc.getZ() + (random.nextDouble() * 0.5) - 0.25;
             
-            loc.getWorld().spawnParticle(Particle.DUST, x, y, z, 1, 0.2, 0.2, 0.2, 0);
+            loc.getWorld().spawnParticle(Particle.DUST, x, y, z, 1, 0.2, 0.2, 0.2, dustOptions);
         }
         
         // Efectos de sonido (probabilidad basada en severidad)

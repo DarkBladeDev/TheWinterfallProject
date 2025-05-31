@@ -6,7 +6,6 @@ import com.ssomar.score.api.executableitems.config.ExecutableItemInterface;
 import com.ssomar.score.api.executableitems.config.ExecutableItemsManagerInterface;
 
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.inventory.ItemStack;
@@ -14,6 +13,9 @@ import org.bukkit.inventory.ShapedRecipe;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+
+import net.kyori.adventure.audience.Audience;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 
 /**
  * Gestor de ítems personalizados del plugin
@@ -46,7 +48,7 @@ public class ItemManager {
         // Registrar recetas
         registerRecipes();
         
-        Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN + "[Winterfall] Sistema de ítems inicializado");
+        ((Audience) Bukkit.getConsoleSender()).sendMessage(MiniMessage.miniMessage().deserialize("<green>[Winterfall] Sistema de ítems inicializado"));
     }
     
     /**

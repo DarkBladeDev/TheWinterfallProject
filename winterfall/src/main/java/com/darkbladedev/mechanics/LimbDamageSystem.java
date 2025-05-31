@@ -11,6 +11,7 @@ import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
+import org.bukkit.attribute.Attribute;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -149,6 +150,11 @@ public class LimbDamageSystem implements Listener {
         DamageCause cause = event.getCause();
         double damage = event.getDamage();
         
+        // Verificar si el daño es por poción (no aplicar daño a extremidades)
+        if (cause == DamageCause.POISON || cause == DamageCause.MAGIC || cause == DamageCause.WITHER) {
+            return; // No aplicar daño a extremidades por efectos de poción
+        }
+        
         // Determinar qué extremidad dañar según el tipo de daño
         LimbType targetLimb = null;
         
@@ -238,6 +244,9 @@ public class LimbDamageSystem implements Listener {
      * @param state Estado de daño
      */
     private void applyEffectsForLimbDamage(Player player, LimbType limbType, DamageState state) {
+        // Actualizar la salud máxima del jugador basado en extremidades rotas
+        updatePlayerMaxHealth(player);
+        
         switch (limbType) {
             case HEAD:
                 // Daño en la cabeza afecta la visión y causa náuseas
@@ -321,6 +330,9 @@ public class LimbDamageSystem implements Listener {
         if (playerLimbDamage.containsKey(limbType)) {
             playerLimbDamage.put(limbType, 0);
             player.sendMessage(ChatColor.GREEN + "Tu " + limbType.getDisplayName() + " ha sido curada.");
+            
+            // Actualizar la salud máxima del jugador después de curar
+            updatePlayerMaxHealth(player);
         }
     }
     
@@ -342,6 +354,9 @@ public class LimbDamageSystem implements Listener {
         }
         
         player.sendMessage(ChatColor.GREEN + "Todas tus extremidades han sido curadas.");
+        
+        // Restaurar la salud máxima del jugador después de curar todas las extremidades
+        player.getAttribute(org.bukkit.attribute.Attribute.MAX_HEALTH).setBaseValue(20.0);
     }
     
     /**
@@ -364,7 +379,7 @@ public class LimbDamageSystem implements Listener {
     }
     
     /**
-     * Establece el estado de daño de una extremidad específica
+     * Establece el nivel de daño de una extremidad específica
      * @param player Jugador al que se le aplicará el cambio
      * @param limbType Tipo de extremidad a modificar
      * @param damageLevel Nivel de daño a establecer (0-100)
@@ -393,6 +408,9 @@ public class LimbDamageSystem implements Listener {
         // Aplicar efectos basados en el nuevo nivel de daño
         DamageState newState = getDamageState(damageLevel);
         applyEffectsForLimbDamage(player, limbType, newState);
+        
+        // Actualizar la salud máxima del jugador
+        updatePlayerMaxHealth(player);
         
         // Notificar al jugador sobre el cambio
         String stateMessage;
@@ -515,6 +533,51 @@ public class LimbDamageSystem implements Listener {
                 DamageState state = getDamageState(level);
                 applyEffectsForLimbDamage(player, type, state);
             }
+        }
+        
+        // Actualizar la salud máxima del jugador
+        updatePlayerMaxHealth(player);
+    }
+    
+    /**
+     * Actualiza la salud máxima del jugador basado en el número de extremidades rotas
+     * @param player Jugador a actualizar
+     */
+    private void updatePlayerMaxHealth(Player player) {
+        if (player == null) {
+            return;
+        }
+        
+        UUID playerId = player.getUniqueId();
+        
+        if (!limbDamage.containsKey(playerId)) {
+            // Si no hay datos de daño, restaurar la salud máxima por defecto
+            player.getAttribute(Attribute.MAX_HEALTH).setBaseValue(20.0);
+            return;
+        }
+        
+        Map<LimbType, Integer> playerLimbDamage = limbDamage.get(playerId);
+        int brokenLimbs = 0;
+        
+        // Contar extremidades rotas (estado BROKEN o CRITICAL)
+        for (LimbType type : LimbType.values()) {
+            int damageLevel = playerLimbDamage.getOrDefault(type, 0);
+            DamageState state = getDamageState(damageLevel);
+            if (state == DamageState.BROKEN || state == DamageState.CRITICAL) {
+                brokenLimbs++;
+            }
+        }
+        
+        // Calcular nueva salud máxima (20.0 - 3.5 por cada extremidad rota)
+        double maxHealth = Math.max(1.0, 20.0 - (brokenLimbs * 3.5));
+        
+        // Aplicar nueva salud máxima
+        player.getAttribute(Attribute.MAX_HEALTH).setBaseValue(maxHealth);
+        
+        // Informar al jugador si hay cambios significativos
+        if (brokenLimbs > 0) {
+            player.sendMessage(ChatColor.RED + "Tus extremidades rotas han reducido tu salud máxima a " + 
+                    ChatColor.GOLD + maxHealth + ChatColor.RED + " puntos.");
         }
     }
 }

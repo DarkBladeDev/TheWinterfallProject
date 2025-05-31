@@ -4,10 +4,12 @@ import com.darkbladedev.WinterfallMain;
 import com.darkbladedev.mechanics.NutritionSystem.NutrientType;
 
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
+
+import net.kyori.adventure.audience.Audience;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 
 import java.io.File;
 import java.sql.Connection;
@@ -73,11 +75,11 @@ public class DatabaseManager {
             // Iniciar tarea de guardado automático
             startSaveTask();
             
-            Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN + "[Winterfall] Base de datos SQLite inicializada correctamente");
+            ((Audience) Bukkit.getConsoleSender()).sendMessage(MiniMessage.miniMessage().deserialize("<green>[Winterfall] Base de datos SQLite inicializada correctamente"));
         } catch (ClassNotFoundException e) {
-            Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[Winterfall] Error al cargar el driver de SQLite: " + e.getMessage());
+            ((Audience) Bukkit.getConsoleSender()).sendMessage(MiniMessage.miniMessage().deserialize("<red>[Winterfall] Error al cargar el driver de SQLite: " + e.getMessage()));
         } catch (SQLException e) {
-            Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[Winterfall] Error al conectar con la base de datos SQLite: " + e.getMessage());
+            ((Audience) Bukkit.getConsoleSender()).sendMessage(MiniMessage.miniMessage().deserialize("<red>[Winterfall] Error al conectar con la base de datos SQLite: " + e.getMessage()));
         }
     }
     
@@ -152,7 +154,7 @@ public class DatabaseManager {
             // Guardar daño en extremidades
             saveLimbDamageData(playerId);
         } catch (SQLException e) {
-            Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[Winterfall] Error al guardar datos del jugador: " + e.getMessage());
+            ((Audience) Bukkit.getConsoleSender()).sendMessage(MiniMessage.miniMessage().deserialize("<red>[Winterfall] Error al guardar datos del jugador: " + e.getMessage()));
         }
     }
     
@@ -236,7 +238,7 @@ public class DatabaseManager {
             // Cargar daño en extremidades
             loadLimbDamageData(playerId);
         } catch (SQLException e) {
-            Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[Winterfall] Error al cargar datos del jugador: " + e.getMessage());
+            ((Audience) Bukkit.getConsoleSender()).sendMessage(MiniMessage.miniMessage().deserialize("<red>[Winterfall] Error al cargar datos del jugador: " + e.getMessage()));
         }
     }
     
@@ -313,7 +315,7 @@ public class DatabaseManager {
                         com.darkbladedev.mechanics.LimbDamageSystem.LimbType.valueOf(limbTypeName);
                     plugin.getLimbDamageSystem().setLimbDamage(player, limbType, damageLevel);
                 } catch (IllegalArgumentException e) {
-                    Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[Winterfall] Tipo de extremidad desconocido: " + limbTypeName);
+                    ((Audience) Bukkit.getConsoleSender()).sendMessage(MiniMessage.miniMessage().deserialize("<red>[Winterfall] Tipo de extremidad desconocido: " + limbTypeName));
                 }
             }
         }
@@ -340,7 +342,7 @@ public class DatabaseManager {
                 connection.close();
             }
         } catch (SQLException e) {
-            Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[Winterfall] Error al cerrar la conexión con la base de datos: " + e.getMessage());
+            ((Audience) Bukkit.getConsoleSender()).sendMessage(MiniMessage.miniMessage().deserialize("<red>[Winterfall] Error al cerrar la conexión con la base de datos: " + e.getMessage()));
         }
     }
 }
