@@ -128,7 +128,7 @@ public class WinterfallCommand implements CommandExecutor, TabCompleter {
         ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<yellow>/winterfall mob <tipo> [cantidad]<gray> - Genera mobs alienígenas"));
         ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<yellow>/winterfall snow <on/off><gray> - Activa/desactiva la nevada tóxica"));
         ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<yellow>/winterfall radiation <on/off><gray> - Activa/desactiva la radiación"));
-        ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<yellow>/winterfall bleeding <cure> [jugador]<gray> - Cura el sangrado"));
+        ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<yellow>/winterfall bleeding <cure/start> [jugador] [severidad] [duración]<gray> - Gestiona el sangrado"));
         ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<yellow>/winterfall hydration <set/add/remove> <cantidad> [jugador]<gray> - Gestiona la hidratación"));
         ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<yellow>/winterfall nutrition <protein/fat/carbs/vitamins> <set/add/remove> <cantidad> [jugador]<gray> - Gestiona la nutrición"));
         ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<yellow>/winterfall limb <set/heal> <extremidad/all> <nivel> [jugador]<gray> - Gestiona el daño de extremidades"));
@@ -344,7 +344,7 @@ public class WinterfallCommand implements CommandExecutor, TabCompleter {
         
         // Verificar argumentos
         if (args.length < 2) {
-            ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>Uso: /winterfall bleeding <cure> [jugador]"));
+            ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>Uso: /winterfall bleeding <cure/start> [jugador] [severidad] [duración]"));
             return;
         }
         
@@ -373,8 +373,59 @@ public class WinterfallCommand implements CommandExecutor, TabCompleter {
             } else {
                 ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>Debes especificar un jugador cuando ejecutas desde la consola."));
             }
+        } else if (action.equals("start")) {
+            // Valores predeterminados
+            int severity = 1; // Severidad por defecto: leve (1-3)
+            int duration = 20; // Duración por defecto: 20 segundos
+            
+            if (args.length >= 4) {
+                try {
+                    severity = Integer.parseInt(args[3]);
+                    // Asegurar que la severidad esté entre 1 y 3
+                    severity = Math.max(1, Math.min(3, severity));
+                } catch (NumberFormatException e) {
+                    ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>La severidad debe ser un número entre 1 y 3."));
+                    return;
+                }
+            }
+            
+            if (args.length >= 5) {
+                try {
+                    duration = Integer.parseInt(args[4]);
+                    // Asegurar que la duración sea al menos 5 segundos
+                    duration = Math.max(5, duration);
+                } catch (NumberFormatException e) {
+                    ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>La duración debe ser un número mayor a 5."));
+                    return;
+                }
+            }
+            
+            if (args.length >= 3) {
+                // Aplicar sangrado a otro jugador
+                String playerName = args[2];
+                Player target = Bukkit.getPlayer(playerName);
+                
+                if (target == null) {
+                    ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>Jugador no encontrado: " + playerName));
+                    return;
+                }
+                
+                plugin.getBleedingSystem().applyBleeding(target, severity, duration);
+                
+                String severityText = severity == 1 ? "leve" : (severity == 2 ? "moderado" : "grave");
+                ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<green>Has aplicado sangrado " + severityText + " a " + target.getName() + " por " + duration + " segundos."));
+            } else if (sender instanceof Player) {
+                // Aplicar sangrado a sí mismo
+                Player player = (Player) sender;
+                plugin.getBleedingSystem().applyBleeding(player, severity, duration);
+                
+                String severityText = severity == 1 ? "leve" : (severity == 2 ? "moderado" : "grave");
+                ((Audience) player).sendMessage(MiniMessage.miniMessage().deserialize("<green>Te has aplicado sangrado " + severityText + " por " + duration + " segundos."));
+            } else {
+                ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>Debes especificar un jugador cuando ejecutas desde la consola."));
+            }
         } else {
-            ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>Acción desconocida. Usa 'cure'."));
+            ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>Acción desconocida. Usa 'cure' o 'start'."));
         }
     }
     
@@ -1061,14 +1112,33 @@ public class WinterfallCommand implements CommandExecutor, TabCompleter {
                     
                 case "bleeding":
                     if (args.length == 2) {
-                        if ("cure".startsWith(args[1].toLowerCase())) {
-                            completions.add("cure");
+                        String[] bleedingActions = {"cure", "start"};
+                        for (String action : bleedingActions) {
+                            if (action.startsWith(args[1].toLowerCase())) {
+                                completions.add(action);
+                            }
                         }
-                    } else if (args.length == 3 && args[1].equalsIgnoreCase("cure")) {
-                        // Autocompletar nombres de jugadores
+                    } else if (args.length == 3) {
+                        // Autocompletar nombres de jugadores para ambas acciones
                         for (Player player : Bukkit.getOnlinePlayers()) {
                             if (player.getName().toLowerCase().startsWith(args[2].toLowerCase())) {
                                 completions.add(player.getName());
+                            }
+                        }
+                    } else if (args.length == 4 && args[1].equalsIgnoreCase("start")) {
+                        // Autocompletar severidad (1-3)
+                        String[] severities = {"1", "2", "3"};
+                        for (String severity : severities) {
+                            if (severity.startsWith(args[3])) {
+                                completions.add(severity);
+                            }
+                        }
+                    } else if (args.length == 5 && args[1].equalsIgnoreCase("start")) {
+                        // Autocompletar duración (sugerencias comunes)
+                        String[] durations = {"5", "10", "30", "60", "120", "300"};
+                        for (String duration : durations) {
+                            if (duration.startsWith(args[4])) {
+                                completions.add(duration);
                             }
                         }
                     }

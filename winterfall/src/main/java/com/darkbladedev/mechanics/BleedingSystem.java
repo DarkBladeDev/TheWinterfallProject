@@ -1,6 +1,7 @@
 package com.darkbladedev.mechanics;
 
 import com.darkbladedev.WinterfallMain;
+import com.darkbladedev.CustomTypes.CustomDamageTypes;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -8,6 +9,8 @@ import org.bukkit.Color;
 import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
+import org.bukkit.damage.DamageSource;
+import org.bukkit.damage.DamageType;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -55,7 +58,7 @@ public class BleedingSystem implements Listener {
         startBleedingSystem();
         isActive = true;
         
-        Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[Winterfall] Sistema de sangrado inicializado");
+        Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN + "[Winterfall] Sistema de sangrado inicializado");
     }
     
     /**
@@ -131,7 +134,12 @@ public class BleedingSystem implements Listener {
         
         // Daño por sangrado según severidad
         if (random.nextInt(5) < severity) {
-            entity.damage(severity * 0.5); // 0.5, 1.0 o 1.5 corazones de daño
+            try {
+                entity.damage(severity * 0.5, (Entity) DamageSource.builder((DamageType) CustomDamageTypes.BLEEDING)); // 0.5, 1.0 o 1.5 corazones de daño
+            } catch (Exception e) {
+                Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[Winterfall] Error al aplicar sangrado con DamageType custom (Aplicando daño default): " + e.getMessage());
+                entity.damage(severity * 0.5); // Daño por defecto si hay un error
+            }
         }
         
         // Efectos adicionales para jugadores
@@ -178,8 +186,12 @@ public class BleedingSystem implements Listener {
      * @param duration Duración en segundos
      */
     public void applyBleeding(LivingEntity entity, int severity, int duration) {
-        // Validar parámetros
-        severity = Math.max(1, Math.min(3, severity)); // Entre 1 y 3
+        if (!isActive || entity == null) {
+            return;
+        }
+        
+        // Validar severidad
+        severity = Math.max(1, Math.min(3, severity));
         duration = Math.max(5, duration); // Mínimo 5 segundos
         
         UUID entityId = entity.getUniqueId();
@@ -215,8 +227,7 @@ public class BleedingSystem implements Listener {
                     break;
             }
             
-            player.sendMessage(ChatColor.RED + "¡Has comenzado a sangrar! " + 
-                    "Tienes un sangrado " + severityText + ChatColor.RED + ".");
+            player.sendMessage(ChatColor.RED + "¡Estás sangrando! " + ChatColor.WHITE + "(Nivel: " + severityText + ChatColor.WHITE + ", Duración: " + duration + " segundos)");
         }
     }
     
@@ -254,19 +265,22 @@ public class BleedingSystem implements Listener {
     
     /**
      * Detiene el sangrado de una entidad
-     * @param entity Entidad a curar
+     * @param entity Entidad a la que detener el sangrado
      */
     public void stopBleeding(LivingEntity entity) {
-        UUID entityId = entity.getUniqueId();
+        if (entity == null) {
+            return;
+        }
         
-        if (bleedingSeverity.containsKey(entityId)) {
-            bleedingSeverity.remove(entityId);
-            bleedingDuration.remove(entityId);
+        UUID entityId = entity.getUniqueId();
+        bleedingSeverity.remove(entityId);
+        bleedingDuration.remove(entityId);
+        
+        // Notificar al jugador
+        if (entity instanceof Player) {
+            Player player = (Player) entity;
+            player.sendMessage(ChatColor.GREEN + "Tu sangrado se ha detenido.");
             
-            if (entity instanceof Player) {
-                Player player = (Player) entity;
-                player.sendMessage(ChatColor.GREEN + "Tu sangrado ha sido curado.");
-            }
         }
     }
     

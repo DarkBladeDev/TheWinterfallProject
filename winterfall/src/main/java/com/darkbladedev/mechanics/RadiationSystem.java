@@ -208,4 +208,8 @@ public class RadiationSystem {
     public boolean isActive() {
         return isActive;
     }
+
+    public int getMaxRadiationLevel() {
+        return 20;
+    }
 }

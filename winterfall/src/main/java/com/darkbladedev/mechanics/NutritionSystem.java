@@ -620,4 +620,8 @@ public class NutritionSystem implements Listener {
         isActive = false;
         ((Audience) Bukkit.getConsoleSender()).sendMessage(MiniMessage.miniMessage().deserialize("<green>[Winterfall] Sistema de nutrición desactivado"));
     }
+
+    public int getMaxNutrientLevel() {
+        return MAX_NUTRIENT_LEVEL;
+    }
 }

@@ -400,4 +400,8 @@ public class StaminaSystem implements Listener {
             applyLowStaminaEffects(player, newLevel);
         }
     }
+
+    public int getMaxStamina() {
+        return MAX_STAMINA;
+    }
 }

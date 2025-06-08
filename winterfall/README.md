@@ -13,10 +13,6 @@ Este plugin recrea el mundo post-apocalíptico de la serie "El Eternauta" en Min
 ### Ítems Especiales
 - **Traje Aislante**: Conjunto de armadura que protege contra la nevada tóxica, similar al usado por Juan Salvo y sus compañeros.
 
-### Mobs Alienígenas
-- **Manos**: Invasores básicos, rápidos y letales.
-- **Cascarudos**: Invasores blindados, resistentes al daño.
-- **Gurbos**: Invasores gigantes, extremadamente fuertes pero lentos.
 
 ## Comandos
 
@@ -27,9 +23,6 @@ Este plugin recrea el mundo post-apocalíptico de la serie "El Eternauta" en Min
 - `/winterfall item <tipo>` - Obtiene un ítem especial
   - Tipos disponibles: isolation_helmet, isolation_chestplate, isolation_leggings, isolation_boots, flamethrower, electric_gun, full_suit
 
-### Mobs
-- `/winterfall mob <tipo> [cantidad]` - Genera mobs alienígenas
-  - Tipos disponibles: mano, cascarudo, gurbo, random
 
 ### Control Ambiental
 - `/winterfall snow <on/off>` - Activa/desactiva la nevada tóxica

@@ -1,12 +1,16 @@
 package com.darkbladedev.mechanics;
 
 import com.darkbladedev.WinterfallMain;
+import com.darkbladedev.CustomTypes.CustomDamageTypes;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.damage.DamageSource;
+import org.bukkit.damage.DamageType;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -157,7 +161,12 @@ public class HydrationSystem implements Listener {
         // Efectos según el nivel de hidratación
         if (level <= 0) {
             // Deshidratación severa: daño y efectos graves
-            player.damage(1.0); // Medio corazón de daño
+            try {
+                player.damage(1.0, (Entity) DamageSource.builder((DamageType) CustomDamageTypes.DEHYDRATION)); // Medio corazón de daño
+            } catch (Exception e) {
+                Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[Winterfall] Error al aplicar deshidratación con DamageType custom (Aplicando daño default): " + e.getMessage());
+                player.damage(1.0); // Daño por defecto si hay un error
+            }
             player.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, 100, 1));
             player.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 100, 1));
             player.addPotionEffect(new PotionEffect(PotionEffectType.NAUSEA, 100, 0));
@@ -192,24 +201,34 @@ public class HydrationSystem implements Listener {
      * @param amount Cantidad a disminuir
      */
     public void decreaseHydration(Player player, int amount) {
+        if (!isActive || player == null || amount <= 0) {
+            return;
+        }
+        
         // Verificar si el jugador tiene permiso para bypass
         if (player.hasPermission("winterfall.bypass.water")) {
             return; // No disminuir hidratación si tiene el permiso
         }
         
         UUID playerId = player.getUniqueId();
-        
-        // Inicializar si es necesario
-        if (!hydrationLevel.containsKey(playerId)) {
-            hydrationLevel.put(playerId, MAX_HYDRATION);
-        }
-        
-        // Obtener nivel actual y reducir
-        int currentLevel = hydrationLevel.get(playerId);
+        int currentLevel = getHydrationLevel(player);
         int newLevel = Math.max(0, currentLevel - amount);
         
-        // Actualizar nivel
         hydrationLevel.put(playerId, newLevel);
+        
+        // Notificar al jugador si hay un cambio significativo
+        if (newLevel < currentLevel && (currentLevel % 20 == 0 || newLevel == 0)) {
+            if (newLevel <= 20) {
+                player.sendMessage(ChatColor.RED + "¡Tienes mucha sed! Necesitas beber agua urgentemente.");
+            } else {
+                player.sendMessage(ChatColor.YELLOW + "Empiezas a sentir sed.");
+            }
+        }
+        
+        // Aplicar efectos según el nivel de hidratación
+        applyDehydrationEffects(player, newLevel);
+        
+
     }
     
     /**
@@ -218,24 +237,21 @@ public class HydrationSystem implements Listener {
      * @param amount Cantidad a aumentar
      */
     public void increaseHydration(Player player, int amount) {
-        UUID playerId = player.getUniqueId();
-        
-        // Inicializar si es necesario
-        if (!hydrationLevel.containsKey(playerId)) {
-            hydrationLevel.put(playerId, MAX_HYDRATION);
+        if (!isActive || player == null || amount <= 0) {
+            return;
         }
         
-        // Obtener nivel actual y aumentar
-        int currentLevel = hydrationLevel.get(playerId);
-        int newLevel = Math.min(MAX_HYDRATION, currentLevel + amount);
+        UUID playerId = player.getUniqueId();
+        int currentLevel = getHydrationLevel(player);
+        int newLevel = Math.min(currentLevel + amount, MAX_HYDRATION);
         
-        // Actualizar nivel
         hydrationLevel.put(playerId, newLevel);
         
-        // Notificar al jugador si ha recuperado hidratación significativa
-        if (amount >= 3) {
-            player.sendMessage(ChatColor.AQUA + "Te sientes hidratado.");
+        // Notificar al jugador si hay un cambio significativo
+        if (newLevel > currentLevel && (newLevel % 20 == 0 || newLevel == MAX_HYDRATION)) {
+            player.sendMessage(ChatColor.AQUA + "Te sientes más hidratado.");
         }
+        
     }
     
     /**
@@ -312,7 +328,7 @@ public class HydrationSystem implements Listener {
      * Maneja el evento de consumo de items
      * @param event Evento de consumo
      */
-    @SuppressWarnings({ "deprecation", "removal" })
+    @SuppressWarnings({ "deprecation" })
     @EventHandler(priority = EventPriority.NORMAL)
     public void onPlayerItemConsume(PlayerItemConsumeEvent event) {
         Player player = event.getPlayer();
@@ -419,17 +435,20 @@ public class HydrationSystem implements Listener {
      * @param level Nivel de hidratación a establecer (0-20)
      */
     public void setHydrationLevel(Player player, int level) {
-        UUID playerId = player.getUniqueId();
+        if (!isActive || player == null) {
+            return;
+        }
         
-        // Asegurar que el nivel esté dentro de los límites
+        UUID playerId = player.getUniqueId();
         int newLevel = Math.max(0, Math.min(MAX_HYDRATION, level));
         
-        // Actualizar nivel
         hydrationLevel.put(playerId, newLevel);
         
-        // Aplicar efectos si el nivel es bajo
-        if (newLevel <= HYDRATION_DAMAGE_THRESHOLD) {
-            applyDehydrationEffects(player, newLevel);
-        }
+        // Aplicar efectos según el nivel de hidratación
+        applyDehydrationEffects(player, newLevel);
+    }
+
+    public int getMaxHydration() {
+        return MAX_HYDRATION;
     }
 }

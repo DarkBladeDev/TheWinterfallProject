@@ -44,6 +44,7 @@ public class WinterfallMain extends JavaPlugin {
     private MobManager mobManager;
     private PlaceholderAPIExpansion placeholders;
     public static boolean hasExecutableItems = false;
+    public static boolean hasItemsAdder = false;
     public static final String NAME = "Winterfall";
     
     @Override
@@ -70,12 +71,21 @@ public class WinterfallMain extends JavaPlugin {
         }
 
 
-        // INicializar EI-API
+        // Inicializar EI-API
         Plugin executableItems = Bukkit.getPluginManager().getPlugin("ExecutableItems");
         if(executableItems != null && executableItems.isEnabled()) {
             SCore.plugin.getServer().getLogger().info("["+NAME+"] ExecutableItems hooked !");
             hasExecutableItems = true;
             itemManager = new ItemManager(this);
+        }
+        
+        // Inicializar ItemsAdder
+        Plugin itemsAdder = Bukkit.getPluginManager().getPlugin("ItemsAdder");
+        if(itemsAdder != null && itemsAdder.isEnabled()) {
+            ((Audience) Bukkit.getConsoleSender()).sendMessage(MiniMessage.miniMessage().deserialize("<green>[Winterfall] ItemsAdder detectado y HUDs registrados"));
+            hasItemsAdder = true;
+        } else {
+            ((Audience) Bukkit.getConsoleSender()).sendMessage(MiniMessage.miniMessage().deserialize("<yellow>[Winterfall] ItemsAdder no detectado. Los HUDs no estarán disponibles."));
         }
         
         // Mensaje de inicio

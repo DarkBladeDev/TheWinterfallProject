@@ -357,6 +357,7 @@ public class LimbDamageSystem implements Listener {
         
         // Restaurar la salud máxima del jugador después de curar todas las extremidades
         player.getAttribute(org.bukkit.attribute.Attribute.MAX_HEALTH).setBaseValue(20.0);
+        
     }
     
     /**

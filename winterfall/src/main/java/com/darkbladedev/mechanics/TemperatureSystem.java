@@ -451,4 +451,8 @@ public class TemperatureSystem implements Listener {
             applyHypothermiaEffects(player);
         }
     }
+
+    public int getMaxTemperature() {
+        return MAX_TEMPERATURE;
+    }
 }
