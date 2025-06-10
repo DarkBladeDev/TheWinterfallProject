@@ -15,7 +15,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 
@@ -257,10 +257,10 @@ public class PlaceholderAPIExpansion extends PlaceholderExpansion {
     @Override
     public boolean register() {
         if (super.register()) {
-            Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN + "[Winterfall] Placeholders registrados correctamente");
+            Bukkit.getConsoleSender().sendMessage(NamedTextColor.GREEN + "[Winterfall] Placeholders registrados correctamente");
             return true;
         } else {
-            Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[Winterfall] Error al registrar los placeholders");
+            Bukkit.getConsoleSender().sendMessage(NamedTextColor.RED + "[Winterfall] Error al registrar los placeholders");
             return false;
         }
     }

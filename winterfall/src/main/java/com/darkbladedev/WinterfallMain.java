@@ -13,13 +13,15 @@ import com.darkbladedev.mechanics.NutritionSystem;
 import com.darkbladedev.mechanics.StaminaSystem;
 import com.darkbladedev.mechanics.TemperatureSystem;
 import com.darkbladedev.items.ItemManager;
-import com.darkbladedev.mobs.MobManager;
 import com.ssomar.score.SCore;
 
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.command.CommandSender;
+
+import java.util.List;
 
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.text.minimessage.MiniMessage;
@@ -41,7 +43,6 @@ public class WinterfallMain extends JavaPlugin {
     private TemperatureSystem temperatureSystem;
     private DatabaseManager databaseManager;
     private ItemManager itemManager;
-    private MobManager mobManager;
     private PlaceholderAPIExpansion placeholders;
     public static boolean hasExecutableItems = false;
     public static boolean hasItemsAdder = false;
@@ -146,7 +147,6 @@ public class WinterfallMain extends JavaPlugin {
         
         // Inicializar gestores
         //itemManager = new ItemManager(this);
-        mobManager = new MobManager(this);
         databaseManager = new DatabaseManager(this);
         
         // Activar sistemas
@@ -174,8 +174,25 @@ public class WinterfallMain extends JavaPlugin {
      */
     private void registerCommands() {
         WinterfallCommand winterfallCommand = new WinterfallCommand(this);
-        getCommand("winterfall").setExecutor(winterfallCommand);
-        getCommand("winterfall").setTabCompleter(winterfallCommand);
+        
+        // Usar el método registerCommand de JavaPlugin para Paper plugins
+        this.getServer().getCommandMap().register("winterfall", new org.bukkit.command.Command("winterfall") {
+            {
+                this.setDescription("Comando principal del plugin Winterfall");
+                this.setUsage("/winterfall <subcomando>");
+                this.setAliases(List.of("wf"));
+            }
+            
+            @Override
+            public boolean execute(CommandSender sender, String commandLabel, String[] args) {
+                return winterfallCommand.onCommand(sender, this, commandLabel, args);
+            }
+            
+            @Override
+            public List<String> tabComplete(CommandSender sender, String alias, String[] args) {
+                return winterfallCommand.onTabComplete(sender, this, alias, args);
+            }
+        });
     }
     
     /**
@@ -224,14 +241,6 @@ public class WinterfallMain extends JavaPlugin {
      */
     public ItemManager getItemManager() {
         return itemManager;
-    }
-    
-    /**
-     * Obtiene el gestor de mobs
-     * @return Gestor de mobs
-     */
-    public MobManager getMobManager() {
-        return mobManager;
     }
     
     /**

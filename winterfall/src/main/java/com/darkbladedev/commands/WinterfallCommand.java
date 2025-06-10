@@ -53,11 +53,7 @@ public class WinterfallCommand implements CommandExecutor, TabCompleter {
             case "help":
                 showHelp(sender);
                 break;
-                
-            case "mob":
-                handleMobCommand(sender, args);
-                break;
-                
+                                
             case "snow":
                 handleSnowCommand(sender, args);
                 break;
@@ -138,87 +134,6 @@ public class WinterfallCommand implements CommandExecutor, TabCompleter {
         ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<gray>----------------------------------------"));
     }
     
-    /**
-     * Maneja el subcomando "mob"
-     * @param sender Remitente del comando
-     * @param args Argumentos del comando
-     */
-    private void handleMobCommand(CommandSender sender, String[] args) {
-        // Verificar permisos
-        if (!sender.hasPermission("winterfall.mob")) {
-            ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>No tienes permiso para usar este comando."));
-            return;
-        }
-        
-        // Verificar argumentos
-        if (args.length < 2) {
-            ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>Uso: /winterfall mob <tipo> [cantidad]"));
-        ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<gray>Tipos disponibles: mano, cascarudo, gurbo, random"));
-            return;
-        }
-        
-        // Obtener cantidad (por defecto 1)
-        int amount = 1;
-        if (args.length >= 3) {
-            try {
-                amount = Integer.parseInt(args[2]);
-                if (amount <= 0) {
-                    amount = 1;
-                }
-            } catch (NumberFormatException e) {
-                ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>La cantidad debe ser un número válido."));
-                return;
-            }
-        }
-        
-        String mobType = args[1].toLowerCase();
-        
-        // Si el remitente es un jugador, generar en su ubicación
-        if (sender instanceof Player) {
-            Player player = (Player) sender;
-            
-            switch (mobType) {
-                case "mano":
-                    for (int i = 0; i < amount; i++) {
-                        plugin.getMobManager().spawnMano(player.getLocation());
-                    }
-                    ((Audience) player).sendMessage(MiniMessage.miniMessage().deserialize("<green>Has generado " + amount + " Mano(s)."));
-                    break;
-                    
-                case "cascarudo":
-                    for (int i = 0; i < amount; i++) {
-                        plugin.getMobManager().spawnCascarudo(player.getLocation());
-                    }
-                    ((Audience) player).sendMessage(MiniMessage.miniMessage().deserialize("<green>Has generado " + amount + " Cascarudo(s)."));
-                    break;
-                    
-                case "gurbo":
-                    for (int i = 0; i < amount; i++) {
-                        plugin.getMobManager().spawnGurbo(player.getLocation());
-                    }
-                    ((Audience) player).sendMessage(MiniMessage.miniMessage().deserialize("<green>Has generado " + amount + " Gurbo(s)."));
-                    break;
-                    
-                case "random":
-                    plugin.getMobManager().spawnRandomAliens(player.getWorld(), amount);
-                    ((Audience) player).sendMessage(MiniMessage.miniMessage().deserialize("<green>Has generado " + amount + " alienígenas aleatorios."));
-                    break;
-                    
-                default:
-                    ((Audience) player).sendMessage(MiniMessage.miniMessage().deserialize("<red>Tipo de mob desconocido. Usa mano, cascarudo, gurbo o random."));
-                    break;
-            }
-        } else {
-            // Si es la consola, generar en el mundo principal
-            if (mobType.equals("random")) {
-                World world = Bukkit.getWorlds().get(0); // Mundo principal
-                plugin.getMobManager().spawnRandomAliens(world, amount);
-                ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<green>Has generado " + amount + " alienígenas aleatorios en el mundo principal."));
-            } else {
-                ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>La consola solo puede generar mobs aleatorios. Usa /winterfall mob random <cantidad>"));
-            }
-        }
-    }
     
     /**
      * Maneja el subcomando "snow"

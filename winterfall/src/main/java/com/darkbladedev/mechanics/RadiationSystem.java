@@ -3,7 +3,7 @@ package com.darkbladedev.mechanics;
 import com.darkbladedev.WinterfallMain;
 
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.World;
@@ -45,7 +45,7 @@ public class RadiationSystem {
         startRadiationSystem();
         isActive = true;
         
-        Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN + "[Winterfall] Sistema de radiación inicializado");
+        Bukkit.getConsoleSender().sendMessage(NamedTextColor.GREEN + "[Winterfall] Sistema de radiación inicializado");
     }
     
     /**
@@ -108,7 +108,7 @@ public class RadiationSystem {
             player.addPotionEffect(new PotionEffect(PotionEffectType.HUNGER, 100, 0));
             
             if (level == 1) {
-                player.sendMessage(ChatColor.YELLOW + "Sientes un leve mareo... parece que hay radiación en esta zona.");
+                player.sendMessage(NamedTextColor.YELLOW + "Sientes un leve mareo... parece que hay radiación en esta zona.");
             }
         }
         
@@ -118,7 +118,7 @@ public class RadiationSystem {
             player.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, 100, 0));
             
             if (level == 6) {
-                player.sendMessage(ChatColor.GOLD + "La radiación está afectando tu cuerpo. Deberías salir de esta zona.");
+                player.sendMessage(NamedTextColor.GOLD + "La radiación está afectando tu cuerpo. Deberías salir de esta zona.");
             }
         }
         
@@ -128,7 +128,7 @@ public class RadiationSystem {
             player.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 80, 0));
             
             if (level == 11) {
-                player.sendMessage(ChatColor.RED + "¡La radiación está dañando tus órganos! ¡Debes salir inmediatamente!");
+                player.sendMessage(NamedTextColor.RED + "¡La radiación está dañando tus órganos! ¡Debes salir inmediatamente!");
             }
         }
         
@@ -138,7 +138,7 @@ public class RadiationSystem {
             player.damage(1.0); // 0.5 corazones de daño
             
             if (level % 5 == 0) { // Mensaje cada 5 niveles a partir del 16
-                player.sendMessage(ChatColor.DARK_RED + "¡La radiación está matándote! ¡Necesitas tratamiento médico urgente!");
+                player.sendMessage(NamedTextColor.DARK_RED + "¡La radiación está matándote! ¡Necesitas tratamiento médico urgente!");
             }
         }
     }

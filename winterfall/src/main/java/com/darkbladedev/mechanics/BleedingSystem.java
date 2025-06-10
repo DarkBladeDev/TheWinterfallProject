@@ -2,15 +2,17 @@ package com.darkbladedev.mechanics;
 
 import com.darkbladedev.WinterfallMain;
 import com.darkbladedev.CustomTypes.CustomDamageTypes;
-
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
+
+import net.kyori.adventure.audience.Audience;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.minimessage.MiniMessage;
+
 import org.bukkit.Color;
 import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.damage.DamageSource;
-import org.bukkit.damage.DamageType;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -58,7 +60,7 @@ public class BleedingSystem implements Listener {
         startBleedingSystem();
         isActive = true;
         
-        Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN + "[Winterfall] Sistema de sangrado inicializado");
+        ((Audience) Bukkit.getConsoleSender()).sendMessage(MiniMessage.miniMessage().deserialize("[Winterfall] <green>Sistema de sangrado inicializado"));
     }
     
     /**
@@ -97,7 +99,7 @@ public class BleedingSystem implements Listener {
                         
                         if (livingEntity instanceof Player) {
                             Player player = (Player) livingEntity;
-                            player.sendMessage(ChatColor.GREEN + "Tu sangrado se ha detenido.");
+                            player.sendMessage(NamedTextColor.GREEN + "Tu sangrado se ha detenido.");
                         }
                     } else {
                         // Actualizar duración
@@ -135,9 +137,11 @@ public class BleedingSystem implements Listener {
         // Daño por sangrado según severidad
         if (random.nextInt(5) < severity) {
             try {
-                entity.damage(severity * 0.5, (Entity) DamageSource.builder((DamageType) CustomDamageTypes.BLEEDING)); // 0.5, 1.0 o 1.5 corazones de daño
+                // Crear DamageSource personalizado para sangrado
+                DamageSource damageSource = CustomDamageTypes.createBleedingDamageSource(null, entity);
+                entity.damage(severity * 0.5, damageSource); // 0.5, 1.0 o 1.5 corazones de daño
             } catch (Exception e) {
-                Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[Winterfall] Error al aplicar sangrado con DamageType custom (Aplicando daño default): " + e.getMessage());
+                ((Audience) ((Audience) Bukkit.getConsoleSender())).sendMessage(MiniMessage.miniMessage().deserialize("[Winterfall] <red>Error al aplicar sangrado con DamageType custom (Aplicando daño default): " + e.getMessage()));
                 entity.damage(severity * 0.5); // Daño por defecto si hay un error
             }
         }
@@ -166,13 +170,13 @@ public class BleedingSystem implements Listener {
             if (random.nextInt(20) < severity) {
                 switch (severity) {
                     case 1:
-                        player.sendMessage(ChatColor.YELLOW + "Tienes una herida leve que está sangrando.");
+                        player.sendMessage(NamedTextColor.YELLOW + "Tienes una herida leve que está sangrando.");
                         break;
                     case 2:
-                        player.sendMessage(ChatColor.GOLD + "Estás perdiendo sangre de forma moderada. Necesitas tratamiento.");
+                        player.sendMessage(NamedTextColor.GOLD + "Estás perdiendo sangre de forma moderada. Necesitas tratamiento.");
                         break;
                     case 3:
-                        player.sendMessage(ChatColor.RED + "¡Estás sangrando gravemente! Necesitas atención médica urgente.");
+                        player.sendMessage(NamedTextColor.RED + "¡Estás sangrando gravemente! Necesitas atención médica urgente.");
                         break;
                 }
             }
@@ -217,17 +221,17 @@ public class BleedingSystem implements Listener {
             
             switch (severity) {
                 case 1:
-                    severityText = ChatColor.YELLOW + "leve";
+                    severityText = NamedTextColor.YELLOW + "leve";
                     break;
                 case 2:
-                    severityText = ChatColor.GOLD + "moderado";
+                    severityText = NamedTextColor.GOLD + "moderado";
                     break;
                 case 3:
-                    severityText = ChatColor.RED + "grave";
+                    severityText = NamedTextColor.RED + "grave";
                     break;
             }
             
-            player.sendMessage(ChatColor.RED + "¡Estás sangrando! " + ChatColor.WHITE + "(Nivel: " + severityText + ChatColor.WHITE + ", Duración: " + duration + " segundos)");
+            player.sendMessage(NamedTextColor.RED + "¡Estás sangrando! " + NamedTextColor.WHITE + "(Nivel: " + severityText + NamedTextColor.WHITE + ", Duración: " + duration + " segundos)");
         }
     }
     
@@ -279,7 +283,7 @@ public class BleedingSystem implements Listener {
         // Notificar al jugador
         if (entity instanceof Player) {
             Player player = (Player) entity;
-            player.sendMessage(ChatColor.GREEN + "Tu sangrado se ha detenido.");
+            player.sendMessage(NamedTextColor.GREEN + "Tu sangrado se ha detenido.");
             
         }
     }

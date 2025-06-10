@@ -170,9 +170,9 @@ public class TemperatureSystem implements Listener {
      * @param player Jugador a verificar
      * @return true si está en ambiente frío, false en caso contrario
      */
+    @SuppressWarnings("removal")
     private boolean isInColdEnvironment(Player player) {
         World world = player.getWorld();
-        @SuppressWarnings("deprecation")
         String biomeName = player.getLocation().getBlock().getBiome().name().toLowerCase();
         
         // Verificar si el mundo tiene nieve activa (usando el sistema de nevada si está disponible)
