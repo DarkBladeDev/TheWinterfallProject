@@ -6,7 +6,6 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 
 import org.bukkit.Bukkit;
-import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -85,7 +84,7 @@ public class StaminaSystem implements Listener {
     public void initialize() {
         // Verificar si el sistema está habilitado en la configuración
         if (!plugin.getConfig().getBoolean("stamina.enabled", true)) {
-            Bukkit.getConsoleSender().sendMessage(NamedTextColor.YELLOW + "[Winterfall] Sistema de estamina deshabilitado en la configuración");
+            Bukkit.getConsoleSender().sendMessage(MiniMessage.miniMessage().deserialize(WinterfallMain.PREFIX + " <yellow>Sistema de estamina deshabilitado en la configuración"));
             return;
         }
         
@@ -95,7 +94,7 @@ public class StaminaSystem implements Listener {
         // Registrar eventos
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
         
-        Bukkit.getConsoleSender().sendMessage(NamedTextColor.GREEN + "[Winterfall] Sistema de estamina inicializado");
+        Bukkit.getConsoleSender().sendMessage(MiniMessage.miniMessage().deserialize(WinterfallMain.PREFIX + " <green>Sistema de estamina inicializado"));
     }
     
     /**
@@ -169,7 +168,7 @@ public class StaminaSystem implements Listener {
             
             // Mensaje (con probabilidad para no spamear)
             if (Math.random() < 0.3) {
-                player.sendMessage(NamedTextColor.DARK_RED + "¡Estás completamente agotado! Necesitas descansar.");
+                player.sendMessage(MiniMessage.miniMessage().deserialize("<dark_red>¡Estás completamente agotado! Necesitas descansar."));
             }
         } else if (level <= 3) {
             // Estamina muy baja: efectos moderados
@@ -178,7 +177,7 @@ public class StaminaSystem implements Listener {
             
             // Mensaje (con probabilidad para no spamear)
             if (Math.random() < 0.2) {
-                player.sendMessage(NamedTextColor.RED + "Te sientes muy cansado. Deberías dejar de correr.");
+                player.sendMessage(MiniMessage.miniMessage().deserialize("<red>Te sientes muy cansado. Deberías dejar de correr."));
             }
         } else if (level <= STAMINA_EFFECT_THRESHOLD) {
             // Estamina baja: efectos leves
@@ -186,7 +185,7 @@ public class StaminaSystem implements Listener {
             
             // Mensaje (con probabilidad para no spamear)
             if (Math.random() < 0.1) {
-                player.sendMessage(NamedTextColor.GOLD + "Estás empezando a cansarte.");
+                player.sendMessage(MiniMessage.miniMessage().deserialize("<gold>Estás empezando a cansarte."));
             }
         }
     }
@@ -378,7 +377,7 @@ public class StaminaSystem implements Listener {
             staminaTask.cancel();
         }
         isActive = false;
-        Bukkit.getConsoleSender().sendMessage(NamedTextColor.GREEN + "[Winterfall] Sistema de estamina desactivado");
+        Bukkit.getConsoleSender().sendMessage(MiniMessage.miniMessage().deserialize(WinterfallMain.PREFIX + "<green>Sistema de estamina desactivado"));
     }
     
     /**

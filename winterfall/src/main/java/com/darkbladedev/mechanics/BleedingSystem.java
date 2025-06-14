@@ -5,7 +5,6 @@ import com.darkbladedev.CustomTypes.CustomDamageTypes;
 import org.bukkit.Bukkit;
 
 import net.kyori.adventure.audience.Audience;
-import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 
 import org.bukkit.Color;
@@ -99,7 +98,7 @@ public class BleedingSystem implements Listener {
                         
                         if (livingEntity instanceof Player) {
                             Player player = (Player) livingEntity;
-                            player.sendMessage(NamedTextColor.GREEN + "Tu sangrado se ha detenido.");
+                            player.sendMessage(MiniMessage.miniMessage().deserialize("<green>Tu sangrado se ha detenido."));
                         }
                     } else {
                         // Actualizar duración
@@ -170,13 +169,13 @@ public class BleedingSystem implements Listener {
             if (random.nextInt(20) < severity) {
                 switch (severity) {
                     case 1:
-                        player.sendMessage(NamedTextColor.YELLOW + "Tienes una herida leve que está sangrando.");
+                        ((Audience) player).sendMessage(MiniMessage.miniMessage().deserialize("<yellow>Tienes una herida leve que está sangrando."));
                         break;
                     case 2:
-                        player.sendMessage(NamedTextColor.GOLD + "Estás perdiendo sangre de forma moderada. Necesitas tratamiento.");
+                    ((Audience) player).sendMessage(MiniMessage.miniMessage().deserialize("<gold>Estás perdiendo sangre de forma moderada. Necesitas tratamiento."));
                         break;
                     case 3:
-                        player.sendMessage(NamedTextColor.RED + "¡Estás sangrando gravemente! Necesitas atención médica urgente.");
+                    ((Audience) player).sendMessage(MiniMessage.miniMessage().deserialize("<red>¡Estás sangrando gravemente! Necesitas atención médica urgente."));
                         break;
                 }
             }
@@ -221,17 +220,17 @@ public class BleedingSystem implements Listener {
             
             switch (severity) {
                 case 1:
-                    severityText = NamedTextColor.YELLOW + "leve";
+                    severityText = "<yellow>" + "leve";
                     break;
                 case 2:
-                    severityText = NamedTextColor.GOLD + "moderado";
+                    severityText = "<gold>" + "moderado";
                     break;
                 case 3:
-                    severityText = NamedTextColor.RED + "grave";
+                    severityText = "<red>" + "grave";
                     break;
             }
             
-            player.sendMessage(NamedTextColor.RED + "¡Estás sangrando! " + NamedTextColor.WHITE + "(Nivel: " + severityText + NamedTextColor.WHITE + ", Duración: " + duration + " segundos)");
+            ((Audience) player).sendMessage(MiniMessage.miniMessage().deserialize("<red>¡Estás sangrando! " + "<white>(Nivel: " + severityText + ", Duración: " + duration + " segundos)"));
         }
     }
     
@@ -283,7 +282,7 @@ public class BleedingSystem implements Listener {
         // Notificar al jugador
         if (entity instanceof Player) {
             Player player = (Player) entity;
-            player.sendMessage(NamedTextColor.GREEN + "Tu sangrado se ha detenido.");
+            ((Audience) player).sendMessage(MiniMessage.miniMessage().deserialize("<green>Tu sangrado se ha detenido."));
             
         }
     }

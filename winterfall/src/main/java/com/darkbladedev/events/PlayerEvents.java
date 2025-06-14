@@ -1,23 +1,23 @@
 package com.darkbladedev.events;
 
 import com.darkbladedev.WinterfallMain;
-import net.kyori.adventure.text.format.NamedTextColor;
-
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageEvent;
-import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
+import com.darkbladedev.CustomTypes.CustomEnchantments;
+
 /**
- * Manejador de eventos para "El Eternauta"
+ * Manejador de eventos
  * Gestiona las interacciones de los jugadores con el mundo
  */
 public class PlayerEvents implements Listener {
@@ -82,51 +82,35 @@ public class PlayerEvents implements Listener {
             plugin.getBleedingSystem().processDamageEvent(event);
         }
     }
-
     
     /**
-     * Maneja el evento de interacción del jugador
-     * @param event Evento de interacción
+     * Maneja el evento de daño entre entidades para aplicar efectos de encantamientos
+     * @param event Evento de daño entre entidades
      */
-    //@EventHandler
-    public void onPlayerInteract(PlayerInteractEvent event) {
-        Player player = event.getPlayer();
-        ItemStack item = event.getItem();
+    @EventHandler(priority = EventPriority.NORMAL)
+    public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
+        // Verificar si el atacante es un jugador
+        if (!(event.getDamager() instanceof Player)) {
+            return;
+        }
         
-        // Verificar si el jugador está usando un ítem personalizado
-        if (item != null && item.hasItemMeta()) {
-            @SuppressWarnings("unused")
-            ItemMeta meta = item.getItemMeta();
+        Player attacker = (Player) event.getDamager();
+        LivingEntity target = (LivingEntity) event.getEntity();
+        
+        // Verificar si el jugador tiene un arma en la mano
+        ItemStack weapon = attacker.getInventory().getItemInMainHand();
+        if (weapon == null || !weapon.hasItemMeta()) {
+            return;
+        }
+        
+        ItemMeta meta = weapon.getItemMeta();
+        
+        // Verificar si el arma tiene el encantamiento de Congelación
+        if (meta.hasEnchant(CustomEnchantments.getCongelationEnchantment())) {
+            int level = meta.getEnchantLevel(CustomEnchantments.getCongelationEnchantment());
             
-            // Lanzallamas
-            if (plugin.getItemManager().isCustomItem(item, "flamethrower")) {
-                // Implementar lógica del lanzallamas
-                if (event.getAction().name().contains("RIGHT")) {
-                    // Efecto visual de fuego
-                    player.getWorld().createExplosion(player.getLocation(), 0.0f, false, false, player);
-                    
-                    // Mensaje de uso
-                    player.sendMessage(NamedTextColor.GOLD + "¡Has disparado tu lanzallamas!");
-                    
-                    // Evitar consumo del ítem
-                    event.setCancelled(true);
-                }
-            }
-            
-            // Pistola eléctrica
-            else if (plugin.getItemManager().isCustomItem(item, "electric_gun")) {
-                // Implementar lógica de la pistola eléctrica
-                if (event.getAction().name().contains("RIGHT")) {
-                    // Efecto visual de electricidad
-                    player.getWorld().strikeLightningEffect(player.getTargetBlock(null, 20).getLocation());
-                    
-                    // Mensaje de uso
-                    player.sendMessage(NamedTextColor.AQUA + "¡Has disparado tu pistola eléctrica!");
-                    
-                    // Evitar consumo del ítem
-                    event.setCancelled(true);
-                }
-            }
+            // Aplicar efecto de congelación al objetivo
+            plugin.getFreezingSystem().applyFreezing(target, level);
         }
     }
 }

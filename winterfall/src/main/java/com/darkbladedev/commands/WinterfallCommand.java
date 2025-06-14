@@ -105,6 +105,10 @@ public class WinterfallCommand implements CommandExecutor, TabCompleter {
                 handleConfigCommand(sender, newArgs2);
                 break;
                 
+            case "enchantment":
+                handleEnchantmentCommand(sender, args);
+                break;
+                
             default:
                 ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>Subcomando desconocido. Usa /winterfall help para ver los comandos disponibles."));
                 break;
@@ -131,6 +135,8 @@ public class WinterfallCommand implements CommandExecutor, TabCompleter {
         ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<yellow>/winterfall status [jugador]<gray> - Muestra el estado físico del jugador"));
         ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<yellow>/winterfall config hydration-rate <normal/activity> <tasa><gray> - Ajusta la velocidad de disminución de hidratación"));
         ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<yellow>/winterfall config nutrition-rate <normal/activity> <tasa><gray> - Ajusta la velocidad de disminución de nutrientes"));
+        ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<yellow>/winterfall enchantment give <encantamiento> [nivel] [jugador]<gray> - Da un libro encantado"));
+        ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<yellow>/winterfall enchantment apply <encantamiento> [nivel]<gray> - Aplica un encantamiento al ítem en mano"));
         ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<gray>----------------------------------------"));
     }
     
@@ -194,6 +200,179 @@ public class WinterfallCommand implements CommandExecutor, TabCompleter {
                 ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>Estado desconocido. Usa 'on' o 'off'."));
                 break;
         }
+    }
+    
+    /**
+     * Maneja el subcomando "enchantment"
+     * @param sender Remitente del comando
+     * @param args Argumentos del comando
+     */
+    private void handleEnchantmentCommand(CommandSender sender, String[] args) {
+        // Verificar permisos
+        if (!sender.hasPermission("winterfall.enchantment")) {
+            ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>No tienes permiso para usar este comando."));
+            return;
+        }
+        
+        // Verificar argumentos
+        if (args.length < 2) {
+            ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>Uso: /winterfall enchantment <give/apply> <encantamiento> [nivel] [jugador]"));
+            return;
+        }
+        
+        String subCommand = args[1].toLowerCase();
+        
+        switch (subCommand) {
+            case "give":
+                handleEnchantmentGiveCommand(sender, args);
+                break;
+                
+            case "apply":
+                handleEnchantmentApplyCommand(sender, args);
+                break;
+                
+            default:
+                ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>Subcomando desconocido. Usa 'give' o 'apply'."));
+                break;
+        }
+    }
+    
+    /**
+     * Maneja el subcomando "enchantment give"
+     * @param sender Remitente del comando
+     * @param args Argumentos del comando
+     */
+    private void handleEnchantmentGiveCommand(CommandSender sender, String[] args) {
+        // Verificar argumentos
+        if (args.length < 3) {
+            ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>Uso: /winterfall enchantment give <encantamiento> [nivel] [jugador]"));
+            return;
+        }
+        
+        // Obtener el encantamiento
+        String enchantmentName = args[2].toUpperCase();
+        com.darkbladedev.CustomTypes.CustomEnchantments.CustomEnchantment enchantment = null;
+        
+        try {
+            enchantment = com.darkbladedev.CustomTypes.CustomEnchantments.CustomEnchantment.valueOf(enchantmentName);
+        } catch (IllegalArgumentException e) {
+            ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>Encantamiento no encontrado: " + enchantmentName));
+            return;
+        }
+        
+        // Obtener el nivel (opcional, por defecto 1)
+        int level = 1;
+        if (args.length >= 4) {
+            try {
+                level = Integer.parseInt(args[3]);
+                if (level < 1 || level > enchantment.getMaxLevel()) {
+                    ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>Nivel inválido. Debe estar entre 1 y " + enchantment.getMaxLevel()));
+                    return;
+                }
+            } catch (NumberFormatException e) {
+                // Si no es un número, asumimos que es un nombre de jugador
+            }
+        }
+        
+        // Obtener el jugador (opcional, por defecto el remitente)
+        Player targetPlayer = null;
+        if (args.length >= 5) {
+            targetPlayer = Bukkit.getPlayer(args[4]);
+        } else if (args.length == 4 && !(args[3].matches("\\d+"))) {
+            // Si el cuarto argumento no es un número, asumimos que es un nombre de jugador
+            targetPlayer = Bukkit.getPlayer(args[3]);
+            level = 1; // Resetear el nivel a 1 ya que no se especificó
+        } else if (sender instanceof Player) {
+            targetPlayer = (Player) sender;
+        } else {
+            ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>Debes especificar un jugador cuando ejecutas este comando desde la consola."));
+            return;
+        }
+        
+        if (targetPlayer == null) {
+            ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>Jugador no encontrado."));
+            return;
+        }
+        
+        // Crear y dar el libro encantado
+        org.bukkit.inventory.ItemStack book = com.darkbladedev.CustomTypes.CustomEnchantments.getCustomEnchantedBook(enchantment, level);
+        targetPlayer.getInventory().addItem(book);
+        
+        // Notificar al jugador y al remitente
+        ((Audience) targetPlayer).sendMessage(MiniMessage.miniMessage().deserialize("<green>Has recibido un libro con el encantamiento " + enchantment.getDisplayName() + " nivel " + level + "."));
+        
+        if (sender != targetPlayer) {
+            ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<green>Has dado un libro con el encantamiento " + enchantment.getDisplayName() + " nivel " + level + " a " + targetPlayer.getName() + "."));
+        }
+    }
+    
+    /**
+     * Maneja el subcomando "enchantment apply"
+     * @param sender Remitente del comando
+     * @param args Argumentos del comando
+     */
+    private void handleEnchantmentApplyCommand(CommandSender sender, String[] args) {
+        // Verificar si el remitente es un jugador
+        if (!(sender instanceof Player)) {
+            ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>Este comando solo puede ser ejecutado por un jugador."));
+            return;
+        }
+        
+        Player player = (Player) sender;
+        
+        // Verificar argumentos
+        if (args.length < 3) {
+            ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>Uso: /winterfall enchantment apply <encantamiento> [nivel]"));
+            return;
+        }
+        
+        // Obtener el encantamiento
+        String enchantmentName = args[2].toUpperCase();
+        com.darkbladedev.CustomTypes.CustomEnchantments.CustomEnchantment enchantment = null;
+        
+        try {
+            enchantment = com.darkbladedev.CustomTypes.CustomEnchantments.CustomEnchantment.valueOf(enchantmentName);
+        } catch (IllegalArgumentException e) {
+            ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>Encantamiento no encontrado: " + enchantmentName));
+            return;
+        }
+        
+        // Obtener el nivel (opcional, por defecto 1)
+        int level = 1;
+        if (args.length >= 4) {
+            try {
+                level = Integer.parseInt(args[3]);
+                if (level < 1 || level > enchantment.getMaxLevel()) {
+                    ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>Nivel inválido. Debe estar entre 1 y " + enchantment.getMaxLevel()));
+                    return;
+                }
+            } catch (NumberFormatException e) {
+                ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>Nivel inválido. Debe ser un número entre 1 y " + enchantment.getMaxLevel()));
+                return;
+            }
+        }
+        
+        // Verificar si el jugador tiene un ítem en la mano
+        org.bukkit.inventory.ItemStack itemInHand = player.getInventory().getItemInMainHand();
+        
+        if (itemInHand.getType() == org.bukkit.Material.AIR) {
+            ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>Debes tener un ítem en la mano para aplicar el encantamiento."));
+            return;
+        }
+        
+        // Obtener el encantamiento del registro
+        org.bukkit.enchantments.Enchantment customEnchantment = enchantment.getEnchantment(enchantment.getKey());
+        
+        if (customEnchantment == null) {
+            ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>Error al obtener el encantamiento del registro."));
+            return;
+        }
+        
+        // Aplicar el encantamiento al ítem
+        itemInHand.addUnsafeEnchantment(customEnchantment, level);
+        
+        // Notificar al jugador
+        ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<green>Has aplicado el encantamiento " + enchantment.getDisplayName() + " nivel " + level + " a tu ítem."));
     }
     
     /**
@@ -982,7 +1161,7 @@ public class WinterfallCommand implements CommandExecutor, TabCompleter {
         
         // Autocompletar subcomandos
         if (args.length == 1) {
-            String[] subCommands = {"help", "mob", "snow", "radiation", "bleeding", "hydration", "nutrition", "status", "limb", "config", "hydrationrate", "nutritionrate"};
+            String[] subCommands = {"help", "mob", "snow", "radiation", "bleeding", "hydration", "nutrition", "status", "limb", "config", "enchantment"};
             for (String subCommand : subCommands) {
                 if (subCommand.startsWith(args[0].toLowerCase())) {
                     completions.add(subCommand);
@@ -1220,6 +1399,55 @@ public class WinterfallCommand implements CommandExecutor, TabCompleter {
                         for (String rate : rates) {
                             if (rate.startsWith(args[2])) {
                                 completions.add(rate);
+                            }
+                        }
+                    }
+                    break;
+                    
+                case "enchantment":
+                    // Segundo argumento - subcomando
+                    if (args.length == 2) {
+                        String[] subCommands = {"give", "apply"};
+                        for (String subCommand : subCommands) {
+                            if (subCommand.startsWith(args[1].toLowerCase())) {
+                                completions.add(subCommand);
+                            }
+                        }
+                    }
+                    // Tercer argumento - tipo de encantamiento
+                    else if (args.length == 3) {
+                        for (com.darkbladedev.CustomTypes.CustomEnchantments.CustomEnchantment enchantment : 
+                             com.darkbladedev.CustomTypes.CustomEnchantments.CustomEnchantment.values()) {
+                            if (enchantment.name().toLowerCase().startsWith(args[2].toLowerCase())) {
+                                completions.add(enchantment.name().toLowerCase());
+                            }
+                        }
+                    }
+                    // Cuarto argumento - nivel o jugador
+                    else if (args.length == 4) {
+                        if (args[1].equalsIgnoreCase("give") || args[1].equalsIgnoreCase("apply")) {
+                            // Sugerir niveles comunes
+                            for (int i = 1; i <= 3; i++) {
+                                if (String.valueOf(i).startsWith(args[3])) {
+                                    completions.add(String.valueOf(i));
+                                }
+                            }
+                            
+                            // Si es 'give', también sugerir jugadores
+                            if (args[1].equalsIgnoreCase("give")) {
+                                for (Player player : Bukkit.getOnlinePlayers()) {
+                                    if (player.getName().toLowerCase().startsWith(args[3].toLowerCase())) {
+                                        completions.add(player.getName());
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    // Quinto argumento - jugador (solo para give con nivel especificado)
+                    else if (args.length == 5 && args[1].equalsIgnoreCase("give")) {
+                        for (Player player : Bukkit.getOnlinePlayers()) {
+                            if (player.getName().toLowerCase().startsWith(args[4].toLowerCase())) {
+                                completions.add(player.getName());
                             }
                         }
                     }

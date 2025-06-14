@@ -3,7 +3,6 @@ package com.darkbladedev.mechanics;
 import com.darkbladedev.WinterfallMain;
 import com.darkbladedev.CustomTypes.CustomDamageTypes;
 import org.bukkit.Bukkit;
-import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -91,7 +90,7 @@ public class HydrationSystem implements Listener {
     public void initialize() {
         // Verificar si el sistema está habilitado en la configuración
         if (!plugin.getConfig().getBoolean("hydration.enabled", true)) {
-            Bukkit.getConsoleSender().sendMessage(NamedTextColor.YELLOW + "[Winterfall] Sistema de hidratación deshabilitado en la configuración");
+            Bukkit.getConsoleSender().sendMessage(MiniMessage.miniMessage().deserialize("[Winterfall] <yellow>Sistema de hidratación deshabilitado en la configuración"));
             return;
         }
         
@@ -101,7 +100,7 @@ public class HydrationSystem implements Listener {
         // Registrar eventos
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
         
-        Bukkit.getConsoleSender().sendMessage(NamedTextColor.AQUA + "[Winterfall] Sistema de hidratación inicializado");
+        Bukkit.getConsoleSender().sendMessage(MiniMessage.miniMessage().deserialize("[Winterfall] <green>Sistema de hidratación inicializado"));
     }
     
     /**
@@ -163,7 +162,7 @@ public class HydrationSystem implements Listener {
                 DamageSource damageSource = CustomDamageTypes.createDehydrationDamageSource(player);
                 player.damage(1.0, damageSource); // Medio corazón de daño
             } catch (Exception e) {
-                Bukkit.getConsoleSender().sendMessage(NamedTextColor.RED + "[Winterfall] Error al aplicar deshidratación con DamageType custom (Aplicando daño default): " + e.getMessage());
+                Bukkit.getConsoleSender().sendMessage(MiniMessage.miniMessage().deserialize("[Winterfall] <red>Error al aplicar deshidratación con DamageType custom (Aplicando daño default): " + e.getMessage()));
                 player.damage(1.0); // Daño por defecto si hay un error
             }
             player.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, 100, 1));
@@ -172,7 +171,7 @@ public class HydrationSystem implements Listener {
             
             // Mensaje (con probabilidad para no spamear)
             if (Math.random() < 0.3) {
-                player.sendMessage(NamedTextColor.DARK_RED + "¡Estás severamente deshidratado! Necesitas agua urgentemente.");
+                player.sendMessage(MiniMessage.miniMessage().deserialize("<red>¡Estás severamente deshidratado! Necesitas agua urgentemente."));
             }
         } else if (level <= 3) {
             // Deshidratación moderada: efectos moderados
@@ -181,7 +180,7 @@ public class HydrationSystem implements Listener {
             
             // Mensaje (con probabilidad para no spamear)
             if (Math.random() < 0.2) {
-                player.sendMessage(NamedTextColor.RED + "Te sientes muy débil por la deshidratación. Necesitas beber agua.");
+                player.sendMessage(MiniMessage.miniMessage().deserialize("<red>Te sientes muy débil por la deshidratación. Necesitas beber agua."));
             }
         } else if (level <= HYDRATION_DAMAGE_THRESHOLD) {
             // Deshidratación leve: efectos leves
@@ -189,7 +188,7 @@ public class HydrationSystem implements Listener {
             
             // Mensaje (con probabilidad para no spamear)
             if (Math.random() < 0.1) {
-                player.sendMessage(NamedTextColor.GOLD + "Tienes sed. Deberías beber agua pronto.");
+                player.sendMessage(MiniMessage.miniMessage().deserialize("<gold>Tienes sed. Deberías beber agua pronto."));
             }
         }
     }
@@ -218,9 +217,9 @@ public class HydrationSystem implements Listener {
         // Notificar al jugador si hay un cambio significativo
         if (newLevel < currentLevel && (currentLevel % 20 == 0 || newLevel == 0)) {
             if (newLevel <= 20) {
-                player.sendMessage(NamedTextColor.RED + "¡Tienes mucha sed! Necesitas beber agua urgentemente.");
+                player.sendMessage(MiniMessage.miniMessage().deserialize("<red>¡Tienes mucha sed! Necesitas beber agua urgentemente."));
             } else {
-                player.sendMessage(NamedTextColor.YELLOW + "Empiezas a sentir sed.");
+                player.sendMessage(MiniMessage.miniMessage().deserialize("<yellow>Empiezas a sentir sed."));
             }
         }
         
@@ -248,7 +247,7 @@ public class HydrationSystem implements Listener {
         
         // Notificar al jugador si hay un cambio significativo
         if (newLevel > currentLevel && (newLevel % 20 == 0 || newLevel == MAX_HYDRATION)) {
-            player.sendMessage(NamedTextColor.AQUA + "Te sientes más hidratado.");
+            player.sendMessage(MiniMessage.miniMessage().deserialize("<aqua>Te sientes más hidratado."));
         }
         
     }
@@ -425,7 +424,7 @@ public class HydrationSystem implements Listener {
             hydrationTask.cancel();
         }
         isActive = false;
-        Bukkit.getConsoleSender().sendMessage(NamedTextColor.AQUA + "[Winterfall] Sistema de hidratación desactivado");
+        Bukkit.getConsoleSender().sendMessage(MiniMessage.miniMessage().deserialize("[Winterfall] <white>Sistema de hidratación desactivado"));
     }
 
     /**

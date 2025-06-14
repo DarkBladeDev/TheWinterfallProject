@@ -106,9 +106,9 @@ public class TemperatureSystem implements Listener {
             // Iniciar sistema
             startTemperatureSystem();
             
-            ((Audience) (Bukkit.getConsoleSender())).sendMessage(MiniMessage.miniMessage().deserialize("<green>[Winterfall] Sistema de temperatura activado"));
+            ((Audience) (Bukkit.getConsoleSender())).sendMessage(MiniMessage.miniMessage().deserialize(WinterfallMain.PREFIX + " <green>Sistema de temperatura activado"));
         } else {
-            ((Audience) (Bukkit.getConsoleSender())).sendMessage(MiniMessage.miniMessage().deserialize("<yellow>[Winterfall] Sistema de temperatura desactivado en la configuración"));
+            ((Audience) (Bukkit.getConsoleSender())).sendMessage(MiniMessage.miniMessage().deserialize(WinterfallMain.PREFIX + " <yellow>Sistema de temperatura desactivado en la configuración"));
         }
     }
     
@@ -427,7 +427,7 @@ public class TemperatureSystem implements Listener {
             temperatureTask.cancel();
         }
         isActive = false;
-        ((Audience) Bukkit.getConsoleSender()).sendMessage(MiniMessage.miniMessage().deserialize("<green>[Winterfall] Sistema de temperatura desactivado"));
+        ((Audience) Bukkit.getConsoleSender()).sendMessage(MiniMessage.miniMessage().deserialize(WinterfallMain.PREFIX + " <green>Sistema de temperatura desactivado"));
     }
     
     /**

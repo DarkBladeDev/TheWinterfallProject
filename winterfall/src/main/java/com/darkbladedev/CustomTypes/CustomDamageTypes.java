@@ -18,6 +18,7 @@ public class CustomDamageTypes {
     // Claves para los tipos de daño personalizados
     private static final Key BLEEDING_KEY = Key.key("winterfall:bleeding");
     private static final Key DEHYDRATION_KEY = Key.key("winterfall:dehydration");
+    private static final Key FREEZING_KEY = Key.key("winterfall:freezing");
     
     /**
      * Crea una fuente de daño de sangrado
@@ -67,6 +68,31 @@ public class CustomDamageTypes {
                     .build();
         } catch (Exception e) {
             Bukkit.getConsoleSender().sendMessage("[Winterfall] Error al crear DamageSource de deshidratación: " + e.getMessage());
+            return DamageSource.builder(DamageType.GENERIC).build();
+        }
+    }
+    
+    /**
+     * Crea una fuente de daño de congelación
+     * @param attacker La entidad que causa el daño por congelación
+     * @param target La entidad que recibe el daño
+     * @return La fuente de daño personalizada
+     */
+    @SuppressWarnings("removal")
+    public static DamageSource createFreezingDamageSource(Entity attacker, Entity target) {
+        try {
+            DamageType damageType = RegistryAccess.registryAccess().getRegistry(DamageType.class).get(FREEZING_KEY);
+            if (damageType == null) {
+                Bukkit.getConsoleSender().sendMessage("[Winterfall] Error: No se pudo encontrar el tipo de daño 'freezing'. Usando daño genérico.");
+                return DamageSource.builder(DamageType.GENERIC).build();
+            }
+            
+            return DamageSource.builder(damageType)
+                    .withCausingEntity(attacker)
+                    .withDirectEntity(target)
+                    .build();
+        } catch (Exception e) {
+            Bukkit.getConsoleSender().sendMessage("[Winterfall] Error al crear DamageSource de congelación: " + e.getMessage());
             return DamageSource.builder(DamageType.GENERIC).build();
         }
     }

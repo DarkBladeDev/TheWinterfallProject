@@ -1,10 +1,11 @@
 package com.darkbladedev.mechanics;
 
 import com.darkbladedev.WinterfallMain;
-import net.kyori.adventure.text.format.NamedTextColor;
-import net.md_5.bungee.api.ChatColor;
+import com.darkbladedev.CustomTypes.CustomDamageTypes;
 
+import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.damage.DamageSource;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -50,10 +51,10 @@ public class LimbDamageSystem implements Listener {
     
     // Estados de daño
     public enum DamageState {
-        HEALTHY(0, NamedTextColor.GREEN + "Sano"),
-        DAMAGED(1, NamedTextColor.YELLOW + "Herido"),
-        CRITICAL(2, NamedTextColor.RED + "Crítico"),
-        BROKEN(3, NamedTextColor.DARK_RED + "Roto");
+        HEALTHY(0, "<green>" + "Sano"),
+        DAMAGED(1, "<yellow>" + "Herido"),
+        CRITICAL(2, "<red>" + "Crítico"),
+        BROKEN(3, "<dark_red>" + "Roto");
         
         private final int level;
         private final String displayName;
@@ -109,14 +110,14 @@ public class LimbDamageSystem implements Listener {
     public void initialize() {
         // Verificar si el sistema está habilitado en la configuración
         if (!plugin.getConfig().getBoolean("limb_damage.enabled", true)) {
-            plugin.getServer().getConsoleSender().sendMessage(NamedTextColor.YELLOW + "[Winterfall] Sistema de daño por extremidades deshabilitado en la configuración");
+            plugin.getServer().getConsoleSender().sendMessage(MiniMessage.miniMessage().deserialize("[Winterfall] <yellow>Sistema de daño por extremidades deshabilitado en la configuración"));
             return;
         }
         
         if (!isActive) {
             plugin.getServer().getPluginManager().registerEvents(this, plugin);
             isActive = true;
-            plugin.getServer().getConsoleSender().sendMessage(NamedTextColor.GREEN + "[Winterfall] Sistema de daño por extremidades activado");
+            plugin.getServer().getConsoleSender().sendMessage(MiniMessage.miniMessage().deserialize("[Winterfall] <green>Sistema de daño por extremidades activado"));
         }
     }
     
@@ -126,7 +127,7 @@ public class LimbDamageSystem implements Listener {
     public void shutdown() {
         if (isActive) {
             isActive = false;
-            plugin.getServer().getConsoleSender().sendMessage(NamedTextColor.RED + "[Winterfall] Sistema de daño por extremidades desactivado");
+            plugin.getServer().getConsoleSender().sendMessage(MiniMessage.miniMessage().deserialize("[Winterfall] <red>Sistema de daño por extremidades desactivado"));
         }
     }
     
@@ -150,10 +151,11 @@ public class LimbDamageSystem implements Listener {
         
         Player player = (Player) event.getEntity();
         DamageCause cause = event.getCause();
+        DamageSource source = event.getDamageSource();
         double damage = event.getDamage();
         
         // Verificar si el daño es por poción (no aplicar daño a extremidades)
-        if (cause == DamageCause.POISON || cause == DamageCause.MAGIC || cause == DamageCause.WITHER) {
+        if (source == CustomDamageTypes.createBleedingDamageSource(source.getCausingEntity(), player) || source == CustomDamageTypes.createDehydrationDamageSource(player)) {
             return; // No aplicar daño a extremidades por efectos de poción
         }
         
@@ -234,7 +236,7 @@ public class LimbDamageSystem implements Listener {
         DamageState newState = DamageState.fromLevel(newDamage);
         
         if (oldState != newState) {
-            player.sendMessage(NamedTextColor.RED + "Tu " + limbType.getDisplayName() + " está ahora " + newState.getDisplayName());
+            player.sendMessage(MiniMessage.miniMessage().deserialize("<red>Tu " + limbType.getDisplayName() + " <red>está ahora " + newState.getDisplayName()));
             applyEffectsForLimbDamage(player, limbType, newState);
         }
     }
@@ -331,7 +333,7 @@ public class LimbDamageSystem implements Listener {
         
         if (playerLimbDamage.containsKey(limbType)) {
             playerLimbDamage.put(limbType, 0);
-            player.sendMessage(NamedTextColor.GREEN + "Tu " + limbType.getDisplayName() + " ha sido curada.");
+            player.sendMessage(MiniMessage.miniMessage().deserialize("<green>Tu " + limbType.getDisplayName() + " ha sido curada."));
             
             // Actualizar la salud máxima del jugador después de curar
             updatePlayerMaxHealth(player);
@@ -355,10 +357,10 @@ public class LimbDamageSystem implements Listener {
             playerLimbDamage.put(limbType, 0);
         }
         
-        player.sendMessage(NamedTextColor.GREEN + "Todas tus extremidades han sido curadas.");
+        player.sendMessage(MiniMessage.miniMessage().deserialize("<green>Todas tus extremidades han sido curadas."));
         
         // Restaurar la salud máxima del jugador después de curar todas las extremidades
-        player.getAttribute(org.bukkit.attribute.Attribute.MAX_HEALTH).setBaseValue(20.0);
+        player.getAttribute(Attribute.MAX_HEALTH).setBaseValue(20.0);
         
     }
     
@@ -369,15 +371,15 @@ public class LimbDamageSystem implements Listener {
      */
     public String getLimbStatusMessage(Player player) {
         StringBuilder message = new StringBuilder();
-        message.append(NamedTextColor.GRAY + "----------------------------------------\n");
-        message.append(NamedTextColor.AQUA + "Estado de las Extremidades:\n");
+        message.append(MiniMessage.miniMessage().serialize(MiniMessage.miniMessage().deserialize("<gray>----------------------------------------\n")));
+        message.append(MiniMessage.miniMessage().serialize(MiniMessage.miniMessage().deserialize("<aqua>Estado de las Extremidades:\n")));
         
         for (LimbType limbType : LimbType.values()) {
             DamageState state = getLimbDamageState(player, limbType);
-            message.append(NamedTextColor.YELLOW + limbType.getDisplayName() + ": " + state.getDisplayName() + "\n");
+            message.append(MiniMessage.miniMessage().serialize(MiniMessage.miniMessage().deserialize("<yellow>" + limbType.getDisplayName() + ": " + state.getDisplayName() + "\n")));
         }
         
-        message.append(NamedTextColor.GRAY + "----------------------------------------");
+        message.append(MiniMessage.miniMessage().serialize(MiniMessage.miniMessage().deserialize("<gray>----------------------------------------")));
         return message.toString();
     }
     
@@ -418,17 +420,17 @@ public class LimbDamageSystem implements Listener {
         // Notificar al jugador sobre el cambio
         String stateMessage;
         if (newState == DamageState.HEALTHY) {
-            stateMessage = ChatColor.GREEN + "saludable";
+            stateMessage = "<green>" + "saludable";
         } else if (newState == DamageState.DAMAGED) {
-            stateMessage = NamedTextColor.YELLOW + "lesionada";
+            stateMessage = "<yellow>" + "lesionada";
         } else if (newState == DamageState.BROKEN) {
-            stateMessage = NamedTextColor.RED + "fracturada";
+            stateMessage = "<red>" + "fracturada";
         } else {
-            stateMessage = NamedTextColor.DARK_RED + "crítica";
+            stateMessage = "<dark_red>" + "crítica";
         }
         
-        player.sendMessage(NamedTextColor.YELLOW + "Tu " + limbType.getDisplayName() + " ahora está " + stateMessage + 
-                NamedTextColor.YELLOW + " (" + damageLevel + "%)");
+        player.sendMessage(MiniMessage.miniMessage().deserialize("<gray>Tu <yellow>" + limbType.getDisplayName() + " <gray>ahora está " + stateMessage + 
+                "<yellow>" + " (" + damageLevel + "%)"));
         
         return newState;
     }
@@ -579,8 +581,8 @@ public class LimbDamageSystem implements Listener {
         
         // Informar al jugador si hay cambios significativos
         if (brokenLimbs > 0) {
-            player.sendMessage(NamedTextColor.RED + "Tus extremidades rotas han reducido tu salud máxima a " + 
-                    NamedTextColor.GOLD + maxHealth + NamedTextColor.RED + " puntos.");
+            player.sendMessage(MiniMessage.miniMessage().deserialize("<red>Tus extremidades rotas han reducido tu salud máxima a " + 
+                    "<gold>" + maxHealth + "<red>" + " puntos."));
         }
     }
 }

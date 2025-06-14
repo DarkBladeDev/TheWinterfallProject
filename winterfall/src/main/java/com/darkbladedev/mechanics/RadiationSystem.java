@@ -3,15 +3,21 @@ package com.darkbladedev.mechanics;
 import com.darkbladedev.WinterfallMain;
 
 import org.bukkit.Bukkit;
-import net.kyori.adventure.text.format.NamedTextColor;
+
+import net.kyori.adventure.text.minimessage.MiniMessage;
+
 import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
+
+import com.darkbladedev.CustomTypes.CustomEnchantments;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -45,7 +51,7 @@ public class RadiationSystem {
         startRadiationSystem();
         isActive = true;
         
-        Bukkit.getConsoleSender().sendMessage(NamedTextColor.GREEN + "[Winterfall] Sistema de radiación inicializado");
+        Bukkit.getConsoleSender().sendMessage(MiniMessage.miniMessage().deserialize(WinterfallMain.PREFIX + " Sistema de radiación inicializado"));
     }
     
     /**
@@ -103,44 +109,84 @@ public class RadiationSystem {
      * @param level Nivel de radiación
      */
     private void applyRadiationEffects(Player player, int level) {
+        // Verificar si el jugador tiene protección contra radiación
+        int protectionLevel = getRadiationProtectionLevel(player);
+        
+        // Reducir el nivel de radiación según el nivel de protección
+        // Cada nivel de protección reduce un 25% los efectos
+        int adjustedLevel = Math.max(0, level - (int)(level * (protectionLevel * 0.25)));
+        
+        // Si tiene protección completa (nivel 4), mostrar mensaje y salir
+        if (protectionLevel >= 4 && level > 0) {
+            if (level % 10 == 0) { // Mostrar mensaje ocasionalmente
+                player.sendMessage(MiniMessage.miniMessage().deserialize("<green>Tu traje de protección te está protegiendo completamente de la radiación."));
+            }
+            return;
+        }
+        
         // Nivel 1-5: Efectos leves (náusea, hambre)
-        if (level >= 1) {
+        if (adjustedLevel >= 1) {
             player.addPotionEffect(new PotionEffect(PotionEffectType.HUNGER, 100, 0));
             
-            if (level == 1) {
-                player.sendMessage(NamedTextColor.YELLOW + "Sientes un leve mareo... parece que hay radiación en esta zona.");
+            if (adjustedLevel == 1 && protectionLevel == 0) {
+                player.sendMessage(MiniMessage.miniMessage().deserialize("<yellow>Sientes un leve mareo... parece que hay radiación en esta zona."));
+            } else if (adjustedLevel == 1 && protectionLevel > 0) {
+                player.sendMessage(MiniMessage.miniMessage().deserialize("<yellow>Tu protección contra radiación está reduciendo los efectos, pero aún sientes algo de mareo."));
             }
         }
         
         // Nivel 6-10: Efectos moderados (debilidad, más náusea)
-        if (level >= 6) {
+        if (adjustedLevel >= 6) {
             player.addPotionEffect(new PotionEffect(PotionEffectType.NAUSEA, 160, 0));
             player.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, 100, 0));
             
-            if (level == 6) {
-                player.sendMessage(NamedTextColor.GOLD + "La radiación está afectando tu cuerpo. Deberías salir de esta zona.");
+            if (adjustedLevel == 6) {
+                player.sendMessage(MiniMessage.miniMessage().deserialize(WinterfallMain.PREFIX + "<gold>La radiación está afectando tu cuerpo. Deberías salir de esta zona."));
             }
         }
         
         // Nivel 11-15: Efectos graves (veneno, ceguera)
-        if (level >= 11) {
+        if (adjustedLevel >= 11) {
             player.addPotionEffect(new PotionEffect(PotionEffectType.POISON, 60, 0));
             player.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 80, 0));
             
-            if (level == 11) {
-                player.sendMessage(NamedTextColor.RED + "¡La radiación está dañando tus órganos! ¡Debes salir inmediatamente!");
+            if (adjustedLevel == 11) {
+                player.sendMessage(MiniMessage.miniMessage().deserialize(WinterfallMain.PREFIX + "<red>¡La radiación está dañando tus órganos! ¡Debes salir inmediatamente!"));
             }
         }
         
         // Nivel 16+: Efectos mortales (wither, daño directo)
-        if (level >= 16) {
+        if (adjustedLevel >= 16) {
             player.addPotionEffect(new PotionEffect(PotionEffectType.WITHER, 60, 0));
             player.damage(1.0); // 0.5 corazones de daño
             
-            if (level % 5 == 0) { // Mensaje cada 5 niveles a partir del 16
-                player.sendMessage(NamedTextColor.DARK_RED + "¡La radiación está matándote! ¡Necesitas tratamiento médico urgente!");
+            if (adjustedLevel % 5 == 0) { // Mensaje cada 5 niveles a partir del 16
+                player.sendMessage(MiniMessage.miniMessage().deserialize("<dark_red>¡La radiación está matándote! ¡Necesitas tratamiento médico urgente!"));
             }
         }
+    }
+    
+    /**
+     * Obtiene el nivel de protección contra radiación del jugador
+     * @param player Jugador a verificar
+     * @return Nivel de protección contra radiación (0-4)
+     */
+    private int getRadiationProtectionLevel(Player player) {
+        int protectionLevel = 0;
+        
+        // Verificar cada pieza de armadura
+        ItemStack[] armor = player.getInventory().getArmorContents();
+        for (ItemStack item : armor) {
+            if (item != null && item.hasItemMeta()) {
+                ItemMeta meta = item.getItemMeta();
+                if (meta.hasEnchant(CustomEnchantments.getRadiationProtectionEnchantment())) {
+                    protectionLevel += meta.getEnchantLevel(CustomEnchantments.getRadiationProtectionEnchantment());
+                }
+            }
+        }
+        
+        // Limitar el nivel máximo de protección a 4
+        return Math.min(4, protectionLevel);
     }
     
     /**

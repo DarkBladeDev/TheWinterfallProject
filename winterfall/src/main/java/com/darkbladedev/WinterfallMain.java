@@ -12,6 +12,7 @@ import com.darkbladedev.mechanics.HydrationSystem;
 import com.darkbladedev.mechanics.NutritionSystem;
 import com.darkbladedev.mechanics.StaminaSystem;
 import com.darkbladedev.mechanics.TemperatureSystem;
+import com.darkbladedev.mechanics.FreezingSystem;
 import com.darkbladedev.items.ItemManager;
 import com.ssomar.score.SCore;
 
@@ -41,12 +42,15 @@ public class WinterfallMain extends JavaPlugin {
     private NutritionSystem nutritionSystem;
     private StaminaSystem staminaSystem;
     private TemperatureSystem temperatureSystem;
+    private FreezingSystem freezingSystem;
     private DatabaseManager databaseManager;
     private ItemManager itemManager;
     private PlaceholderAPIExpansion placeholders;
     public static boolean hasExecutableItems = false;
     public static boolean hasItemsAdder = false;
     public static final String NAME = "Winterfall";
+    public static final String PREFIX = "<gradient:#ffffff::#63d0ff>Winterfall</gradient>";
+
     
     @Override
     public void onEnable() {
@@ -120,6 +124,9 @@ public class WinterfallMain extends JavaPlugin {
         if (temperatureSystem != null) {
             temperatureSystem.shutdown();
         }
+        if (freezingSystem != null) {
+            freezingSystem.shutdown();
+        }
         if (databaseManager != null) {
             databaseManager.shutdown();
         }
@@ -144,6 +151,7 @@ public class WinterfallMain extends JavaPlugin {
         nutritionSystem = new NutritionSystem(this);
         staminaSystem = new StaminaSystem(this);
         temperatureSystem = new TemperatureSystem(this);
+        freezingSystem = new FreezingSystem(this);
         
         // Inicializar gestores
         //itemManager = new ItemManager(this);
@@ -158,6 +166,7 @@ public class WinterfallMain extends JavaPlugin {
         nutritionSystem.initialize();
         staminaSystem.initialize();
         temperatureSystem.initialize();
+        freezingSystem.initialize();
         databaseManager.initialize();
     }
     
@@ -281,5 +290,13 @@ public class WinterfallMain extends JavaPlugin {
      */
     public TemperatureSystem getTemperatureSystem() {
         return temperatureSystem;
+    }
+    
+    /**
+     * Obtiene el sistema de congelación
+     * @return Sistema de congelación
+     */
+    public FreezingSystem getFreezingSystem() {
+        return freezingSystem;
     }
 }

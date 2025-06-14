@@ -3,7 +3,9 @@ package com.darkbladedev.mechanics;
 import com.darkbladedev.WinterfallMain;
 
 import org.bukkit.Bukkit;
-import net.kyori.adventure.text.format.NamedTextColor;
+
+import net.kyori.adventure.text.minimessage.MiniMessage;
+
 import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.World;
@@ -58,7 +60,7 @@ public class SnowfallSystem {
         startDamageSystem();
         isActive = true;
         
-        Bukkit.getConsoleSender().sendMessage(NamedTextColor.AQUA + "[Winterfall] Sistema de nevada mortal inicializado");
+        Bukkit.getConsoleSender().sendMessage(MiniMessage.miniMessage().deserialize(WinterfallMain.PREFIX + " Sistema de nevada mortal inicializado"));
     }
     
     /**
@@ -87,8 +89,8 @@ public class SnowfallSystem {
                             }
                             
                             // Mensaje de advertencia periódico
-                            if (random.nextInt(100) < 5) { // 5% de probabilidad cada tick
-                                player.sendMessage(NamedTextColor.RED + "¡La nieve tóxica cae sobre ti! Necesitas protección.");
+                            if (random.nextInt(100) < 1) { // 1% de probabilidad cada tick
+                                player.sendMessage(MiniMessage.miniMessage().deserialize("<red>¡La nieve tóxica cae sobre ti! Necesitas protección."));
                             }
                         }
                     }
@@ -158,7 +160,7 @@ public class SnowfallSystem {
         // Nivel 16+: Efectos mortales (daño severo)
         if (level >= 16) {
             player.damage(15.0); // 7.5 corazones de daño
-            player.sendMessage(NamedTextColor.DARK_RED + "¡La nieve tóxica está penetrando en tu piel! ¡Necesitas protección urgentemente!");
+            player.sendMessage(MiniMessage.miniMessage().deserialize("<dark_red>¡La nieve tóxica está penetrando en tu piel! ¡Necesitas protección urgentemente!"));
         }
     }
     
