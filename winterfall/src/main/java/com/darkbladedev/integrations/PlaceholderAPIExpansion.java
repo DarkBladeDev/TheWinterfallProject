@@ -140,19 +140,19 @@ public class PlaceholderAPIExpansion extends PlaceholderExpansion {
 
         // Barras de progreso para nutrición
         if (identifier.equals("nutrition_protein_bar")) {
-            return nutritionSystem.getNutrientBar(player, NutrientType.PROTEIN);
+            return MiniMessage.miniMessage().serialize(nutritionSystem.getNutrientBar(player, NutrientType.PROTEIN));
         }
 
         if (identifier.equals("nutrition_fat_bar")) {
-            return nutritionSystem.getNutrientBar(player, NutrientType.FAT);
+            return MiniMessage.miniMessage().serialize(nutritionSystem.getNutrientBar(player, NutrientType.FAT));
         }
 
         if (identifier.equals("nutrition_carbs_bar")) {
-            return nutritionSystem.getNutrientBar(player, NutrientType.CARBS);
+            return MiniMessage.miniMessage().serialize(nutritionSystem.getNutrientBar(player, NutrientType.CARBS));
         }
 
         if (identifier.equals("nutrition_vitamins_bar")) {
-            return nutritionSystem.getNutrientBar(player, NutrientType.VITAMINS);
+            return MiniMessage.miniMessage().serialize(nutritionSystem.getNutrientBar(player, NutrientType.VITAMINS));
         }
 
         // Placeholders de radiación

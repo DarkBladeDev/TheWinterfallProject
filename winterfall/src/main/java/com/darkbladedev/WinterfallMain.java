@@ -49,7 +49,7 @@ public class WinterfallMain extends JavaPlugin {
     public static boolean hasExecutableItems = false;
     public static boolean hasItemsAdder = false;
     public static final String NAME = "Winterfall";
-    public static final String PREFIX = "<gradient:#ffffff::#63d0ff>Winterfall</gradient>";
+    public static final String PREFIX = "<gradient:#ffffff:#63d0ff>Winterfall</gradient>";
 
     
     @Override

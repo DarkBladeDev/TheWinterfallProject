@@ -447,14 +447,14 @@ public class NutritionSystem implements Listener {
      * @param type Tipo de nutriente
      * @return Barra de progreso como texto
      */
-    public String getNutrientBar(Player player, NutrientType type) {
+    public Component getNutrientBar(Player player, NutrientType type) {
         int level = getNutrientLevel(player, type);
         
         StringBuilder bar = new StringBuilder();
         MiniMessage mm = MiniMessage.miniMessage();
         
         // Usar el color específico del nutriente
-        Component barColor = mm.deserialize(type.getColorCode());
+        String barColor = type.getColorCode();
         bar.append(barColor);
         
         // Construir barra de progreso
@@ -468,7 +468,7 @@ public class NutritionSystem implements Listener {
             }
         }
         
-        return bar.toString();
+        return mm.deserialize(bar.toString());
     }
     
     /**
@@ -618,7 +618,7 @@ public class NutritionSystem implements Listener {
             nutritionTask.cancel();
         }
         isActive = false;
-        ((Audience) Bukkit.getConsoleSender()).sendMessage(MiniMessage.miniMessage().deserialize("<green>[Winterfall] Sistema de nutrición desactivado"));
+        ((Audience) Bukkit.getConsoleSender()).sendMessage(MiniMessage.miniMessage().deserialize(WinterfallMain.PREFIX + " <green>Sistema de nutrición desactivado"));
     }
 
     public int getMaxNutrientLevel() {

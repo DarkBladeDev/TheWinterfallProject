@@ -377,7 +377,7 @@ public class StaminaSystem implements Listener {
             staminaTask.cancel();
         }
         isActive = false;
-        Bukkit.getConsoleSender().sendMessage(MiniMessage.miniMessage().deserialize(WinterfallMain.PREFIX + "<green>Sistema de estamina desactivado"));
+        Bukkit.getConsoleSender().sendMessage(MiniMessage.miniMessage().deserialize(WinterfallMain.PREFIX + " <green>Sistema de estamina desactivado"));
     }
     
     /**

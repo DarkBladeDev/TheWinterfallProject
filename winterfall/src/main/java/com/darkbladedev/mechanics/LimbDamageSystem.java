@@ -3,6 +3,7 @@ package com.darkbladedev.mechanics;
 import com.darkbladedev.WinterfallMain;
 import com.darkbladedev.CustomTypes.CustomDamageTypes;
 
+import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.damage.DamageSource;
@@ -14,6 +15,7 @@ import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
+import org.jetbrains.annotations.NotNull;
 import org.bukkit.attribute.Attribute;
 
 import java.util.HashMap;
@@ -110,14 +112,14 @@ public class LimbDamageSystem implements Listener {
     public void initialize() {
         // Verificar si el sistema está habilitado en la configuración
         if (!plugin.getConfig().getBoolean("limb_damage.enabled", true)) {
-            plugin.getServer().getConsoleSender().sendMessage(MiniMessage.miniMessage().deserialize("[Winterfall] <yellow>Sistema de daño por extremidades deshabilitado en la configuración"));
+            plugin.getServer().getConsoleSender().sendMessage(MiniMessage.miniMessage().deserialize(WinterfallMain.PREFIX + "<yellow> Sistema de daño por extremidades deshabilitado en la configuración"));
             return;
         }
         
         if (!isActive) {
             plugin.getServer().getPluginManager().registerEvents(this, plugin);
             isActive = true;
-            plugin.getServer().getConsoleSender().sendMessage(MiniMessage.miniMessage().deserialize("[Winterfall] <green>Sistema de daño por extremidades activado"));
+            plugin.getServer().getConsoleSender().sendMessage(MiniMessage.miniMessage().deserialize(WinterfallMain.PREFIX + "<green> Sistema de daño por extremidades activado"));
         }
     }
     
@@ -127,7 +129,7 @@ public class LimbDamageSystem implements Listener {
     public void shutdown() {
         if (isActive) {
             isActive = false;
-            plugin.getServer().getConsoleSender().sendMessage(MiniMessage.miniMessage().deserialize("[Winterfall] <red>Sistema de daño por extremidades desactivado"));
+            plugin.getServer().getConsoleSender().sendMessage(MiniMessage.miniMessage().deserialize(WinterfallMain.PREFIX + "<red> Sistema de daño por extremidades desactivado"));
         }
     }
     
@@ -369,18 +371,20 @@ public class LimbDamageSystem implements Listener {
      * @param player Jugador a mostrar
      * @return Mensaje con el estado de las extremidades
      */
-    public String getLimbStatusMessage(Player player) {
+    public @NotNull Component getLimbStatusMessage(Player player) {
         StringBuilder message = new StringBuilder();
-        message.append(MiniMessage.miniMessage().serialize(MiniMessage.miniMessage().deserialize("<gray>----------------------------------------\n")));
-        message.append(MiniMessage.miniMessage().serialize(MiniMessage.miniMessage().deserialize("<aqua>Estado de las Extremidades:\n")));
+        MiniMessage mm = MiniMessage.miniMessage();
+
+        message.append(("<gray>----------------------------------------\n"));
+        message.append(("<aqua>Estado de las Extremidades:\n"));
         
         for (LimbType limbType : LimbType.values()) {
             DamageState state = getLimbDamageState(player, limbType);
-            message.append(MiniMessage.miniMessage().serialize(MiniMessage.miniMessage().deserialize("<yellow>" + limbType.getDisplayName() + ": " + state.getDisplayName() + "\n")));
+            message.append(("<yellow>" + limbType.getDisplayName() + ": " + state.getDisplayName() + "\n"));
         }
         
-        message.append(MiniMessage.miniMessage().serialize(MiniMessage.miniMessage().deserialize("<gray>----------------------------------------")));
-        return message.toString();
+        message.append(("<gray>----------------------------------------"));
+        return mm.deserialize(message.toString());
     }
     
     /**

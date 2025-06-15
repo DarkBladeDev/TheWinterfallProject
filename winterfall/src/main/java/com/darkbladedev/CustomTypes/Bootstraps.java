@@ -78,6 +78,7 @@ public class Bootstraps implements PluginBootstrap {
                 EnchantmentKeys.create(CustomEnchantments.RADIATION_PROTECTION_KEY),
                 b -> b.maxLevel(3)
                    .anvilCost(15)
+                   .weight(15)
                    .minimumCost(EnchantmentRegistryEntry.EnchantmentCost.of(5, 3))
                    .maximumCost(EnchantmentRegistryEntry.EnchantmentCost.of(15, 5))
 

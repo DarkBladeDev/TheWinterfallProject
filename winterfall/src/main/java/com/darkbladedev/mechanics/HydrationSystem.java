@@ -90,7 +90,7 @@ public class HydrationSystem implements Listener {
     public void initialize() {
         // Verificar si el sistema está habilitado en la configuración
         if (!plugin.getConfig().getBoolean("hydration.enabled", true)) {
-            Bukkit.getConsoleSender().sendMessage(MiniMessage.miniMessage().deserialize("[Winterfall] <yellow>Sistema de hidratación deshabilitado en la configuración"));
+            Bukkit.getConsoleSender().sendMessage(MiniMessage.miniMessage().deserialize(WinterfallMain.PREFIX + "<yellow> Sistema de hidratación deshabilitado en la configuración"));
             return;
         }
         
@@ -100,7 +100,7 @@ public class HydrationSystem implements Listener {
         // Registrar eventos
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
         
-        Bukkit.getConsoleSender().sendMessage(MiniMessage.miniMessage().deserialize("[Winterfall] <green>Sistema de hidratación inicializado"));
+        Bukkit.getConsoleSender().sendMessage(MiniMessage.miniMessage().deserialize(WinterfallMain.PREFIX + "<green> Sistema de hidratación inicializado"));
     }
     
     /**
@@ -162,7 +162,7 @@ public class HydrationSystem implements Listener {
                 DamageSource damageSource = CustomDamageTypes.createDehydrationDamageSource(player);
                 player.damage(1.0, damageSource); // Medio corazón de daño
             } catch (Exception e) {
-                Bukkit.getConsoleSender().sendMessage(MiniMessage.miniMessage().deserialize("[Winterfall] <red>Error al aplicar deshidratación con DamageType custom (Aplicando daño default): " + e.getMessage()));
+                Bukkit.getConsoleSender().sendMessage(MiniMessage.miniMessage().deserialize(WinterfallMain.PREFIX + " <red>Error al aplicar deshidratación con DamageType custom (Aplicando daño default): " + e.getMessage()));
                 player.damage(1.0); // Daño por defecto si hay un error
             }
             player.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, 100, 1));
@@ -424,7 +424,7 @@ public class HydrationSystem implements Listener {
             hydrationTask.cancel();
         }
         isActive = false;
-        Bukkit.getConsoleSender().sendMessage(MiniMessage.miniMessage().deserialize("[Winterfall] <white>Sistema de hidratación desactivado"));
+        Bukkit.getConsoleSender().sendMessage(MiniMessage.miniMessage().deserialize(WinterfallMain.PREFIX + "<white> Sistema de hidratación desactivado"));
     }
 
     /**

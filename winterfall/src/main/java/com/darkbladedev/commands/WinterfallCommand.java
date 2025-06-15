@@ -1,6 +1,7 @@
 package com.darkbladedev.commands;
 
 import com.darkbladedev.WinterfallMain;
+
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.command.Command;
@@ -648,7 +649,7 @@ public class WinterfallCommand implements CommandExecutor, TabCompleter {
             for (com.darkbladedev.mechanics.NutritionSystem.NutrientType nutrient : 
                     com.darkbladedev.mechanics.NutritionSystem.NutrientType.values()) {
                 int level = plugin.getNutritionSystem().getNutrientLevel(target, nutrient);
-                String bar = plugin.getNutritionSystem().getNutrientBar(target, nutrient);
+                String bar = MiniMessage.miniMessage().serialize(plugin.getNutritionSystem().getNutrientBar(target, nutrient));
                 
                 String status;
                 if (level > 70) {
@@ -669,13 +670,13 @@ public class WinterfallCommand implements CommandExecutor, TabCompleter {
         // Estado de extremidades
         if (plugin.getLimbDamageSystem().isActive()) {
             // Mostrar estado de cada extremidad
-            String limbStatus = plugin.getLimbDamageSystem().getLimbStatusMessage(target);
+            Component limbStatus = plugin.getLimbDamageSystem().getLimbStatusMessage(target);
             sender.sendMessage(limbStatus);
         } else {
-            ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<yellow>Estado de extremidades: <gray>Sistema inactivo"));
+            sender.sendMessage(MiniMessage.miniMessage().deserialize("<yellow>Estado de extremidades:</yellow> <gray>Sistema inactivo</gray>"));
         }
         
-        ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<gray>----------------------------------------"));
+        sender.sendMessage(MiniMessage.miniMessage().deserialize("<gray>----------------------------------------</gray>"));
     }
     
     /**
