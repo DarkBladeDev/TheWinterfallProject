@@ -1,2 +1,4 @@
-winterfall/target/
 .vscode/*
+winterfall-core/target/
+public-version/target/
+private-version/target/

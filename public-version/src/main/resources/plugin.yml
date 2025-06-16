@@ -1,0 +1,52 @@
+name: Savage-Frontier
+version: 1.0.0
+main: com.darkbladedev.SavageFrontierMain
+api-version: 1.21
+description: Aumenta la dificultad de tu survival con Savage Frontier.
+author: DarkBladeDev
+depend: [PlaceholderAPI]
+commands:
+  savage:
+    description: Comando principal
+    usage: /sf <subcomando>
+    aliases: [savage-frontier, sf]
+
+permissions:
+  savage.bypass.water:
+    description: Permiso para bypasear el sistema de hidratación
+    default: false
+  savage.bypass.nutrients:
+    description: Permiso para bypasear el sistema de nutrición
+    default: false
+  savage.bypass.stamina:
+    description: Permiso para bypasear el sistema de estamina
+    default: false
+  
+  savage.admin.snow:
+    description: Permiso para activar o desactivar el sistema de nieve
+    default: op
+  savage.admin.bleeding:
+    description: Permiso para activar o desactivar el sistema de sangrado
+    default: op
+  savage.admin.radiation:
+    description: Permiso para activar o desactivar el sistema de radiación
+    default: op
+  savage.admin.limb:
+    description: Permiso para activar o desactivar el sistema de daño en extremidades
+    default: op
+  savage.admin.hydration:
+    description: Permiso para activar o desactivar el sistema de hidratación
+    default: op
+  savage.admin.nutrition:
+    description: Permiso para activar o desactivar el sistema de nutrición
+    default: op
+  savage.admin.stamina:
+    description: Permiso para activar o desactivar el sistema de estamina
+    default: op
+  savage.admin.temperature:
+    description: Permiso para activar o desactivar el sistema de temperatura
+    default: op
+
+  savage.status.others:
+    description: Permiso para ver el estado de otros jugadores
+    default: op

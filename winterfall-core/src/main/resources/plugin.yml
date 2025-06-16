@@ -1,0 +1,52 @@
+name: Winterfall
+version: 1.0.0
+main: com.darkbladedev.WinterfallMain
+api-version: 1.21
+description: Plugin que recrea el mundo de "El Eternauta" con mecánicas, items y mobs realistas.
+author: DarkBladeDev
+depend: [PlaceholderAPI]
+commands:
+  winterfall:
+    description: Comando principal del plugin Winterfall
+    usage: /winterfall <subcomando>
+    aliases: [wf]
+
+permissions:
+  winterfall.bypass.water:
+    description: Permiso para bypasear el sistema de hidratación
+    default: false
+  winterfall.bypass.nutrients:
+    description: Permiso para bypasear el sistema de nutrición
+    default: false
+  winterfall.bypass.stamina:
+    description: Permiso para bypasear el sistema de estamina
+    default: false
+
+  winterfall.admin.snow:
+    description: Permiso para activar o desactivar el sistema de nieve
+    default: op
+  winterfall.admin.bleeding:
+    description: Permiso para activar o desactivar el sistema de sangrado
+    default: op
+  winterfall.admin.radiation:
+    description: Permiso para activar o desactivar el sistema de radiación
+    default: op
+  winterfall.admin.limb:
+    description: Permiso para activar o desactivar el sistema de daño en extremidades
+    default: op
+  winterfall.admin.hydration:
+    description: Permiso para activar o desactivar el sistema de hidratación
+    default: op
+  winterfall.admin.nutrition:
+    description: Permiso para activar o desactivar el sistema de nutrición
+    default: op
+  winterfall.admin.stamina:
+    description: Permiso para activar o desactivar el sistema de estamina
+    default: op
+  winterfall.admin.temperature:
+    description: Permiso para activar o desactivar el sistema de temperatura
+    default: op
+
+  winterfall.status.others:
+    description: Permiso para ver el estado de otros jugadores
+    default: op
