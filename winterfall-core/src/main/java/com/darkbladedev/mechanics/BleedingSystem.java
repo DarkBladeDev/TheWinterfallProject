@@ -59,7 +59,7 @@ public class BleedingSystem implements Listener {
         startBleedingSystem();
         isActive = true;
         
-        ((Audience) Bukkit.getConsoleSender()).sendMessage(MiniMessage.miniMessage().deserialize("[Winterfall] <green>Sistema de sangrado inicializado"));
+        ((Audience) Bukkit.getConsoleSender()).sendMessage(MiniMessage.miniMessage().deserialize(plugin.PREFIX + " <green>Sistema de sangrado inicializado"));
     }
     
     /**

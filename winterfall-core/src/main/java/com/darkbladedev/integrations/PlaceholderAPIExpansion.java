@@ -94,7 +94,8 @@ public class PlaceholderAPIExpansion extends PlaceholderExpansion {
     @Override
     public String onRequest(OfflinePlayer offlinePlayer, String identifier) {
         if (offlinePlayer == null || !offlinePlayer.isOnline()) {
-            return "";
+            Component errorMessage = MiniMessage.miniMessage().deserialize("<red>ERROR: Jugador no encontrado");
+            return MiniMessage.miniMessage().serialize(errorMessage);
         }
 
         Player player = offlinePlayer.getPlayer();

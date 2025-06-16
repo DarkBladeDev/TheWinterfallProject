@@ -41,7 +41,7 @@ public class DatabaseManager {
     public DatabaseManager(SavageFrontierMain plugin) {
         this.plugin = plugin;
         this.saveInterval = plugin.getConfig().getInt("database.save_interval", 300);
-        this.dbFile = plugin.getConfig().getString("database.file", "Winterfall/database.db");
+        this.dbFile = plugin.getConfig().getString("database.file", "/database.db");
         
         // Reemplazar la ruta relativa con la ruta absoluta
         if (!dbFile.startsWith("/")) {

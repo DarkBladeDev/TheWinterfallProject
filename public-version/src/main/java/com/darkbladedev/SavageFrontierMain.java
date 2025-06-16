@@ -155,9 +155,9 @@ public class SavageFrontierMain extends JavaPlugin {
         // Usar el método registerCommand de JavaPlugin para Paper plugins
         this.getServer().getCommandMap().register("savage", new org.bukkit.command.Command("savage") {
             {
-                this.setDescription("Comando principal del plugin Winterfall");
-                this.setUsage("/winterfall <subcomando>");
-                this.setAliases(List.of("wf"));
+                this.setDescription("Comando principal del plugin Savage Frontier");
+                this.setUsage("/savage <subcomando>");
+                this.setAliases(List.of("sf", "savage-frontier"));
             }
             
             @Override

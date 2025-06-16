@@ -5,7 +5,7 @@ database:
   # Tipo de base de datos (sqlite)
   type: sqlite
   # Ruta del archivo de la base de datos
-  file: "database.db"
+  file: "/database.db"
   # Intervalo de guardado automático en segundos
   save_interval: 300
 

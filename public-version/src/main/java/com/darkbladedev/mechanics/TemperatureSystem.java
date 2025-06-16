@@ -9,6 +9,7 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.block.Biome;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -28,6 +29,8 @@ import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -60,7 +63,9 @@ public class TemperatureSystem implements Listener {
     private int temperatureIncreaseAmount; // Cantidad que aumenta la temperatura
     private double temperatureDecreaseRate; // Tasa de disminución (0.0 - 1.0)
     private double temperatureIncreaseRate; // Tasa de aumento (0.0 - 1.0)
+    @SuppressWarnings("unused")
     private int coldProtectionEffectiveness; // Efectividad del encantamiento de protección contra frío
+    @SuppressWarnings("unused")
     private int heatProtectionEffectiveness; // Efectividad del encantamiento de protección contra calor
     
     // Umbrales configurables
@@ -73,17 +78,19 @@ public class TemperatureSystem implements Listener {
     @SuppressWarnings("unused")
     private int severeHyperthermiaThreshold;
     
-    // Mapa de temperaturas por bioma
-    private final Map<String, Integer> biomeTemperatures;
     
     // Referencias
     private final SavageFrontierMain plugin;
+    private String temperatureConfigFile;
     
     // Estado
     private boolean isActive;
     private BukkitTask temperatureTask;
     private final Map<UUID, Integer> temperatureLevel;
     
+    // Mapa de temperaturas por bioma
+    private final Map<String, Integer> biomeTemperatures;
+
     /**
      * Constructor del sistema de temperatura
      * @param plugin Instancia del plugin principal
@@ -147,10 +154,24 @@ public class TemperatureSystem implements Listener {
         SEVERE_HYPERTHERMIA_THRESHOLD = config.getInt("temperature.thresholds.severe_hyperthermia", DEFAULT_SEVERE_HYPERTHERMIA_THRESHOLD);
         
         // Cargar temperaturas por bioma
-        ConfigurationSection biomesSection = config.getConfigurationSection("temperature.biomes");
+        String pluginPath = plugin.getDataFolder().getParentFile().getAbsolutePath();
+        temperatureConfigFile = pluginPath + "/temperature_values.yml";
+        // Crear temperatureConfigFile si no existe
+        File temperatureConfigDir = new File(temperatureConfigFile).getParentFile();
+        if (!temperatureConfigDir.exists()) {
+            try {
+                temperatureConfigDir.mkdirs();
+            } catch (Exception e) {
+                plugin.getLogger().severe("Error al crear el archivo de configuración de temperaturas: " + e.getMessage());
+            }
+        }
+
+        // Cargar temperaturas por bioma desde la configuración
+        FileConfiguration biomeConfig = YamlConfiguration.loadConfiguration(new File(temperatureConfigFile));
+        ConfigurationSection biomesSection = biomeConfig.getConfigurationSection("temperature.biomes");
         if (biomesSection == null) {
             // Crear sección de biomas si no existe
-            biomesSection = config.createSection("temperature.biomes");
+            biomesSection = biomeConfig.createSection("temperature.biomes");
             
             // Configurar temperaturas por defecto para algunos biomas comunes
             // Biomas fríos
@@ -203,12 +224,17 @@ public class TemperatureSystem implements Listener {
                 // Asignar temperatura por defecto según el tipo de bioma
                 int defaultTemp = getDefaultBiomeTemperature(biome);
                 biomeTemperatures.put(biomeName, defaultTemp);
-                config.set("temperature.biomes." + biomeName, defaultTemp);
+                biomeConfig.set("temperature.biomes." + biomeName, defaultTemp);
             }
         }
         
         // Guardar cambios en la configuración
         plugin.saveConfig();
+        try {
+            biomeConfig.save(temperatureConfigDir);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
     
 
@@ -288,19 +314,33 @@ public class TemperatureSystem implements Listener {
         boolean isInColdEnvironment = isInColdEnvironment(player);
         boolean isInHotEnvironment = isInHotEnvironment(player);
         
+        // Obtener nivel de protección contra frío y calor
+        int coldProtectionLevel = getEnchantmentLevel(player, CustomEnchantments.COLD_PROTECTION_KEY);
+        int heatProtectionLevel = getEnchantmentLevel(player, CustomEnchantments.HEAT_PROTECTION_KEY);
+        
         // Actualizar temperatura según el entorno y protecciones
         if (isInColdEnvironment) {
-            // Verificar si el jugador tiene protección contra el frío
-            if (!hasProtectionAgainstCold(player)) {
-                // Disminuir temperatura si está en ambiente frío sin protección
-                decreaseTemperature(player, temperatureDecreaseAmount);
+            // Calcular reducción de efecto basada en nivel de protección
+            double protectionFactor = 1.0;
+            if (coldProtectionLevel > 0) {
+                // Reducir el efecto del frío según el nivel de protección
+                // Nivel 1: 30% de reducción, Nivel 2: 60% de reducción, Nivel 3: 90% de reducción
+                protectionFactor = Math.max(0.1, 1.0 - (coldProtectionLevel * 0.3));
             }
+            
+            // Disminuir temperatura si está en ambiente frío, con reducción si tiene protección
+            decreaseTemperature(player, (int)(temperatureDecreaseAmount * protectionFactor));
         } else if (isInHotEnvironment) {
-            // Verificar si el jugador tiene protección contra el calor
-            if (!hasProtectionAgainstHeat(player)) {
-                // Aumentar temperatura si está en ambiente caluroso sin protección
-                increaseTemperature(player, temperatureIncreaseAmount * 2); // Más rápido en ambientes calurosos
+            // Calcular reducción de efecto basada en nivel de protección
+            double protectionFactor = 1.0;
+            if (heatProtectionLevel > 0) {
+                // Reducir el efecto del calor según el nivel de protección
+                // Nivel 1: 30% de reducción, Nivel 2: 60% de reducción, Nivel 3: 90% de reducción
+                protectionFactor = Math.max(0.1, 1.0 - (heatProtectionLevel * 0.3));
             }
+            
+            // Aumentar temperatura si está en ambiente caluroso, con reducción si tiene protección
+            increaseTemperature(player, (int)(temperatureIncreaseAmount * 2 * protectionFactor));
         } else {
             // En biomas templados, normalizar la temperatura
             normalizeTemperature(player);
@@ -309,10 +349,10 @@ public class TemperatureSystem implements Listener {
         // Aplicar efectos según la temperatura
         if (getPlayerTemperature(player) <= HYPOTHERMIA_THRESHOLD) {
             // Aplicar efectos de hipotermia si la temperatura es baja
-            applyHypothermiaEffects(player);
+            applyHypothermiaEffects(player, coldProtectionLevel);
         } else if (getPlayerTemperature(player) >= HYPERTHERMIA_THRESHOLD) {
             // Aplicar efectos de hipertermia si la temperatura es alta
-            applyHyperthermiaEffects(player);
+            applyHyperthermiaEffects(player, heatProtectionLevel);
         }
     }
     
@@ -336,36 +376,29 @@ public class TemperatureSystem implements Listener {
     /**
      * Verifica si el jugador tiene protección contra el frío
      * @param player Jugador a verificar
-     * @return true si tiene protección, false en caso contrario
+     * @return Nivel de protección contra el frío (0-3)
      */
-    private boolean hasProtectionAgainstCold(Player player) {
-        
-        // Verificar si tiene encantamiento de protección contra el frío
+    @SuppressWarnings("unused")
+    private int hasProtectionAgainstCold(Player player) {
+        // Obtener el nivel total de encantamiento de protección contra el frío
         int protectionLevel = getEnchantmentLevel(player, CustomEnchantments.COLD_PROTECTION_KEY);
-        if (protectionLevel > 0) {
-            // Calcular probabilidad de protección basada en el nivel del encantamiento y la efectividad configurada
-            double protectionChance = protectionLevel * coldProtectionEffectiveness;
-            return Math.random() * 100 <= protectionChance;
-        }
         
-        return false;
+        // Devolver el nivel de protección (0 si no tiene encantamiento)
+        return protectionLevel;
     }
     
     /**
      * Verifica si el jugador tiene protección contra el calor
      * @param player Jugador a verificar
-     * @return true si tiene protección, false en caso contrario
+     * @return Nivel de protección contra el calor (0-3)
      */
-    private boolean hasProtectionAgainstHeat(Player player) {
-        // Verificar si tiene encantamiento de protección contra el calor
+    @SuppressWarnings("unused")
+    private int hasProtectionAgainstHeat(Player player) {
+        // Obtener el nivel total de encantamiento de protección contra el calor
         int protectionLevel = getEnchantmentLevel(player, CustomEnchantments.HEAT_PROTECTION_KEY);
-        if (protectionLevel > 0) {
-            // Calcular probabilidad de protección basada en el nivel del encantamiento y la efectividad configurada
-            double protectionChance = protectionLevel * heatProtectionEffectiveness;
-            return Math.random() * 100 <= protectionChance;
-        }
         
-        return false;
+        // Devolver el nivel de protección (0 si no tiene encantamiento)
+        return protectionLevel;
     }
     
     /**
@@ -544,6 +577,7 @@ public class TemperatureSystem implements Listener {
      * Aplica efectos de hipotermia basados en el nivel de temperatura
      * @param player Jugador al que aplicar los efectos
      */
+    @SuppressWarnings("unused")
     private void applyHypothermiaEffects(Player player) {
         int temperature = getTemperatureLevel(player);
         
@@ -575,10 +609,89 @@ public class TemperatureSystem implements Listener {
     }
     
     /**
+     * Aplica efectos de hipotermia basados en el nivel de temperatura
+     * @param player Jugador al que aplicar los efectos
+     * @param protectionLevel Nivel de protección contra el frío
+     */
+    private void applyHypothermiaEffects(Player player, int protectionLevel) {
+        int temperature = getTemperatureLevel(player);
+        
+        // Limpiar efectos anteriores si la temperatura es normal
+        if (temperature > HYPOTHERMIA_THRESHOLD) {
+            return;
+        }
+        
+        // Calcular reducción de efectos basada en nivel de protección
+        int effectReduction = protectionLevel;
+        
+        // Aplicar efectos según el nivel de hipotermia
+        if (temperature <= SEVERE_HYPOTHERMIA_THRESHOLD) {
+            // Hipotermia severa - daño y efectos graves
+            // Reducir la potencia de los efectos según el nivel de protección
+            int slownessAmplifier = Math.max(0, 2 - effectReduction);
+            int weaknessAmplifier = Math.max(0, 2 - effectReduction);
+            
+            // Aplicar efectos reducidos según protección
+            if (slownessAmplifier > 0) {
+                player.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, updateInterval * 20 + 20, slownessAmplifier));
+            }
+            
+            if (weaknessAmplifier > 0) {
+                player.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, updateInterval * 20 + 20, weaknessAmplifier));
+            }
+            
+            // Náusea solo si no tiene protección nivel 3
+            if (protectionLevel < 3) {
+                player.addPotionEffect(new PotionEffect(PotionEffectType.NAUSEA, updateInterval * 20 + 20, 0));
+            }
+            
+            // Daño por hipotermia severa reducido según protección
+            if (protectionLevel < 3) {
+                double damageAmount = 1.0 * Math.max(0.1, 1.0 - (protectionLevel * 0.3));
+                player.damage(damageAmount);
+            }
+            
+            // Mensaje según nivel de protección
+            if (protectionLevel == 0) {
+                ((Audience) player).sendMessage(MiniMessage.miniMessage().deserialize("<dark_red>¡Estás sufriendo hipotermia severa! Necesitas protección contra el frío urgentemente."));
+            } else if (protectionLevel < 3) {
+                ((Audience) player).sendMessage(MiniMessage.miniMessage().deserialize("<red>Tu protección contra el frío no es suficiente para estas temperaturas extremas."));
+            } else {
+                ((Audience) player).sendMessage(MiniMessage.miniMessage().deserialize("<yellow>Tu protección contra el frío te está salvando de la hipotermia severa."));
+            }
+        } else if (temperature <= HYPOTHERMIA_THRESHOLD) {
+            // Hipotermia moderada - efectos de movimiento y debilidad
+            // Solo aplicar si la protección no es suficiente
+            if (protectionLevel < 2) {
+                int slownessAmplifier = Math.max(0, 1 - effectReduction);
+                int weaknessAmplifier = Math.max(0, 1 - effectReduction);
+                
+                if (slownessAmplifier > 0) {
+                    player.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, updateInterval * 20 + 20, slownessAmplifier));
+                }
+                
+                if (weaknessAmplifier > 0) {
+                    player.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, updateInterval * 20 + 20, weaknessAmplifier));
+                }
+                
+                // Mensaje de advertencia
+                if (temperature % 5 == 0) { // Mostrar mensaje cada 5 puntos de temperatura
+                    if (protectionLevel == 0) {
+                        ((Audience) player).sendMessage(MiniMessage.miniMessage().deserialize("<red>Estás comenzando a sufrir hipotermia. Necesitas protección contra el frío."));
+                    } else {
+                        ((Audience) player).sendMessage(MiniMessage.miniMessage().deserialize("<yellow>Tu protección contra el frío te está ayudando, pero necesitas más abrigo."));
+                    }
+                }
+            }
+        }
+    }
+    
+    /**
      * Aplica efectos de hipertermia basados en el nivel de temperatura
      * @param player Jugador al que aplicar los efectos
+     * @param protectionLevel Nivel de protección contra el calor
      */
-    private void applyHyperthermiaEffects(Player player) {
+    private void applyHyperthermiaEffects(Player player, int protectionLevel) {
         int temperature = getTemperatureLevel(player);
         
         // Limpiar efectos anteriores si la temperatura es normal
@@ -586,24 +699,67 @@ public class TemperatureSystem implements Listener {
             return;
         }
         
+        // Calcular reducción de efectos basada en nivel de protección
+        int effectReduction = protectionLevel;
+        
         // Aplicar efectos según el nivel de hipertermia
         if (temperature >= SEVERE_HYPERTHERMIA_THRESHOLD) {
             // Hipertermia severa - daño y efectos graves
-            player.addPotionEffect(new PotionEffect(PotionEffectType.NAUSEA, updateInterval * 20 + 20, 0));
-            player.addPotionEffect(new PotionEffect(PotionEffectType.HUNGER, updateInterval * 20 + 20, 2));
-            player.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, updateInterval * 20 + 20, 1));
+            // Reducir la potencia de los efectos según el nivel de protección
+            int hungerAmplifier = Math.max(0, 2 - effectReduction);
+            int weaknessAmplifier = Math.max(0, 1 - effectReduction);
             
-            // Daño por hipertermia severa
-            player.damage(1.0);
-            ((Audience) player).sendMessage(MiniMessage.miniMessage().deserialize("<dark_red>¡Estás sufriendo hipertermia severa! Necesitas protección contra el calor urgentemente."));
+            // Aplicar efectos reducidos según protección
+            if (hungerAmplifier > 0) {
+                player.addPotionEffect(new PotionEffect(PotionEffectType.HUNGER, updateInterval * 20 + 20, hungerAmplifier));
+            }
+            
+            if (weaknessAmplifier > 0) {
+                player.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, updateInterval * 20 + 20, weaknessAmplifier));
+            }
+            
+            // Náusea solo si no tiene protección nivel 3
+            if (protectionLevel < 3) {
+                player.addPotionEffect(new PotionEffect(PotionEffectType.NAUSEA, updateInterval * 20 + 20, 0));
+            }
+            
+            // Daño por hipertermia severa reducido según protección
+            if (protectionLevel < 3) {
+                double damageAmount = 1.0 * Math.max(0.1, 1.0 - (protectionLevel * 0.3));
+                player.damage(damageAmount);
+            }
+            
+            // Mensaje según nivel de protección
+            if (protectionLevel == 0) {
+                ((Audience) player).sendMessage(MiniMessage.miniMessage().deserialize("<dark_red>¡Estás sufriendo hipertermia severa! Necesitas protección contra el calor urgentemente."));
+            } else if (protectionLevel < 3) {
+                ((Audience) player).sendMessage(MiniMessage.miniMessage().deserialize("<red>Tu protección contra el calor no es suficiente para estas temperaturas extremas."));
+            } else {
+                ((Audience) player).sendMessage(MiniMessage.miniMessage().deserialize("<yellow>Tu protección contra el calor te está salvando de la hipertermia severa."));
+            }
         } else if (temperature >= HYPERTHERMIA_THRESHOLD) {
             // Hipertermia moderada - efectos de hambre y debilidad
-            player.addPotionEffect(new PotionEffect(PotionEffectType.HUNGER, updateInterval * 20 + 20, 1));
-            player.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, updateInterval * 20 + 20, 0));
-            
-            // Mensaje de advertencia
-            if (temperature % 5 == 0) { // Mostrar mensaje cada 5 puntos de temperatura
-                ((Audience) player).sendMessage(MiniMessage.miniMessage().deserialize("<red>Estás comenzando a sufrir hipertermia. Necesitas protección contra el calor."));
+            // Solo aplicar si la protección no es suficiente
+            if (protectionLevel < 2) {
+                int hungerAmplifier = Math.max(0, 1 - effectReduction);
+                int weaknessAmplifier = Math.max(0, 0 - effectReduction); // Nivel 0 de debilidad
+                
+                if (hungerAmplifier > 0) {
+                    player.addPotionEffect(new PotionEffect(PotionEffectType.HUNGER, updateInterval * 20 + 20, hungerAmplifier));
+                }
+                
+                if (weaknessAmplifier > 0) {
+                    player.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, updateInterval * 20 + 20, weaknessAmplifier));
+                }
+                
+                // Mensaje de advertencia
+                if (temperature % 5 == 0) { // Mostrar mensaje cada 5 puntos de temperatura
+                    if (protectionLevel == 0) {
+                        ((Audience) player).sendMessage(MiniMessage.miniMessage().deserialize("<red>Estás comenzando a sufrir hipertermia. Necesitas protección contra el calor."));
+                    } else {
+                        ((Audience) player).sendMessage(MiniMessage.miniMessage().deserialize("<yellow>Tu protección contra el calor te está ayudando, pero necesitas más protección."));
+                    }
+                }
             }
         }
     }
@@ -849,7 +1005,8 @@ public class TemperatureSystem implements Listener {
         
         // Aplicar efectos si el nivel es bajo
         if (newLevel <= HYPOTHERMIA_THRESHOLD) {
-            applyHypothermiaEffects(player);
+            int coldProtectionLevel = getEnchantmentLevel(player, CustomEnchantments.COLD_PROTECTION_KEY);
+            applyHypothermiaEffects(player, coldProtectionLevel);
         }
     }
 

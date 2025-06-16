@@ -59,7 +59,7 @@ public class BleedingSystem implements Listener {
         startBleedingSystem();
         isActive = true;
         
-        ((Audience) Bukkit.getConsoleSender()).sendMessage(MiniMessage.miniMessage().deserialize("[Winterfall] <green>Sistema de sangrado inicializado"));
+        ((Audience) Bukkit.getConsoleSender()).sendMessage(MiniMessage.miniMessage().deserialize(plugin.PREFIX + " <green>Sistema de sangrado inicializado"));
     }
     
     /**
@@ -140,7 +140,7 @@ public class BleedingSystem implements Listener {
                 DamageSource damageSource = CustomDamageTypes.createBleedingDamageSource(null, entity);
                 entity.damage(severity * 0.5, damageSource); // 0.5, 1.0 o 1.5 corazones de daño
             } catch (Exception e) {
-                ((Audience) ((Audience) Bukkit.getConsoleSender())).sendMessage(MiniMessage.miniMessage().deserialize("[Winterfall] <red>Error al aplicar sangrado con DamageType custom (Aplicando daño default): " + e.getMessage()));
+                ((Audience) ((Audience) Bukkit.getConsoleSender())).sendMessage(MiniMessage.miniMessage().deserialize(plugin.PREFIX + " <red>Error al aplicar sangrado con DamageType custom (Aplicando daño default): " + e.getMessage()));
                 entity.damage(severity * 0.5); // Daño por defecto si hay un error
             }
         }

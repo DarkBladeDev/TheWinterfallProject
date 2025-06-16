@@ -1094,7 +1094,7 @@ public class SavageCommand implements CommandExecutor, TabCompleter {
         
         // Autocompletar subcomandos
         if (args.length == 1) {
-            String[] subCommands = {"help", "mob", "snow", "radiation", "bleeding", "hydration", "nutrition", "status", "limb", "config", "enchantment"};
+            String[] subCommands = {"help", "mob", "radiation", "bleeding", "hydration", "nutrition", "status", "limb", "config", "enchantment"};
             for (String subCommand : subCommands) {
                 if (subCommand.startsWith(args[0].toLowerCase())) {
                     completions.add(subCommand);

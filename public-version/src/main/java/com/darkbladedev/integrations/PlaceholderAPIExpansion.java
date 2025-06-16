@@ -99,7 +99,8 @@ public class PlaceholderAPIExpansion extends PlaceholderExpansion {
 
         Player player = offlinePlayer.getPlayer();
         if (player == null) {
-            return "";
+            Component errorMessage = MiniMessage.miniMessage().deserialize("<red>ERROR: Jugador no encontrado");
+            return MiniMessage.miniMessage().serialize(errorMessage);
         }
 
         // Placeholders de hidratación
