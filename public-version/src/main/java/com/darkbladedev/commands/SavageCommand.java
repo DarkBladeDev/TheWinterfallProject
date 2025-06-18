@@ -19,7 +19,7 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Manejador de comandos para TWFP
+ * Manejador de comandos para Savage Frontier
  * Permite a los jugadores interactuar con las funcionalidades del plugin
  * Implementa TabCompleter para proporcionar autocompletado de comandos
  */
@@ -86,6 +86,10 @@ public class SavageCommand implements CommandExecutor, TabCompleter {
                 handleConfigCommand(sender, args);
                 break;
                 
+            case "reload":
+                handleReloadCommand(sender, args);
+                break;
+                
             // Mantener compatibilidad con comandos antiguos
             case "hydrationrate":
                 ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<yellow>Este comando está obsoleto. Usa /savage config hydration-rate en su lugar."));
@@ -136,6 +140,7 @@ public class SavageCommand implements CommandExecutor, TabCompleter {
         ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<yellow>/savage config nutrition-rate <normal/activity> <tasa><gray> - Ajusta la velocidad de disminución de nutrientes"));
         ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<yellow>/savage enchantment give <encantamiento> [nivel] [jugador]<gray> - Da un libro encantado"));
         ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<yellow>/savage enchantment apply <encantamiento> [nivel]<gray> - Aplica un encantamiento al ítem en mano"));
+        ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<yellow>/savage reload<gray> - Recarga la configuración y sistemas del plugin"));
         ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<gray>----------------------------------------"));
     }
     
@@ -1236,6 +1241,26 @@ public class SavageCommand implements CommandExecutor, TabCompleter {
         }
     }
     
+    /**
+     * Maneja el subcomando "reload"
+     * @param sender Remitente del comando
+     * @param args Argumentos del comando
+     */
+    private void handleReloadCommand(CommandSender sender, String[] args) {
+        // Verificar permisos
+        if (!sender.hasPermission("savage.admin")) {
+            ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>No tienes permiso para usar este comando."));
+            return;
+        }
+        
+        ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize(plugin.PREFIX + " <yellow>Recargando plugin..."));
+        
+        // Recargar configuración y sistemas
+        plugin.reloadSystems();
+        
+        ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize(plugin.PREFIX + " <green>¡Plugin recargado correctamente!"));
+    }
+    
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
         List<String> completions = new ArrayList<>();
@@ -1247,7 +1272,7 @@ public class SavageCommand implements CommandExecutor, TabCompleter {
         
         // Autocompletar subcomandos
         if (args.length == 1) {
-            String[] subCommands = {"help", "radiation", "temperature", "bleeding", "hydration", "nutrition", "status", "limb", "config", "enchantment"};
+            String[] subCommands = {"help", "radiation", "temperature", "bleeding", "hydration", "nutrition", "status", "limb", "config", "enchantment", "reload"};
             for (String subCommand : subCommands) {
                 if (subCommand.startsWith(args[0].toLowerCase())) {
                     completions.add(subCommand);

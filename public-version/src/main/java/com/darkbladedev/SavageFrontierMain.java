@@ -68,7 +68,7 @@ public class SavageFrontierMain extends JavaPlugin {
         }
     }
 
-        
+
 
     @Override
     public void onDisable() {
@@ -102,7 +102,7 @@ public class SavageFrontierMain extends JavaPlugin {
         }
         
         // Mensaje de cierre
-        ((Audience) Bukkit.getConsoleSender()).sendMessage(MiniMessage.miniMessage().deserialize(PREFIX + " <red>El plugin ha sido desactivado! La nevada ha cesado temporalmente..."));
+        ((Audience) Bukkit.getConsoleSender()).sendMessage(MiniMessage.miniMessage().deserialize(PREFIX + " <red>El plugin ha sido desactivado!"));
         
         // Limpiar instancia
         instance = null;
@@ -250,5 +250,69 @@ public class SavageFrontierMain extends JavaPlugin {
      */
     public FreezingSystem getFreezingSystem() {
         return freezingSystem;
+    }
+    
+    /**
+     * Recarga todos los sistemas del plugin
+     * Este método es llamado por el comando /savage reload
+     */
+    public void reloadSystems() {
+        // Guardar datos actuales antes de recargar
+        if (databaseManager != null) {
+            databaseManager.saveAllPlayerData();
+        }
+        
+        // Recargar configuración
+        reloadConfig();
+        
+        // Reinicializar sistemas
+        if (bleedingSystem != null) {
+            bleedingSystem.shutdown();
+            bleedingSystem.initialize();
+        }
+        
+        if (radiationSystem != null) {
+            radiationSystem.shutdown();
+            radiationSystem.initialize();
+        }
+        
+        if (limbDamageSystem != null) {
+            limbDamageSystem.shutdown();
+            limbDamageSystem.initialize();
+        }
+        
+        if (hydrationSystem != null) {
+            hydrationSystem.shutdown();
+            hydrationSystem.initialize();
+        }
+        
+        if (nutritionSystem != null) {
+            nutritionSystem.shutdown();
+            nutritionSystem.initialize();
+        }
+        
+        if (staminaSystem != null) {
+            staminaSystem.shutdown();
+            staminaSystem.initialize();
+        }
+        
+        if (temperatureSystem != null) {
+            temperatureSystem.shutdown();
+            temperatureSystem.initialize();
+        }
+        
+        if (freezingSystem != null) {
+            freezingSystem.shutdown();
+            freezingSystem.initialize();
+        }
+        
+        // Reinicializar base de datos si es necesario
+        if (databaseManager != null) {
+            databaseManager.shutdown();
+            databaseManager.initialize();
+        }
+        
+        // Mensaje de recarga
+        ((Audience) Bukkit.getConsoleSender()).sendMessage(MiniMessage.miniMessage().deserialize(PREFIX + " <green>Todos los sistemas han sido recargados!"));
     }
 }

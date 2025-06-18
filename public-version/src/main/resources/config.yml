@@ -2,12 +2,20 @@
 
 # Configuración de la base de datos
 database:
-  # Tipo de base de datos (sqlite)
+  # Tipo de base de datos (sqlite o mysql)
   type: sqlite
-  # Ruta del archivo de la base de datos
+  # Ruta del archivo de la base de datos (solo para SQLite)
   file: "database.db"
   # Intervalo de guardado automático en segundos
   save_interval: 300
+  # Configuración de MySQL (solo si type: mysql)
+  mysql:
+    host: "localhost"
+    port: 3306
+    database: "savage_frontier"
+    username: "root"
+    password: ""
+    pool_size: 10
 
 # Configuración del sistema de hidratación
 hydration:

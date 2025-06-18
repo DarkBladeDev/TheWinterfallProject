@@ -59,6 +59,12 @@
         <artifactId>adventure-text-minimessage</artifactId>
         <version>4.21.0</version>
      </dependency>
+
+     <dependency>
+        <groupId>com.zaxxer</groupId>
+        <artifactId>HikariCP</artifactId>
+        <version>6.3.0</version>
+     </dependency>
      
     <!-- PlaceholderAPI dependency -->
     <dependency>

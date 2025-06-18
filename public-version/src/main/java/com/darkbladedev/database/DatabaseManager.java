@@ -22,9 +22,12 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
+
 /**
- * Gestor de base de datos SQLite para el plugin Winterfall
- * Se encarga de almacenar y recuperar la información de los jugadores
+ * Gestor de base de datos para el plugin Savage Frontier
+ * Soporta SQLite y MySQL para almacenar y recuperar la información de los jugadores
  */
 public class DatabaseManager {
 
@@ -33,6 +36,16 @@ public class DatabaseManager {
     private String dbFile;
     private BukkitTask saveTask;
     private int saveInterval;
+    private String dbType;
+    private HikariDataSource dataSource;
+    
+    // Configuración MySQL
+    private String host;
+    private int port;
+    private String database;
+    private String username;
+    private String password;
+    private int poolSize;
     
     /**
      * Constructor del gestor de base de datos
@@ -41,17 +54,28 @@ public class DatabaseManager {
     public DatabaseManager(SavageFrontierMain plugin) {
         this.plugin = plugin;
         this.saveInterval = plugin.getConfig().getInt("database.save_interval", 300);
-        this.dbFile = plugin.getConfig().getString("database.file", "database.db");
+        this.dbType = plugin.getConfig().getString("database.type", "sqlite").toLowerCase();
         
-        // Reemplazar la ruta relativa con la ruta absoluta
-        if (!dbFile.startsWith("/")) {
-            dbFile = plugin.getDataFolder().getParentFile().getAbsolutePath() + plugin.getName() + "/" + dbFile;
-        }
-        
-        // Crear directorio si no existe
-        File dbDirectory = new File(dbFile).getParentFile();
-        if (!dbDirectory.exists()) {
-            dbDirectory.mkdirs();
+        if (dbType.equals("sqlite")) {
+            this.dbFile = plugin.getConfig().getString("database.file", "database.db");
+            
+            // Reemplazar la ruta relativa con la ruta absoluta
+            if (!dbFile.contains(":") && !dbFile.startsWith("/")) {
+                dbFile = plugin.getDataFolder() + File.separator + dbFile;
+            }
+            
+            // Crear directorio si no existe
+            File dbDirectory = new File(dbFile).getParentFile();
+            if (!dbDirectory.exists()) {
+                dbDirectory.mkdirs();
+            }
+        } else if (dbType.equals("mysql")) {
+            this.host = plugin.getConfig().getString("database.mysql.host", "localhost");
+            this.port = plugin.getConfig().getInt("database.mysql.port", 3306);
+            this.database = plugin.getConfig().getString("database.mysql.database", "savage_frontier");
+            this.username = plugin.getConfig().getString("database.mysql.username", "root");
+            this.password = plugin.getConfig().getString("database.mysql.password", "");
+            this.poolSize = plugin.getConfig().getInt("database.mysql.pool_size", 10);
         }
 
         // Inicializar el archivo de configuración
@@ -63,11 +87,14 @@ public class DatabaseManager {
      */
     public void initialize() {
         try {
-            // Cargar el driver de SQLite
-            Class.forName("org.sqlite.JDBC");
-            
-            // Establecer conexión
-            connection = DriverManager.getConnection("jdbc:sqlite:" + dbFile);
+            if (dbType.equals("sqlite")) {
+                initializeSQLite();
+            } else if (dbType.equals("mysql")) {
+                initializeMySQL();
+            } else {
+                ((Audience) Bukkit.getConsoleSender()).sendMessage(MiniMessage.miniMessage().deserialize(plugin.PREFIX + "<red>Tipo de base de datos no soportado: " + dbType));
+                return;
+            }
             
             // Crear tablas si no existen
             createTables();
@@ -75,11 +102,63 @@ public class DatabaseManager {
             // Iniciar tarea de guardado automático
             startSaveTask();
             
-            ((Audience) Bukkit.getConsoleSender()).sendMessage(MiniMessage.miniMessage().deserialize("<green>[Winterfall] Base de datos SQLite inicializada correctamente"));
-        } catch (ClassNotFoundException e) {
-            ((Audience) Bukkit.getConsoleSender()).sendMessage(MiniMessage.miniMessage().deserialize("<red>[Winterfall] Error al cargar el driver de SQLite: " + e.getMessage()));
+            ((Audience) Bukkit.getConsoleSender()).sendMessage(MiniMessage.miniMessage().deserialize(plugin.PREFIX + "<green>Base de datos " + dbType.toUpperCase() + " inicializada correctamente"));
+        } catch (Exception e) {
+            ((Audience) Bukkit.getConsoleSender()).sendMessage(MiniMessage.miniMessage().deserialize(plugin.PREFIX + "<red>Error al inicializar la base de datos: " + e.getMessage()));
+            e.printStackTrace();
+        }
+    }
+    
+    /**
+     * Inicializa la conexión a SQLite
+     */
+    private void initializeSQLite() throws SQLException, ClassNotFoundException {
+        // Cargar el driver de SQLite
+        Class.forName("org.sqlite.JDBC");
+        
+        // Establecer conexión
+        connection = DriverManager.getConnection("jdbc:sqlite:" + dbFile);
+        
+        // Configurar la base de datos para mejor rendimiento
+        try (Statement statement = connection.createStatement()) {
+            statement.execute("PRAGMA journal_mode=WAL;");
+            statement.execute("PRAGMA synchronous=NORMAL;");
+            statement.execute("PRAGMA foreign_keys=ON;");
+        }
+    }
+    
+    /**
+     * Inicializa la conexión a MySQL usando HikariCP
+     */
+    private void initializeMySQL() {
+        try {
+            // Configurar HikariCP
+            HikariConfig config = new HikariConfig();
+            config.setJdbcUrl("jdbc:mysql://" + host + ":" + port + "/" + database + "?useSSL=false&allowPublicKeyRetrieval=true");
+            config.setUsername(username);
+            config.setPassword(password);
+            config.setMaximumPoolSize(poolSize);
+            
+            // Configuración adicional para mejor rendimiento
+            config.addDataSourceProperty("cachePrepStmts", "true");
+            config.addDataSourceProperty("prepStmtCacheSize", "250");
+            config.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
+            config.addDataSourceProperty("useServerPrepStmts", "true");
+            config.addDataSourceProperty("useLocalSessionState", "true");
+            config.addDataSourceProperty("rewriteBatchedStatements", "true");
+            config.addDataSourceProperty("cacheResultSetMetadata", "true");
+            config.addDataSourceProperty("cacheServerConfiguration", "true");
+            config.addDataSourceProperty("elideSetAutoCommits", "true");
+            config.addDataSourceProperty("maintainTimeStats", "false");
+            
+            // Crear el pool de conexiones
+            dataSource = new HikariDataSource(config);
+            
+            // Obtener una conexión del pool
+            connection = dataSource.getConnection();
         } catch (SQLException e) {
-            ((Audience) Bukkit.getConsoleSender()).sendMessage(MiniMessage.miniMessage().deserialize("<red>[Winterfall] Error al conectar con la base de datos SQLite: " + e.getMessage()));
+            ((Audience) Bukkit.getConsoleSender()).sendMessage(MiniMessage.miniMessage().deserialize(plugin.PREFIX + "<red>Error al conectar con la base de datos MySQL: " + e.getMessage()));
+            e.printStackTrace();
         }
     }
     
@@ -377,8 +456,38 @@ public class DatabaseManager {
             if (connection != null && !connection.isClosed()) {
                 connection.close();
             }
+            
+            // Cerrar pool de conexiones si estamos usando MySQL
+            if (dataSource != null && !dataSource.isClosed()) {
+                dataSource.close();
+            }
         } catch (SQLException e) {
-            ((Audience) Bukkit.getConsoleSender()).sendMessage(MiniMessage.miniMessage().deserialize("<red>[Winterfall] Error al cerrar la conexión con la base de datos: " + e.getMessage()));
+            ((Audience) Bukkit.getConsoleSender()).sendMessage(MiniMessage.miniMessage().deserialize(plugin.PREFIX + "<red>Error al cerrar la conexión con la base de datos: " + e.getMessage()));
         }
+    }
+    
+    /**
+     * Obtiene una conexión a la base de datos
+     * @return Conexión a la base de datos
+     */
+    public Connection getConnection() throws SQLException {
+        // Verificar si la conexión está cerrada o es nula
+        if (connection == null || connection.isClosed()) {
+            // Reinicializar la conexión
+            if (dbType.equals("sqlite")) {
+                try {
+                    initializeSQLite();
+                } catch (ClassNotFoundException e) {
+                    throw new SQLException("Error al cargar el driver de SQLite", e);
+                }
+            } else if (dbType.equals("mysql")) {
+                if (dataSource == null || dataSource.isClosed()) {
+                    initializeMySQL();
+                } else {
+                    connection = dataSource.getConnection();
+                }
+            }
+        }
+        return connection;
     }
 }
