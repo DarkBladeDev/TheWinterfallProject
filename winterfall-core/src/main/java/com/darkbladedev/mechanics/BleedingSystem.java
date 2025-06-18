@@ -137,7 +137,7 @@ public class BleedingSystem implements Listener {
         if (random.nextInt(5) < severity) {
             try {
                 // Crear DamageSource personalizado para sangrado
-                DamageSource damageSource = CustomDamageTypes.createBleedingDamageSource(null, entity);
+                DamageSource damageSource = CustomDamageTypes.DamageSourceBuilder(null, entity, CustomDamageTypes.BLEEDING_KEY);
                 entity.damage(severity * 0.5, damageSource); // 0.5, 1.0 o 1.5 corazones de daño
             } catch (Exception e) {
                 ((Audience) ((Audience) Bukkit.getConsoleSender())).sendMessage(MiniMessage.miniMessage().deserialize("[Winterfall] <red>Error al aplicar sangrado con DamageType custom (Aplicando daño default): " + e.getMessage()));

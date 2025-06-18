@@ -217,7 +217,7 @@ public class FreezingSystem implements Listener {
                 
                 // Daño leve por congelación cada 3 segundos
                 if (random.nextInt(3) == 0) {
-                    entity.damage(FREEZING_DAMAGE, CustomDamageTypes.createFreezingDamageSource(null, entity));
+                    entity.damage(FREEZING_DAMAGE, CustomDamageTypes.DamageSourceBuilder(null, entity, CustomDamageTypes.FREEZING_KEY));
                 }
                 break;
                 
@@ -227,7 +227,7 @@ public class FreezingSystem implements Listener {
                 entity.addPotionEffect(new PotionEffect(PotionEffectType.JUMP_BOOST, 40, 128)); // Impedir saltos
                 
                 // Daño por congelación
-                entity.damage(FREEZING_DAMAGE, CustomDamageTypes.createFreezingDamageSource(null, entity));
+                entity.damage(FREEZING_DAMAGE, CustomDamageTypes.DamageSourceBuilder(null, entity, CustomDamageTypes.FREEZING_KEY));
                 break;
         }
     }

@@ -39,7 +39,7 @@ public class WinterfallCommand implements CommandExecutor, TabCompleter {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         // Verificar si el comando es "winterfall"
-        if (!command.getName().equalsIgnoreCase("winterfall")) {
+        if (!command.getName().equalsIgnoreCase(WinterfallMain.COMMAND_NAME)) {
             return false;
         }
         

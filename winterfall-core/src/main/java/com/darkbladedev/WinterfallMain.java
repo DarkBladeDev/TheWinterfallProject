@@ -49,6 +49,7 @@ public class WinterfallMain extends JavaPlugin {
     public static boolean hasExecutableItems = false;
     public static boolean hasItemsAdder = false;
     public static final String NAME = "Winterfall";
+    public static final String COMMAND_NAME = "winterfall";
     public final String PREFIX = "<gradient:#ffffff:#63d0ff>Winterfall</gradient>";
 
     
@@ -185,10 +186,10 @@ public class WinterfallMain extends JavaPlugin {
         WinterfallCommand winterfallCommand = new WinterfallCommand(this);
         
         // Usar el método registerCommand de JavaPlugin para Paper plugins
-        this.getServer().getCommandMap().register("winterfall", new org.bukkit.command.Command("winterfall") {
+        this.getServer().getCommandMap().register(COMMAND_NAME, new org.bukkit.command.Command(COMMAND_NAME) {
             {
-                this.setDescription("Comando principal del plugin Winterfall");
-                this.setUsage("/winterfall <subcomando>");
+                this.setDescription("Comando principal del plugin " + NAME);
+                this.setUsage("/" + COMMAND_NAME + " <subcomando>");
                 this.setAliases(List.of("wf"));
             }
             

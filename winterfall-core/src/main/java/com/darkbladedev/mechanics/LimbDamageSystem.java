@@ -157,8 +157,12 @@ public class LimbDamageSystem implements Listener {
         double damage = event.getDamage();
         
         // Verificar si el daño es por poción (no aplicar daño a extremidades)
-        if (source == CustomDamageTypes.createBleedingDamageSource(source.getCausingEntity(), player) || source == CustomDamageTypes.createDehydrationDamageSource(player)) {
-            return; // No aplicar daño a extremidades por efectos de poción
+        if (source == CustomDamageTypes.DamageSourceBuilder(player, player, CustomDamageTypes.HYPERTHERMIA_KEY) ||
+        source == CustomDamageTypes.DamageSourceBuilder(player, player, CustomDamageTypes.HYPOTHERMIA_KEY) ||
+        source == CustomDamageTypes.DamageSourceBuilder(player, player, CustomDamageTypes.BLEEDING_KEY) ||
+        source == CustomDamageTypes.DamageSourceBuilder(player, player, CustomDamageTypes.FREEZING_KEY) ||
+        source == CustomDamageTypes.DamageSourceBuilder(player, player, CustomDamageTypes.DEHYDRATION_KEY)) {
+            return; // No aplicar daño a extremidades por daños custom
         }
         
         // Determinar qué extremidad dañar según el tipo de daño

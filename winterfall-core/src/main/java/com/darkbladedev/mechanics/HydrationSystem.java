@@ -159,7 +159,7 @@ public class HydrationSystem implements Listener {
             // Deshidratación severa: daño y efectos graves
             try {
                 // Crear DamageSource personalizado para deshidratación
-                DamageSource damageSource = CustomDamageTypes.createDehydrationDamageSource(player);
+                DamageSource damageSource = CustomDamageTypes.DamageSourceBuilder(null, player, CustomDamageTypes.DEHYDRATION_KEY);
                 player.damage(1.0, damageSource); // Medio corazón de daño
             } catch (Exception e) {
                 Bukkit.getConsoleSender().sendMessage(MiniMessage.miniMessage().deserialize(plugin.PREFIX + " <red>Error al aplicar deshidratación con DamageType custom (Aplicando daño default): " + e.getMessage()));
