@@ -4,7 +4,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.damage.DamageSource;
 import org.bukkit.damage.DamageType;
 import org.bukkit.entity.Entity;
-import org.bukkit.entity.Player;
+import org.jetbrains.annotations.Nullable;
 
 import com.darkbladedev.SavageFrontierMain;
 
@@ -21,22 +21,27 @@ public class CustomDamageTypes {
     private static SavageFrontierMain plugin;
 
     // Claves para los tipos de daño personalizados
-    private static final Key BLEEDING_KEY = Key.key("savage-frontier:bleeding");
-    private static final Key DEHYDRATION_KEY = Key.key("savage-frontier:dehydration");
-    private static final Key FREEZING_KEY = Key.key("savage-frontier:freezing");
+    public static final Key BLEEDING_KEY = Key.key("savage-frontier:bleeding");
+    public static final Key DEHYDRATION_KEY = Key.key("savage-frontier:dehydration");
+    public static final Key DESNUTRITION_KEY = Key.key("savage-frontier:desnutrition");
+    public static final Key FREEZING_KEY = Key.key("savage-frontier:freezing");
+    public static final Key HYPOTHERMIA_KEY = Key.key("savage-frontier:hypothermia");
+    public static final Key HYPERTHERMIA_KEY = Key.key("savage-frontier:hyperthermia");
     
-    /**
+
+        /**
      * Crea una fuente de daño de sangrado
      * @param source La entidad que causa el daño (puede ser null)
      * @param target La entidad que recibe el daño
+     * @param key La clave del damageType custom
      * @return La fuente de daño personalizada
      */
     @SuppressWarnings("removal")
-    public static DamageSource createBleedingDamageSource(Entity source, Entity target) {
+    public static DamageSource DamageSourceBuilder(@Nullable Entity source, Entity target, Key key) {
         try {
-            DamageType damageType = RegistryAccess.registryAccess().getRegistry(DamageType.class).get(BLEEDING_KEY);
+            DamageType damageType = RegistryAccess.registryAccess().getRegistry(DamageType.class).get(key);
             if (damageType == null) {
-                Bukkit.getConsoleSender().sendMessage(MiniMessage.miniMessage().deserialize(plugin.PREFIX + " <dark_red>Error: <red>No se pudo encontrar el tipo de daño 'bleeding'. Usando daño genérico."));
+                Bukkit.getConsoleSender().sendMessage(MiniMessage.miniMessage().deserialize(plugin.PREFIX + " <dark_red>Error: <red>No se pudo encontrar el tipo de daño '" + key.asString() + "'. Usando daño genérico."));
                 return DamageSource.builder(DamageType.GENERIC).build();
             }
 
@@ -49,56 +54,47 @@ public class CustomDamageTypes {
                     .withDirectEntity(target)
                     .build();
         } catch (Exception e) {
-            Bukkit.getConsoleSender().sendMessage(MiniMessage.miniMessage().deserialize(plugin.PREFIX + " <red>Error al crear DamageSource de sangrado: " + e.getMessage()));
+            Bukkit.getConsoleSender().sendMessage(MiniMessage.miniMessage().deserialize(plugin.PREFIX + " <red>Error al crear DamageSource de " + key.asString() + " >> " + e.getMessage()));
             return DamageSource.builder(DamageType.GENERIC).build();
         }
     }
     
-    /**
-     * Crea una fuente de daño de deshidratación
-     * @param player El jugador que sufre la deshidratación
-     * @return La fuente de daño personalizada
-     */
-    @SuppressWarnings("removal")
-    public static DamageSource createDehydrationDamageSource(Player player) {
-        try {
-            DamageType damageType = RegistryAccess.registryAccess().getRegistry(DamageType.class).get(DEHYDRATION_KEY);
-            if (damageType == null) {
-                Bukkit.getConsoleSender().sendMessage(MiniMessage.miniMessage().deserialize(plugin.PREFIX + "[Winterfall] <dark_red>Error: <red>No se pudo encontrar el tipo de daño 'dehydration'. Usando daño genérico."));
-                return DamageSource.builder(DamageType.GENERIC).build();
-            }
-            
-            return DamageSource.builder(damageType)
-                    .withDirectEntity(player)
-                    .build();
-        } catch (Exception e) {
-            Bukkit.getConsoleSender().sendMessage(MiniMessage.miniMessage().deserialize(plugin.PREFIX + " <red>Error al crear DamageSource de deshidratación: " + e.getMessage()));
-            return DamageSource.builder(DamageType.GENERIC).build();
+
+    public enum CustomDamageDeathMessage {
+        HYPOTHERMIA(Key.key("savage-frontier:hypothermia"), "<red>%player% ha muerto por hipotermia"),
+        HYPERTHERMIA(Key.key("savage-frontier:hyperthermia"), "<red>%player% ha muerto por hipertermia"),
+        DEHYDRATION(Key.key("savage-frontier:dehydration"), "<red>%player% ha muerto por deshidratación"),
+        DESNUTRITION(Key.key("savage-frontier:desnutrition"), "<red>%player% ha muerto por desnutrición"),
+        BLEEDING(Key.key("savage-frontier:bleeding"), "<red>%player% ha muerto desangrado"),
+        FREEZING(Key.key("savage-frontier:freezing"), "<red>%player% ha muerto congelado");
+
+        CustomDamageDeathMessage(Key key, String messageID) {
+            this.key = key;
+            this.messageID = messageID;
         }
-    }
-    
-    /**
-     * Crea una fuente de daño de congelación
-     * @param attacker La entidad que causa el daño por congelación
-     * @param target La entidad que recibe el daño
-     * @return La fuente de daño personalizada
-     */
-    @SuppressWarnings("removal")
-    public static DamageSource createFreezingDamageSource(Entity attacker, Entity target) {
-        try {
-            DamageType damageType = RegistryAccess.registryAccess().getRegistry(DamageType.class).get(FREEZING_KEY);
-            if (damageType == null) {
-                Bukkit.getConsoleSender().sendMessage(MiniMessage.miniMessage().deserialize(plugin.PREFIX + " <dark_red>Error: <red>No se pudo encontrar el tipo de daño 'freezing'. Usando daño genérico."));
-                return DamageSource.builder(DamageType.GENERIC).build();
-            }
-            
-            return DamageSource.builder(damageType)
-                    .withCausingEntity(attacker)
-                    .withDirectEntity(target)
-                    .build();
-        } catch (Exception e) {
-            Bukkit.getConsoleSender().sendMessage(MiniMessage.miniMessage().deserialize(plugin.PREFIX + " <red>Error al crear DamageSource de congelación: " + e.getMessage()));
-            return DamageSource.builder(DamageType.GENERIC).build();
+
+        public String getMessageID() {
+            return messageID;
         }
+        
+        /**
+         * Obtiene la clave del tipo de daño
+         * @return Clave del tipo de daño
+         */
+        public Key getKey() {
+            return key;
+        }
+        
+        /**
+         * Obtiene el mensaje de muerte con el nombre del jugador incluido
+         * @param playerName Nombre del jugador que murió
+         * @return Mensaje de muerte personalizado
+         */
+        public String getDeathMessage(String playerName) {
+            return messageID.replace("%player%", playerName);
+        }
+        
+        private final Key key;
+        private final String messageID;
     }
 }

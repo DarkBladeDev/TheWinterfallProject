@@ -8,6 +8,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
@@ -15,6 +16,12 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
 import com.darkbladedev.CustomTypes.CustomEnchantments;
+import com.destroystokyo.paper.event.player.PlayerJumpEvent;
+
+import org.bukkit.damage.DamageSource;
+import org.bukkit.damage.DamageType;
+import net.kyori.adventure.text.minimessage.MiniMessage;
+import com.darkbladedev.CustomTypes.CustomDamageTypes;
 
 /**
  * Manejador de eventos
@@ -111,6 +118,44 @@ public class PlayerEvents implements Listener {
             
             // Aplicar efecto de congelación al objetivo
             plugin.getFreezingSystem().applyFreezing(target, level);
+        }
+    }
+
+    /**
+     * Maneja el evento de muerte de un jugador para personalizar los mensajes de muerte
+     * @param event Evento de muerte del jugador
+     */
+    @EventHandler(priority = EventPriority.NORMAL)
+    public void onPlayerDeath(PlayerDeathEvent event) {
+        Player player = event.getEntity();
+        DamageSource damageSource = player.getLastDamageCause().getDamageSource();
+        DamageType damageType = damageSource.getDamageType();
+        
+        // Verificar si es un tipo de daño personalizado
+        if (damageType.key().asString().startsWith("savage-frontier:")) {
+            String damageTypeKey = damageType.key().asString();
+            String playerName = player.getName();
+            
+            // Determinar el tipo de daño personalizado y establecer el mensaje correspondiente
+            for (CustomDamageTypes.CustomDamageDeathMessage deathMessage : CustomDamageTypes.CustomDamageDeathMessage.values()) {
+                if (damageTypeKey.equals(deathMessage.getKey().asString())) {
+                    // Establecer el mensaje de muerte personalizado con el nombre del jugador
+                    event.deathMessage(MiniMessage.miniMessage().deserialize(deathMessage.getDeathMessage(playerName)));
+                    break;
+                }
+            }
+        }
+    }
+
+    @EventHandler
+    public void onPlayerJump(PlayerJumpEvent event) {
+        Player player = event.getPlayer();
+
+        if (plugin.getFreezingSystem().isActive()) {
+            if (plugin.getFreezingSystem().isFrozen(player)) {
+                event.setCancelled(true); // Cancela el salto del jugador congelado
+                return;
+            }
         }
     }
 }

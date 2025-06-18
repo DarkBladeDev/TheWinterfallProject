@@ -47,7 +47,7 @@ public class FreezingSystem implements Listener {
     // Constantes del sistema
     private static final int MAX_FREEZING_LEVEL = 3;
     private static final int DEFAULT_DURATION = 100; // 5 segundos (20 ticks = 1 segundo)
-    private static final float FREEZING_DAMAGE = 1.0f; // 0.5 corazones de daño
+    private static final float FREEZING_DAMAGE = 2.0f; // 1 corazones de daño
     
     /**
      * Constructor del sistema de congelación
@@ -217,17 +217,15 @@ public class FreezingSystem implements Listener {
                 
                 // Daño leve por congelación cada 3 segundos
                 if (random.nextInt(3) == 0) {
-                    entity.damage(FREEZING_DAMAGE, CustomDamageTypes.createFreezingDamageSource(null, entity));
+                    entity.damage(FREEZING_DAMAGE, CustomDamageTypes.DamageSourceBuilder(null, entity, CustomDamageTypes.FREEZING_KEY));
                 }
                 break;
                 
             case 3: // Nivel 3: Lentitud severa, debilidad y daño por congelación
                 entity.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 40, 2));
                 entity.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, 40, 1));
-                entity.addPotionEffect(new PotionEffect(PotionEffectType.JUMP_BOOST, 40, 128)); // Impedir saltos
-                
                 // Daño por congelación
-                entity.damage(FREEZING_DAMAGE, CustomDamageTypes.createFreezingDamageSource(null, entity));
+                entity.damage(FREEZING_DAMAGE, CustomDamageTypes.DamageSourceBuilder(null, entity, CustomDamageTypes.FREEZING_KEY));
                 break;
         }
     }
@@ -279,5 +277,9 @@ public class FreezingSystem implements Listener {
      */
     public boolean isActive() {
         return isActive;
+    }
+
+    public boolean isFrozen(Player player) {
+        return freezingLevel.containsKey(player.getUniqueId());
     }
 }

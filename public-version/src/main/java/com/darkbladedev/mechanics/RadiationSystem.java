@@ -141,7 +141,7 @@ public class RadiationSystem {
             player.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, 100, 0));
             
             if (adjustedLevel == 6) {
-                player.sendMessage(MiniMessage.miniMessage().deserialize(plugin.PREFIX + "<gold>La radiación está afectando tu cuerpo. Deberías salir de esta zona."));
+                player.sendMessage(MiniMessage.miniMessage().deserialize("<gold>La radiación está afectando tu cuerpo. Deberías salir de esta zona."));
             }
         }
         
@@ -151,7 +151,7 @@ public class RadiationSystem {
             player.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 80, 0));
             
             if (adjustedLevel == 11) {
-                player.sendMessage(MiniMessage.miniMessage().deserialize(plugin.PREFIX + "<red>¡La radiación está dañando tus órganos! ¡Debes salir inmediatamente!"));
+                player.sendMessage(MiniMessage.miniMessage().deserialize("<red>¡La radiación está dañando tus órganos! ¡Debes salir inmediatamente!"));
             }
         }
         

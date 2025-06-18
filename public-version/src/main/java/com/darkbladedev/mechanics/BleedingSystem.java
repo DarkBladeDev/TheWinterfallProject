@@ -23,9 +23,9 @@ import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.util.HashMap;
-import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Sistema que maneja el sangrado en "El Eternauta"
@@ -36,8 +36,8 @@ public class BleedingSystem implements Listener {
     private final SavageFrontierMain plugin;
     private final Random random;
     private BukkitTask bleedingTask;
-    private final Map<UUID, Integer> bleedingSeverity;
-    private final Map<UUID, Integer> bleedingDuration;
+    private final ConcurrentHashMap<UUID, Integer> bleedingSeverity;
+    private final ConcurrentHashMap<UUID, Integer> bleedingDuration;
     private boolean isActive;
     
     /**
@@ -47,8 +47,8 @@ public class BleedingSystem implements Listener {
     public BleedingSystem(SavageFrontierMain plugin) {
         this.plugin = plugin;
         this.random = new Random();
-        this.bleedingSeverity = new HashMap<>();
-        this.bleedingDuration = new HashMap<>();
+        this.bleedingSeverity = new ConcurrentHashMap<>();
+        this.bleedingDuration = new ConcurrentHashMap<>();
         this.isActive = false;
     }
     
@@ -70,7 +70,13 @@ public class BleedingSystem implements Listener {
             @Override
             public void run() {
                 // Procesar a todos los jugadores con sangrado activo
-                for (UUID entityId : bleedingSeverity.keySet()) {
+                // Usar una copia de las claves para evitar ConcurrentModificationException
+                for (UUID entityId : new HashMap<>(bleedingSeverity).keySet()) {
+                    // Verificar si la entidad aún está en el mapa (podría haber sido eliminada por otra iteración)
+                    if (!bleedingSeverity.containsKey(entityId)) {
+                        continue;
+                    }
+                    
                     // Obtener entidad
                     Entity entity = Bukkit.getEntity(entityId);
                     if (entity == null || !(entity instanceof LivingEntity)) {
@@ -137,7 +143,7 @@ public class BleedingSystem implements Listener {
         if (random.nextInt(5) < severity) {
             try {
                 // Crear DamageSource personalizado para sangrado
-                DamageSource damageSource = CustomDamageTypes.createBleedingDamageSource(null, entity);
+                DamageSource damageSource = CustomDamageTypes.DamageSourceBuilder(null, entity, CustomDamageTypes.BLEEDING_KEY);
                 entity.damage(severity * 0.5, damageSource); // 0.5, 1.0 o 1.5 corazones de daño
             } catch (Exception e) {
                 ((Audience) ((Audience) Bukkit.getConsoleSender())).sendMessage(MiniMessage.miniMessage().deserialize(plugin.PREFIX + " <red>Error al aplicar sangrado con DamageType custom (Aplicando daño default): " + e.getMessage()));

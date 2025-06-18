@@ -1,11 +1,13 @@
 package com.darkbladedev.mechanics;
 
 import com.darkbladedev.SavageFrontierMain;
+import com.darkbladedev.CustomTypes.CustomDamageTypes;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.damage.DamageSource;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -291,7 +293,8 @@ public class NutritionSystem implements Listener {
             
             // Daño por desnutrición severa
             if (criticalCount == 4 && Math.random() < 0.2) { // 20% de probabilidad con los 4 nutrientes críticos
-                player.damage(1.0); // Medio corazón de daño
+                DamageSource damageSource = CustomDamageTypes.DamageSourceBuilder(null, player, CustomDamageTypes.DESNUTRITION_KEY);
+                player.damage(1.0, damageSource); // Medio corazón de daño
                 ((Audience) player).sendMessage(MiniMessage.miniMessage().deserialize("<dark_red>¡Estás severamente desnutrido! Necesitas una dieta equilibrada urgentemente."));
             }
         } else if (criticalCount >= 1) {

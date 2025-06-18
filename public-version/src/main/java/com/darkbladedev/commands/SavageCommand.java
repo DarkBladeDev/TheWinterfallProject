@@ -57,6 +57,10 @@ public class SavageCommand implements CommandExecutor, TabCompleter {
             case "radiation":
                 handleRadiationCommand(sender, args);
                 break;
+            
+            case "temperature":
+                handleTemperatureCommand(sender, args);
+                break;
                 
             case "bleeding":
                 handleBleedingCommand(sender, args);
@@ -121,7 +125,8 @@ public class SavageCommand implements CommandExecutor, TabCompleter {
         ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<gray>----------------------------------------"));
         ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<aqua>Savage Frontier<gray> - Comandos:"));
         ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<yellow>/savage help<gray> - Muestra esta ayuda"));
-        ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<yellow>/savage radiation <on/off><gray> - Activa/desactiva la radiación"));
+        ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<yellow>/savage radiation <on/off><gray> - Activa/desactiva el sistema de radiación"));
+        ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<yellow>/savage temperature <on/off><gray> - Activa/desactiva el sistema de temperatura"));
         ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<yellow>/savage bleeding <cure/start> [jugador] [severidad] [duración]<gray> - Gestiona el sangrado"));
         ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<yellow>/savage hydration <set/add/remove> <cantidad> [jugador]<gray> - Gestiona la hidratación"));
         ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<yellow>/savage nutrition <protein/fat/carbs/vitamins> <set/add/remove> <cantidad> [jugador]<gray> - Gestiona la nutrición"));
@@ -313,9 +318,148 @@ public class SavageCommand implements CommandExecutor, TabCompleter {
      * @param sender Remitente del comando
      * @param args Argumentos del comando
      */
+    private void handleTemperatureCommand(CommandSender sender, String[] args) {
+        // Verificar permisos
+        if (!sender.hasPermission("savage.admin.radiation")) {
+            ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>No tienes permiso para usar este comando."));
+            return;
+        }
+        
+        // Verificar argumentos
+        if (args.length < 2) {
+            ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>Uso: /savage temperature <on/off>"));
+            return;
+        }
+        
+        String state = args[1].toLowerCase();
+        
+        switch (state) {
+            case "on":
+            case "true":
+            case "enable":
+                if (plugin.getTemperatureSystem().isActive()) {
+                    ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<yellow>El sistema de temperatura ya está activo."));
+                } else {
+                    plugin.getTemperatureSystem().initialize();
+                    ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<green>Sistema de temperatura activado."));
+                }
+                break;
+                
+            case "off":
+            case "false":
+            case "disable":
+                if (!plugin.getTemperatureSystem().isActive()) {
+                    ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<yellow>El sistema de temperatura ya está inactivo."));
+                } else {
+                    plugin.getTemperatureSystem().shutdown();
+                    ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<green>Sistema de temperatura desactivado."));
+                }
+                break;
+
+            case "values":
+                if (!plugin.getTemperatureSystem().isActive()) {
+                    ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<yellow>El sistema de temperatura no está activo."));
+                } else {
+                    if (args.length < 3) {
+                        ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>Uso: /savage temperature values <increase/decrease/set> <cantidad> [jugador]"));
+                        return;
+                    }
+                    
+                    String action = args[2].toLowerCase();
+                    
+                    // Verificar que la acción sea válida
+                    if (!action.equals("increase") && !action.equals("decrease") && !action.equals("set")) {
+                        ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>Acción desconocida. Usa 'increase', 'decrease' o 'set'."));
+                        return;
+                    }
+                    
+                    // Verificar que se haya proporcionado una cantidad
+                    if (args.length < 4) {
+                        ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>Debes especificar una cantidad."));
+                        return;
+                    }
+                    
+                    // Obtener la cantidad
+                    int amount;
+                    try {
+                        amount = Integer.parseInt(args[3]);
+                    } catch (NumberFormatException e) {
+                        ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>La cantidad debe ser un número entero."));
+                        return;
+                    }
+                    
+                    // Obtener el jugador objetivo
+                    Player targetPlayer;
+                    if (args.length >= 5) {
+                        targetPlayer = Bukkit.getPlayer(args[4]);
+                        if (targetPlayer == null) {
+                            ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>Jugador no encontrado: " + args[4]));
+                            return;
+                        }
+                    } else if (sender instanceof Player) {
+                        targetPlayer = (Player) sender;
+                    } else {
+                        ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>Debes especificar un jugador cuando ejecutas este comando desde la consola."));
+                        return;
+                    }
+                    
+                    // Ejecutar la acción correspondiente
+                    switch (action) {
+                        case "increase":
+                            plugin.getTemperatureSystem().increaseTemperature(targetPlayer, amount);
+                            ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<green>Has aumentado la temperatura de " + targetPlayer.getName() + " en " + amount + "°C."));
+                            if (sender != targetPlayer) {
+                                ((Audience) targetPlayer).sendMessage(MiniMessage.miniMessage().deserialize("<green>Tu temperatura ha sido aumentada en " + amount + "°C."));
+                            }
+                            break;
+                            
+                        case "decrease":
+                            plugin.getTemperatureSystem().decreaseTemperature(targetPlayer, amount);
+                            ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<green>Has disminuido la temperatura de " + targetPlayer.getName() + " en " + amount + "°C."));
+                            if (sender != targetPlayer) {
+                                ((Audience) targetPlayer).sendMessage(MiniMessage.miniMessage().deserialize("<green>Tu temperatura ha sido disminuida en " + amount + "°C."));
+                            }
+                            break;
+                            
+                        case "set":
+                            // Verificar que la temperatura esté dentro de los límites
+                            if (amount < plugin.getTemperatureSystem().MIN_TEMPERATURE || amount > plugin.getTemperatureSystem().MAX_TEMPERATURE) {
+                                ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>La temperatura debe estar entre " + 
+                                    plugin.getTemperatureSystem().MIN_TEMPERATURE + "°C y " + 
+                                    plugin.getTemperatureSystem().MAX_TEMPERATURE + "°C."));
+                                return;
+                            }
+                            
+                            // Establecer la temperatura usando el método público
+                            plugin.getTemperatureSystem().setTemperature(targetPlayer, amount);
+                            
+                            ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<green>Has establecido la temperatura de " + targetPlayer.getName() + " a " + amount + "°C."));
+                            if (sender != targetPlayer) {
+                                ((Audience) targetPlayer).sendMessage(MiniMessage.miniMessage().deserialize("<green>Tu temperatura ha sido establecida a " + amount + "°C."));
+                            }
+                            break;
+                    }
+                    
+                    // Mostrar la temperatura actual después de la modificación
+                    double currentTemp = plugin.getTemperatureSystem().getPlayerTemperature(targetPlayer);
+                    ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<aqua>Temperatura actual de " + targetPlayer.getName() + ": " + currentTemp + "°C"));
+                }
+                break;
+                
+            default:
+                ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>Estado desconocido. Usa 'on' o 'off'."));
+                break;
+        }
+    }
+    
+    /**
+     * Maneja el subcomando "radiation"
+     * @param sender Remitente del comando
+     * @param args Argumentos del comando
+     */
     private void handleRadiationCommand(CommandSender sender, String[] args) {
         // Verificar permisos
-        if (!sender.hasPermission("savage.radiation")) {
+        if (!sender.hasPermission("savage.admin.radiation")) {
             ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>No tienes permiso para usar este comando."));
             return;
         }
@@ -606,6 +750,15 @@ public class SavageCommand implements CommandExecutor, TabCompleter {
             sender.sendMessage(limbStatus);
         } else {
             sender.sendMessage(MiniMessage.miniMessage().deserialize("<yellow>Estado de extremidades:</yellow> <gray>Sistema inactivo</gray>"));
+        }
+
+        // Estado de temperatura
+        if (plugin.getTemperatureSystem().isActive()) {
+            // Mostrar estado de temperatura
+            Component temperatureStatus = plugin.getTemperatureSystem().getTemperatureStatusMessage(target);
+            sender.sendMessage(temperatureStatus);
+        } else {
+            sender.sendMessage(MiniMessage.miniMessage().deserialize("<yellow>Estado de temperatura:</yellow> <gray>Sistema inactivo</gray>"));
         }
         
         sender.sendMessage(MiniMessage.miniMessage().deserialize("<gray>----------------------------------------</gray>"));
@@ -1094,7 +1247,7 @@ public class SavageCommand implements CommandExecutor, TabCompleter {
         
         // Autocompletar subcomandos
         if (args.length == 1) {
-            String[] subCommands = {"help", "mob", "radiation", "bleeding", "hydration", "nutrition", "status", "limb", "config", "enchantment"};
+            String[] subCommands = {"help", "radiation", "temperature", "bleeding", "hydration", "nutrition", "status", "limb", "config", "enchantment"};
             for (String subCommand : subCommands) {
                 if (subCommand.startsWith(args[0].toLowerCase())) {
                     completions.add(subCommand);
@@ -1105,26 +1258,7 @@ public class SavageCommand implements CommandExecutor, TabCompleter {
         
         // Autocompletar argumentos según el subcomando
         if (args.length >= 2) {
-            switch (args[0].toLowerCase()) {
-                case "mob":
-                    if (args.length == 2) {
-                        String[] mobTypes = {"mano", "cascarudo", "gurbo", "random"};
-                        for (String mobType : mobTypes) {
-                            if (mobType.startsWith(args[1].toLowerCase())) {
-                                completions.add(mobType);
-                            }
-                        }
-                    } else if (args.length == 3) {
-                        // Sugerir cantidades comunes
-                        String[] amounts = {"1", "5", "10", "25", "50"};
-                        for (String amount : amounts) {
-                            if (amount.startsWith(args[2])) {
-                                completions.add(amount);
-                            }
-                        }
-                    }
-                    break;
-                    
+            switch (args[0].toLowerCase()) {                    
                 case "snow":
                 case "radiation":
                     if (args.length == 2) {
@@ -1385,6 +1519,39 @@ public class SavageCommand implements CommandExecutor, TabCompleter {
                         }
                     }
                     break;
+
+                case "temperature":
+                    // Segundo argumento - subcomandos
+                    if (args.length == 2) {
+                        String[] subCommands = {"values", "on", "off"};
+                        for (String subCommand : subCommands) {
+                            if (subCommand.startsWith(args[1].toLowerCase())) {
+                                completions.add(subCommand);
+                            }
+                        }
+                    }
+                    else if (args.length == 3) {
+                        // Tercer argumento - valores de temperatura
+                        if (args[1].equalsIgnoreCase("values")) {
+                            String[] values = {"decrease", "increase", "set"};
+                            for (String value : values) {
+                                if (value.startsWith(args[2].toLowerCase())) {
+                                    completions.add(value);
+                                }
+                            }
+                        }
+                    }
+                    else if (args.length == 4) {
+                        // Cuarto argumento - cantidad
+                        if (args[1].equalsIgnoreCase("values")) {
+                            String[] amounts = {"-15", "-10", "-5", "0", "10", "15", "20", "30"};
+                            for (String amount : amounts) {
+                                if (amount.startsWith(args[3])) {
+                                    completions.add(amount);
+                                }
+                            }
+                        }
+                    }
             }
         }
         

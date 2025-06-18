@@ -5,7 +5,7 @@ database:
   # Tipo de base de datos (sqlite)
   type: sqlite
   # Ruta del archivo de la base de datos
-  file: "/database.db"
+  file: "database.db"
   # Intervalo de guardado automático en segundos
   save_interval: 300
 
@@ -106,61 +106,7 @@ temperature:
     cold_protection_effectiveness: 10
     # Efectividad del encantamiento de protección contra calor (por nivel)
     heat_protection_effectiveness: 10
-  # Temperaturas por bioma (en grados Celsius)
-  biomes:
-    # Biomas fríos
-    SNOWY_PLAINS: -15
-    ICE_SPIKES: -25
-    FROZEN_OCEAN: -20
-    FROZEN_RIVER: -18
-    SNOWY_TAIGA: -12
-    SNOWY_BEACH: -10
-    GROVE: -8
-    SNOWY_SLOPES: -20
-    FROZEN_PEAKS: -30
-    JAGGED_PEAKS: -25
-    # Biomas templados
-    PLAINS: 15
-    FOREST: 18
-    BIRCH_FOREST: 17
-    DARK_FOREST: 16
-    OLD_GROWTH_BIRCH_FOREST: 16
-    OLD_GROWTH_PINE_TAIGA: 14
-    OLD_GROWTH_SPRUCE_TAIGA: 13
-    TAIGA: 10
-    FLOWER_FOREST: 20
-    MEADOW: 18
-    RIVER: 16
-    BEACH: 22
-    STONY_SHORE: 15
-    OCEAN: 12
-    DEEP_OCEAN: 8
-    LUKEWARM_OCEAN: 22
-    DEEP_LUKEWARM_OCEAN: 18
-    # Biomas cálidos
-    DESERT: 40
-    SAVANNA: 35
-    SAVANNA_PLATEAU: 32
-    WINDSWEPT_SAVANNA: 30
-    JUNGLE: 32
-    SPARSE_JUNGLE: 30
-    BAMBOO_JUNGLE: 31
-    WARM_OCEAN: 28
-    DEEP_WARM_OCEAN: 25
-    BADLANDS: 38
-    ERODED_BADLANDS: 40
-    WOODED_BADLANDS: 36
-    # Biomas extremos
-    NETHER_WASTES: 80
-    SOUL_SAND_VALLEY: 70
-    CRIMSON_FOREST: 90
-    WARPED_FOREST: 85
-    BASALT_DELTAS: 95
-    THE_END: -40
-    END_HIGHLANDS: -45
-    END_MIDLANDS: -42
-    SMALL_END_ISLANDS: -40
-    END_BARRENS: -38
+    
   # Umbrales de temperatura para efectos
   thresholds:
     # Temperatura por debajo de la cual se considera hipotermia

@@ -229,7 +229,7 @@ public class PlaceholderAPIExpansion extends PlaceholderExpansion {
         }
 
         if (identifier.equals("temperature_bar")) {
-            return temperatureSystem.getTemperatureBar(player);
+            return MiniMessage.miniMessage().serialize(temperatureSystem.getTemperatureBar(player));
         }
         
         // Placeholders de estamina

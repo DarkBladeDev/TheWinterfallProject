@@ -41,7 +41,7 @@ public class DatabaseManager {
     public DatabaseManager(SavageFrontierMain plugin) {
         this.plugin = plugin;
         this.saveInterval = plugin.getConfig().getInt("database.save_interval", 300);
-        this.dbFile = plugin.getConfig().getString("database.file", "/database.db");
+        this.dbFile = plugin.getConfig().getString("database.file", "database.db");
         
         // Reemplazar la ruta relativa con la ruta absoluta
         if (!dbFile.startsWith("/")) {
@@ -247,6 +247,18 @@ public class DatabaseManager {
      * @param playerId UUID del jugador
      */
     private void loadHydrationData(UUID playerId) throws SQLException {
+        // Verificar que la conexión esté inicializada
+        if (connection == null) {
+            ((Audience) Bukkit.getConsoleSender()).sendMessage(MiniMessage.miniMessage().deserialize(plugin.PREFIX + " <red>Error: La conexión a la base de datos no está inicializada"));
+            // Intentar reinicializar la conexión
+            initialize();
+            
+            // Si aún es nula, lanzar excepción
+            if (connection == null) {
+                throw new SQLException("No se pudo establecer la conexión con la base de datos");
+            }
+        }
+        
         PreparedStatement statement = connection.prepareStatement(
             "SELECT level FROM hydration WHERE uuid = ?;"
         );
@@ -260,7 +272,7 @@ public class DatabaseManager {
                 plugin.getHydrationSystem().setHydrationLevel(player, level);
             }
         }
-        
+
         resultSet.close();
         statement.close();
     }
@@ -270,6 +282,18 @@ public class DatabaseManager {
      * @param playerId UUID del jugador
      */
     private void loadNutritionData(UUID playerId) throws SQLException {
+        // Verificar que la conexión esté inicializada
+        if (connection == null) {
+            ((Audience) Bukkit.getConsoleSender()).sendMessage(MiniMessage.miniMessage().deserialize(plugin.PREFIX + " <red>Error: La conexión a la base de datos no está inicializada"));
+            // Intentar reinicializar la conexión
+            initialize();
+            
+            // Si aún es nula, lanzar excepción
+            if (connection == null) {
+                throw new SQLException("No se pudo establecer la conexión con la base de datos");
+            }
+        }
+        
         PreparedStatement statement = connection.prepareStatement(
             "SELECT protein, fat, carbs, vitamins FROM nutrition WHERE uuid = ?;"
         );
@@ -298,6 +322,18 @@ public class DatabaseManager {
      * @param playerId UUID del jugador
      */
     private void loadLimbDamageData(UUID playerId) throws SQLException {
+        // Verificar que la conexión esté inicializada
+        if (connection == null) {
+            ((Audience) Bukkit.getConsoleSender()).sendMessage(MiniMessage.miniMessage().deserialize(plugin.PREFIX + " <red>Error: La conexión a la base de datos no está inicializada"));
+            // Intentar reinicializar la conexión
+            initialize();
+            
+            // Si aún es nula, lanzar excepción
+            if (connection == null) {
+                throw new SQLException("No se pudo establecer la conexión con la base de datos");
+            }
+        }
+        
         PreparedStatement statement = connection.prepareStatement(
             "SELECT limb_type, damage_level FROM limb_damage WHERE uuid = ?;"
         );

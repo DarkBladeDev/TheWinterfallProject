@@ -102,7 +102,7 @@ public class SavageFrontierMain extends JavaPlugin {
         }
         
         // Mensaje de cierre
-        ((Audience) Bukkit.getConsoleSender()).sendMessage(MiniMessage.miniMessage().deserialize("<red>[Winterfall] El plugin ha sido desactivado! La nevada ha cesado temporalmente..."));
+        ((Audience) Bukkit.getConsoleSender()).sendMessage(MiniMessage.miniMessage().deserialize(PREFIX + " <red>El plugin ha sido desactivado! La nevada ha cesado temporalmente..."));
         
         // Limpiar instancia
         instance = null;

@@ -1,6 +1,7 @@
 package com.darkbladedev.mechanics;
 
 import com.darkbladedev.SavageFrontierMain;
+import com.darkbladedev.CustomTypes.CustomDamageTypes;
 import com.darkbladedev.CustomTypes.CustomEnchantments;
 
 import org.bukkit.Bukkit;
@@ -10,6 +11,7 @@ import org.bukkit.block.Biome;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.damage.DamageSource;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -18,6 +20,7 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
+import org.jetbrains.annotations.NotNull;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -43,12 +46,12 @@ import java.util.UUID;
 public class TemperatureSystem implements Listener {
 
     // Constantes del sistema
-    public static final int MAX_TEMPERATURE = 100; // Temperatura máxima (normal)
-    public static final int MIN_TEMPERATURE = 0;   // Temperatura mínima (hipotermia severa)
-    public static final int DEFAULT_HYPOTHERMIA_THRESHOLD = 30; // Umbral para efectos de hipotermia
-    public static final int DEFAULT_SEVERE_HYPOTHERMIA_THRESHOLD = 15; // Umbral para hipotermia severa
-    public static final int DEFAULT_HYPERTHERMIA_THRESHOLD = 70; // Umbral para efectos de hipertermia
-    public static final int DEFAULT_SEVERE_HYPERTHERMIA_THRESHOLD = 85; // Umbral para hipertermia severa
+    public final int MAX_TEMPERATURE = 40; // Temperatura máxima (40°C)
+    public final int MIN_TEMPERATURE = -15;   // Temperatura mínima (-15°C)
+    public static final int DEFAULT_HYPOTHERMIA_THRESHOLD = 5; // Umbral para efectos de hipotermia
+    public static final int DEFAULT_SEVERE_HYPOTHERMIA_THRESHOLD = -5; // Umbral para hipotermia severa
+    public static final int DEFAULT_HYPERTHERMIA_THRESHOLD = 30; // Umbral para efectos de hipertermia
+    public static final int DEFAULT_SEVERE_HYPERTHERMIA_THRESHOLD = 35; // Umbral para hipertermia severa
     
     // Umbrales actuales (configurables)
     private int HYPOTHERMIA_THRESHOLD = DEFAULT_HYPOTHERMIA_THRESHOLD;
@@ -86,7 +89,7 @@ public class TemperatureSystem implements Listener {
     // Estado
     private boolean isActive;
     private BukkitTask temperatureTask;
-    private final Map<UUID, Integer> temperatureLevel;
+    public final Map<UUID, Integer> temperatureLevel;
     
     // Mapa de temperaturas por bioma
     private final Map<String, Integer> biomeTemperatures;
@@ -137,7 +140,7 @@ public class TemperatureSystem implements Listener {
         
         // Cargar valores básicos
         isEnabled = config.getBoolean("temperature.enabled", true);
-        updateInterval = config.getInt("temperature.updateInterval", 100);
+        updateInterval = config.getInt("temperature.updateInterval", 60);
         temperatureDecreaseAmount = config.getInt("temperature.decreaseAmount", 1);
         temperatureIncreaseAmount = config.getInt("temperature.increaseAmount", 2);
         temperatureDecreaseRate = config.getDouble("temperature.decreaseRate", 0.8);
@@ -155,12 +158,16 @@ public class TemperatureSystem implements Listener {
         
         // Cargar temperaturas por bioma
         String pluginPath = plugin.getDataFolder().getParentFile().getAbsolutePath();
-        temperatureConfigFile = pluginPath + "/temperature_values.yml";
+        temperatureConfigFile = pluginPath + "/biome_temperatures.yml";
+        File temperatureFile = new File(pluginPath, "biome_temperatures.yml");
         // Crear temperatureConfigFile si no existe
         File temperatureConfigDir = new File(temperatureConfigFile).getParentFile();
         if (!temperatureConfigDir.exists()) {
             try {
                 temperatureConfigDir.mkdirs();
+                if (temperatureFile.exists()) {
+                    temperatureFile.createNewFile();
+                }
             } catch (Exception e) {
                 plugin.getLogger().severe("Error al crear el archivo de configuración de temperaturas: " + e.getMessage());
             }
@@ -175,31 +182,31 @@ public class TemperatureSystem implements Listener {
             
             // Configurar temperaturas por defecto para algunos biomas comunes
             // Biomas fríos
-            biomesSection.set("SNOWY_PLAINS", -5);
+            biomesSection.set("SNOWY_PLAINS", -10);
             biomesSection.set("ICE_SPIKES", -15);
-            biomesSection.set("FROZEN_OCEAN", -10);
+            biomesSection.set("FROZEN_OCEAN", -12);
             biomesSection.set("FROZEN_RIVER", -8);
-            biomesSection.set("SNOWY_TAIGA", -3);
+            biomesSection.set("SNOWY_TAIGA", -5);
             
             // Biomas templados
-            biomesSection.set("PLAINS", 20);
-            biomesSection.set("FOREST", 18);
-            biomesSection.set("BIRCH_FOREST", 17);
-            biomesSection.set("DARK_FOREST", 16);
-            biomesSection.set("TAIGA", 10);
+            biomesSection.set("PLAINS", 15);
+            biomesSection.set("FOREST", 12);
+            biomesSection.set("BIRCH_FOREST", 13);
+            biomesSection.set("DARK_FOREST", 10);
+            biomesSection.set("TAIGA", 5);
             
             // Biomas cálidos
-            biomesSection.set("DESERT", 40);
-            biomesSection.set("SAVANNA", 35);
-            biomesSection.set("BADLANDS", 38);
-            biomesSection.set("JUNGLE", 32);
+            biomesSection.set("DESERT", 38);
+            biomesSection.set("SAVANNA", 32);
+            biomesSection.set("BADLANDS", 35);
+            biomesSection.set("JUNGLE", 30);
             
             // Biomas extremos
-            biomesSection.set("NETHER_WASTES", 70);
-            biomesSection.set("SOUL_SAND_VALLEY", 60);
-            biomesSection.set("CRIMSON_FOREST", 75);
-            biomesSection.set("WARPED_FOREST", 65);
-            biomesSection.set("BASALT_DELTAS", 80);
+            biomesSection.set("NETHER_WASTES", 40);
+            biomesSection.set("SOUL_SAND_VALLEY", 38);
+            biomesSection.set("CRIMSON_FOREST", 40);
+            biomesSection.set("WARPED_FOREST", 39);
+            biomesSection.set("BASALT_DELTAS", 40);
             
             // Guardar configuración
             plugin.saveConfig();
@@ -231,7 +238,7 @@ public class TemperatureSystem implements Listener {
         // Guardar cambios en la configuración
         plugin.saveConfig();
         try {
-            biomeConfig.save(temperatureConfigDir);
+            biomeConfig.save(temperatureFile);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -266,29 +273,41 @@ public class TemperatureSystem implements Listener {
         temperatureTask = new BukkitRunnable() {
             @Override
             public void run() {
+                if (!isActive) {
+                    this.cancel();
+                    return;
+                }
+                
                 for (Player player : Bukkit.getOnlinePlayers()) {
                     updatePlayerTemperature(player);
+                    // Enviar mensaje de depuración al jugador para confirmar que la temperatura se está actualizando
+                    if (player.isOp()) {
+                        //((Audience) player).sendMessage(MiniMessage.miniMessage().deserialize("<gray>Temperatura actualizada: " + getPlayerTemperature(player) + "°C"));
+                    }
                 }
             }
         }.runTaskTimer(plugin, 0L, updateInterval);
         
         isActive = true;
+        
+        // Mensaje de depuración
+        plugin.getLogger().info("Sistema de temperatura iniciado con intervalo de " + updateInterval + " ticks (" + (updateInterval/20.0) + " segundos)");
     }
-    
+
     /**
-     * Normaliza la temperatura del jugador hacia un valor neutro (50%)
+     * Normaliza la temperatura del jugador hacia un valor neutro (15°C)
      * @param player Jugador a normalizar
      */
-    @SuppressWarnings("unused")
-    private void normalizePlayerTemperature(Player player) {
-        double currentTemp = getPlayerTemperature(player);
+    private void normalizeTemperature(Player player) {
+        UUID playerId = player.getUniqueId();
+        double currentTemp = temperatureLevel.getOrDefault(playerId, 15);
         
-        if (currentTemp < 50) {
+        if (currentTemp < 15) {
             // Si está frío, aumentar temperatura
-            increasePlayerTemperature(player);
-        } else if (currentTemp > 50) {
+            increaseTemperature(player, temperatureIncreaseAmount / 2);
+        } else if (currentTemp > 15) {
             // Si está caliente, disminuir temperatura
-            decreasePlayerTemperature(player);
+            decreaseTemperature(player, temperatureDecreaseAmount / 2);
         }
     }
     
@@ -307,8 +326,12 @@ public class TemperatureSystem implements Listener {
         
         // Inicializar si es necesario
         if (!temperatureLevel.containsKey(playerId)) {
-            temperatureLevel.put(playerId, MAX_TEMPERATURE / 2); // Iniciar en temperatura neutral (50%)
+            temperatureLevel.put(playerId, 15); // Iniciar en temperatura neutral (15°C)
+            plugin.getLogger().info("Inicializando temperatura para " + player.getName() + " a 15°C");
         }
+        
+        // Obtener temperatura actual antes de actualizar
+        double tempAntes = getPlayerTemperature(player);
         
         // Verificar el entorno del jugador
         boolean isInColdEnvironment = isInColdEnvironment(player);
@@ -346,6 +369,14 @@ public class TemperatureSystem implements Listener {
             normalizeTemperature(player);
         }
         
+        // Obtener temperatura después de actualizar
+        double tempDespues = getPlayerTemperature(player);
+        
+        // Registrar cambio de temperatura para depuración
+        if (tempAntes != tempDespues) {
+            plugin.getLogger().info("Temperatura de " + player.getName() + " actualizada: " + tempAntes + "°C -> " + tempDespues + "°C");
+        }
+        
         // Aplicar efectos según la temperatura
         if (getPlayerTemperature(player) <= HYPOTHERMIA_THRESHOLD) {
             // Aplicar efectos de hipotermia si la temperatura es baja
@@ -355,23 +386,7 @@ public class TemperatureSystem implements Listener {
             applyHyperthermiaEffects(player, heatProtectionLevel);
         }
     }
-    
-    /**
-     * Normaliza la temperatura del jugador hacia un valor neutro (50%)
-     * @param player Jugador a normalizar
-     */
-    private void normalizeTemperature(Player player) {
-        UUID playerId = player.getUniqueId();
-        double currentTemp = temperatureLevel.getOrDefault(playerId, MAX_TEMPERATURE / 2);
-        
-        if (currentTemp < MAX_TEMPERATURE / 2) {
-            // Si está frío, aumentar temperatura
-            increaseTemperature(player, temperatureIncreaseAmount / 2);
-        } else if (currentTemp > MAX_TEMPERATURE / 2) {
-            // Si está caliente, disminuir temperatura
-            decreaseTemperature(player, temperatureDecreaseAmount / 2);
-        }
-    }
+
     
     /**
      * Verifica si el jugador tiene protección contra el frío
@@ -442,8 +457,8 @@ public class TemperatureSystem implements Listener {
         // Obtener temperatura del bioma desde la configuración
         int biomeTemperature = getBiomeTemperature(biomeName);
         
-        // Considerar frío si la temperatura del bioma es menor a 5°C
-        return biomeTemperature < 5;
+        // Considerar frío si la temperatura del bioma es menor a 0°C
+        return biomeTemperature < 0;
     }
     
     /**
@@ -459,8 +474,8 @@ public class TemperatureSystem implements Listener {
         // Obtener temperatura del bioma desde la configuración
         int biomeTemperature = getBiomeTemperature(biomeName);
         
-        // Considerar caluroso si la temperatura del bioma es mayor a 30°C
-        return biomeTemperature > 30;
+        // Considerar caluroso si la temperatura del bioma es mayor a 25°C
+        return biomeTemperature > 25;
     }
     
     /**
@@ -594,7 +609,9 @@ public class TemperatureSystem implements Listener {
             player.addPotionEffect(new PotionEffect(PotionEffectType.NAUSEA, updateInterval * 20 + 20, 0));
             
             // Daño por hipotermia severa
-            player.damage(1.0);
+            DamageSource damageSource = CustomDamageTypes.DamageSourceBuilder(player, player, CustomDamageTypes.HYPOTHERMIA_KEY);
+            player.damage(2.0, damageSource);
+
             ((Audience) player).sendMessage(MiniMessage.miniMessage().deserialize("<dark_red>¡Estás sufriendo hipotermia severa! Necesitas protección contra el frío urgentemente."));
         } else if (temperature <= HYPOTHERMIA_THRESHOLD) {
             // Hipotermia moderada - efectos de movimiento y debilidad
@@ -647,8 +664,10 @@ public class TemperatureSystem implements Listener {
             
             // Daño por hipotermia severa reducido según protección
             if (protectionLevel < 3) {
-                double damageAmount = 1.0 * Math.max(0.1, 1.0 - (protectionLevel * 0.3));
-                player.damage(damageAmount);
+                DamageSource damageSource = CustomDamageTypes.DamageSourceBuilder(player, player, CustomDamageTypes.HYPOTHERMIA_KEY);
+                double damageAmount = 1.5 * Math.max(0.1, 1.0 - (protectionLevel * 0.3));
+                
+                player.damage(damageAmount, damageSource);
             }
             
             // Mensaje según nivel de protección
@@ -725,8 +744,10 @@ public class TemperatureSystem implements Listener {
             
             // Daño por hipertermia severa reducido según protección
             if (protectionLevel < 3) {
-                double damageAmount = 1.0 * Math.max(0.1, 1.0 - (protectionLevel * 0.3));
-                player.damage(damageAmount);
+                DamageSource damageSource = CustomDamageTypes.DamageSourceBuilder(player, player, CustomDamageTypes.HYPERTHERMIA_KEY);
+                double damageAmount = 1.5 * Math.max(0.1, 1.0 - (protectionLevel * 0.3));
+
+                player.damage(damageAmount, damageSource);
             }
             
             // Mensaje según nivel de protección
@@ -776,12 +797,18 @@ public class TemperatureSystem implements Listener {
         
         // Inicializar si es necesario
         if (!temperatureLevel.containsKey(playerId)) {
-            temperatureLevel.put(playerId, MAX_TEMPERATURE);
+            temperatureLevel.put(playerId, 15); // Inicializar en temperatura neutral (15°C)
+            plugin.getLogger().info("Inicializando temperatura para " + player.getName() + " a 15°C en decreaseTemperature");
         }
         
         // Obtener nivel actual y reducir
         int currentLevel = temperatureLevel.get(playerId);
         int newLevel = Math.max(MIN_TEMPERATURE, currentLevel - (int)(amount * temperatureDecreaseRate));
+        
+        // Registrar cambio para depuración
+        if (currentLevel != newLevel) {
+            plugin.getLogger().info("decreaseTemperature: " + player.getName() + " " + currentLevel + "°C -> " + newLevel + "°C (amount=" + amount + ", rate=" + temperatureDecreaseRate + ")");
+        }
         
         // Actualizar nivel
         temperatureLevel.put(playerId, newLevel);
@@ -793,14 +820,25 @@ public class TemperatureSystem implements Listener {
      * @return Temperatura actual (0-100)
      */
     public double getPlayerTemperature(Player player) {
-        if (player == null) return MAX_TEMPERATURE / 2;
-        return temperatureLevel.getOrDefault(player.getUniqueId(), MAX_TEMPERATURE / 2);
+        if (player == null) return 15; // Temperatura neutral
+        
+        UUID playerId = player.getUniqueId();
+        
+        // Inicializar si es necesario
+        if (!temperatureLevel.containsKey(playerId)) {
+            temperatureLevel.put(playerId, 15); // Inicializar en temperatura neutral (15°C)
+            plugin.getLogger().info("Inicializando temperatura para " + player.getName() + " a 15°C en getPlayerTemperature");
+            return 15;
+        }
+        
+        return temperatureLevel.get(playerId);
     }
     
     /**
      * Disminuye la temperatura del jugador
      * @param player Jugador a afectar
      */
+    @SuppressWarnings("unused")
     private void decreasePlayerTemperature(Player player) {
         decreaseTemperature(player, temperatureDecreaseAmount);
     }
@@ -809,6 +847,7 @@ public class TemperatureSystem implements Listener {
      * Aumenta la temperatura del jugador
      * @param player Jugador a afectar
      */
+    @SuppressWarnings("unused")
     private void increasePlayerTemperature(Player player) {
         increaseTemperature(player, temperatureIncreaseAmount);
     }
@@ -835,12 +874,18 @@ public class TemperatureSystem implements Listener {
         
         // Inicializar si es necesario
         if (!temperatureLevel.containsKey(playerId)) {
-            temperatureLevel.put(playerId, MAX_TEMPERATURE);
+            temperatureLevel.put(playerId, 15); // Inicializar en temperatura neutral (15°C)
+            plugin.getLogger().info("Inicializando temperatura para " + player.getName() + " a 15°C en increaseTemperature");
         }
         
         // Obtener nivel actual y aumentar
         int currentLevel = temperatureLevel.get(playerId);
         int newLevel = Math.min(MAX_TEMPERATURE, currentLevel + (int)(amount * temperatureIncreaseRate));
+        
+        // Registrar cambio para depuración
+        if (currentLevel != newLevel) {
+            plugin.getLogger().info("increaseTemperature: " + player.getName() + " " + currentLevel + "°C -> " + newLevel + "°C (amount=" + amount + ", rate=" + temperatureIncreaseRate + ")");
+        }
         
         // Actualizar nivel
         temperatureLevel.put(playerId, newLevel);
@@ -852,16 +897,34 @@ public class TemperatureSystem implements Listener {
      * @return Nivel de temperatura (0-100)
      */
     public int getTemperatureLevel(Player player) {
-        if (player == null) return 0;
+        if (player == null) return 15; // Temperatura neutral
         
         UUID playerId = player.getUniqueId();
         
         // Inicializar si es necesario
         if (!temperatureLevel.containsKey(playerId)) {
-            temperatureLevel.put(playerId, MAX_TEMPERATURE);
+            temperatureLevel.put(playerId, 15); // Inicializar en temperatura neutral (15°C)
+            plugin.getLogger().info("Inicializando temperatura para " + player.getName() + " a 15°C en getTemperatureLevel");
         }
         
         return temperatureLevel.get(playerId);
+    }
+    
+    /**
+     * Establece el nivel de temperatura de un jugador a un valor específico
+     * @param player Jugador
+     * @param temperature Temperatura a establecer
+     */
+    public void setTemperature(Player player, int temperature) {
+        if (player == null) return;
+        
+        UUID playerId = player.getUniqueId();
+        
+        // Asegurar que la temperatura esté dentro de los límites
+        int newTemperature = Math.max(MIN_TEMPERATURE, Math.min(MAX_TEMPERATURE, temperature));
+        
+        // Actualizar nivel
+        temperatureLevel.put(playerId, newTemperature);
     }
     
     /**
@@ -874,29 +937,61 @@ public class TemperatureSystem implements Listener {
     }
     
     /**
+     * Obtiene un mensaje formateado con el estado de temperatura del jugador
+     * @param player Jugador a verificar
+     * @return Componente con el mensaje formateado
+     */
+    public @NotNull Component getTemperatureStatusMessage(Player player) {
+        int temperature = getTemperatureLevel(player);
+        String temperatureBar = MiniMessage.miniMessage().serialize(getTemperatureBar(player));
+        
+        MiniMessage mm = MiniMessage.miniMessage();
+        StringBuilder message = new StringBuilder();
+        
+        // Determinar el estado de temperatura
+        String temperatureStatus;
+        if (temperature <= SEVERE_HYPOTHERMIA_THRESHOLD) {
+            temperatureStatus = "<dark_red>Hipotermia severa</dark_red>";
+        } else if (temperature <= HYPOTHERMIA_THRESHOLD) {
+            temperatureStatus = "<red>Hipotermia</red>";
+        } else if (temperature >= SEVERE_HYPERTHERMIA_THRESHOLD) {
+            temperatureStatus = "<dark_red>Hipertermia severa</dark_red>";
+        } else if (temperature >= HYPERTHERMIA_THRESHOLD) {
+            temperatureStatus = "<red>Hipertermia</red>";
+        } else {
+            temperatureStatus = "<green>Normal</green>";
+        }
+        
+        message.append("<yellow>Estado de temperatura:</yellow> ").append(temperatureStatus);
+        message.append("\n<yellow>Temperatura actual:</yellow> ").append(temperature).append("°C");
+        message.append("\n<yellow>Nivel:</yellow> ").append(temperatureBar);
+        
+        return mm.deserialize(message.toString());
+    }
+    
+    /**
      * Genera una barra de progreso visual para la temperatura
      * @param player Jugador
      * @return Barra de progreso como texto
      */
-    public String getTemperatureBar(Player player) {
+    public @NotNull Component getTemperatureBar(Player player) {
         int percentage = getTemperaturePercentage(player);
         
         StringBuilder bar = new StringBuilder();
         MiniMessage mm = MiniMessage.miniMessage();
         
         // Determinar color según nivel
-        Component barColor;
+        String barColor;
         if (percentage > 70) {
-            barColor = mm.deserialize("<green>"); // Temperatura normal
+            barColor = "<green>"; // Temperatura normal
         } else if (percentage > 30) {
-            barColor = mm.deserialize("<yellow>"); // Temperatura baja
+            barColor = "<yellow>"; // Temperatura baja
         } else {
-            barColor = mm.deserialize("<red>"); // Hipotermia
+            barColor = "<red>"; // Hipotermia
         }
         
         // Construir barra de progreso
         int bars = (int) Math.round(percentage / 10.0);
-        bar.append(barColor);
         
         for (int i = 0; i < 10; i++) {
             if (i < bars) {
@@ -906,7 +1001,7 @@ public class TemperatureSystem implements Listener {
             }
         }
         
-        return bar.toString();
+        return mm.deserialize(barColor + bar.toString());
     }
     
     /**
@@ -920,8 +1015,12 @@ public class TemperatureSystem implements Listener {
         
         // Inicializar temperatura si es un jugador nuevo
         if (!temperatureLevel.containsKey(playerId)) {
-            temperatureLevel.put(playerId, MAX_TEMPERATURE);
+            temperatureLevel.put(playerId, 15); // Inicializar en temperatura neutral (15°C)
+            plugin.getLogger().info("Inicializando temperatura para " + player.getName() + " a 15°C en onPlayerJoin");
         }
+        
+        // Actualizar temperatura inmediatamente
+        updatePlayerTemperature(player);
     }
     
     /**

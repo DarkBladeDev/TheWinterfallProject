@@ -28,7 +28,7 @@ public class Bootstraps implements PluginBootstrap {
                 b -> b.exhaustion(1.0F)
                     .deathMessageType(DeathMessageType.DEFAULT)
                     .damageEffect(DamageEffect.HURT)
-                    .messageId("winterfall.death.bleeding")
+                    .messageId(CustomDamageTypes.CustomDamageDeathMessage.BLEEDING.getMessageID())
                     .damageScaling(DamageScaling.NEVER)
             );
             
@@ -38,17 +38,47 @@ public class Bootstraps implements PluginBootstrap {
                 b -> b.exhaustion(0.5F)
                     .deathMessageType(DeathMessageType.DEFAULT)
                     .damageEffect(DamageEffect.HURT)
-                    .messageId("winterfall.death.dehydration")
+                    .messageId(CustomDamageTypes.CustomDamageDeathMessage.DEHYDRATION.getMessageID())
                     .damageScaling(DamageScaling.NEVER)
             );
             
             // Registrar tipo de daño de congelación
             event.registry().register(
                 DamageTypeKeys.create(Key.key("savage-frontier:freezing")),
-                b -> b.exhaustion(0.7F)
+                b -> b.exhaustion(0.5F)
                     .deathMessageType(DeathMessageType.DEFAULT)
                     .damageEffect(DamageEffect.HURT)
-                    .messageId("winterfall.death.freezing")
+                    .messageId(CustomDamageTypes.CustomDamageDeathMessage.FREEZING.getMessageID())
+                    .damageScaling(DamageScaling.NEVER)
+            );
+            
+            // Registrar tipo de daño de desnutrición
+            event.registry().register(
+                DamageTypeKeys.create(Key.key("savage-frontier:desnutrition")),
+                b -> b.exhaustion(0.0F)
+                    .deathMessageType(DeathMessageType.DEFAULT)
+                    .damageEffect(DamageEffect.HURT)
+                    .messageId(CustomDamageTypes.CustomDamageDeathMessage.DESNUTRITION.getMessageID())
+                    .damageScaling(DamageScaling.NEVER)
+            );
+
+            // Registrar tipo de daño de hipotermia
+            event.registry().register(
+                DamageTypeKeys.create(Key.key("savage-frontier:hypothermia")),
+                b -> b.exhaustion(0.7F)
+                    .deathMessageType(DeathMessageType.DEFAULT)
+                    .damageEffect(DamageEffect.FREEZING)
+                    .messageId(CustomDamageTypes.CustomDamageDeathMessage.HYPOTHERMIA.getMessageID())
+                    .damageScaling(DamageScaling.NEVER)
+            );
+
+            // Registrar tipo de daño de hipertermia
+            event.registry().register(
+                DamageTypeKeys.create(Key.key("savage-frontier:hyperthermia")),
+                b -> b.exhaustion(0.7F)
+                    .deathMessageType(DeathMessageType.DEFAULT)
+                    .damageEffect(DamageEffect.BURNING)
+                    .messageId(CustomDamageTypes.CustomDamageDeathMessage.HYPERTHERMIA.getMessageID())
                     .damageScaling(DamageScaling.NEVER)
             );
         }));
@@ -60,7 +90,7 @@ public class Bootstraps implements PluginBootstrap {
                 EnchantmentKeys.create(CustomEnchantments.CONGELATION_KEY),
                 b -> b.maxLevel(1)
                     .anvilCost(10)
-                    .activeSlots(EquipmentSlotGroup.ANY)
+                    .activeSlots(EquipmentSlotGroup.MAINHAND)
                     .minimumCost(EnchantmentRegistryEntry.EnchantmentCost.of(5, 3))
                     .maximumCost(EnchantmentRegistryEntry.EnchantmentCost.of(15, 5))
                     .weight(5)
