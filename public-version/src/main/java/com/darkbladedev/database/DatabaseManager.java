@@ -87,13 +87,31 @@ public class DatabaseManager {
      */
     public void initialize() {
         try {
-            if (dbType.equals("sqlite")) {
-                initializeSQLite();
-            } else if (dbType.equals("mysql")) {
-                initializeMySQL();
-            } else {
-                ((Audience) Bukkit.getConsoleSender()).sendMessage(MiniMessage.miniMessage().deserialize(plugin.PREFIX + "<red>Tipo de base de datos no soportado: " + dbType));
-                return;
+            boolean connectionSuccess = false;
+            
+            // Si el tipo es MySQL, intentamos conectar primero
+            if (dbType.equals("mysql")) {
+                try {
+                    initializeMySQL();
+                    connectionSuccess = true;
+                    ((Audience) Bukkit.getConsoleSender()).sendMessage(MiniMessage.miniMessage().deserialize(plugin.PREFIX + " <green>Conexión a MySQL establecida correctamente"));
+                } catch (Exception e) {
+                    ((Audience) Bukkit.getConsoleSender()).sendMessage(MiniMessage.miniMessage().deserialize(plugin.PREFIX + " <yellow>No se pudo conectar a MySQL: " + e.getMessage()));
+                    ((Audience) Bukkit.getConsoleSender()).sendMessage(MiniMessage.miniMessage().deserialize(plugin.PREFIX + " <yellow>Intentando conectar a SQLite como respaldo..."));
+                    
+                    // Cambiar a SQLite como respaldo
+                    dbType = "sqlite";
+                }
+            }
+            
+            // Si no se conectó a MySQL o el tipo original era SQLite
+            if (!connectionSuccess) {
+                if (dbType.equals("sqlite")) {
+                    initializeSQLite();
+                } else {
+                    ((Audience) Bukkit.getConsoleSender()).sendMessage(MiniMessage.miniMessage().deserialize(plugin.PREFIX + " <red>Tipo de base de datos no soportado: " + dbType));
+                    return;
+                }
             }
             
             // Crear tablas si no existen
@@ -102,9 +120,9 @@ public class DatabaseManager {
             // Iniciar tarea de guardado automático
             startSaveTask();
             
-            ((Audience) Bukkit.getConsoleSender()).sendMessage(MiniMessage.miniMessage().deserialize(plugin.PREFIX + "<green>Base de datos " + dbType.toUpperCase() + " inicializada correctamente"));
+            ((Audience) Bukkit.getConsoleSender()).sendMessage(MiniMessage.miniMessage().deserialize(plugin.PREFIX + " <green>Base de datos " + dbType.toUpperCase() + " inicializada correctamente"));
         } catch (Exception e) {
-            ((Audience) Bukkit.getConsoleSender()).sendMessage(MiniMessage.miniMessage().deserialize(plugin.PREFIX + "<red>Error al inicializar la base de datos: " + e.getMessage()));
+            ((Audience) Bukkit.getConsoleSender()).sendMessage(MiniMessage.miniMessage().deserialize(plugin.PREFIX + " <red>Error al inicializar la base de datos: " + e.getMessage()));
             e.printStackTrace();
         }
     }
@@ -139,6 +157,10 @@ public class DatabaseManager {
             config.setPassword(password);
             config.setMaximumPoolSize(poolSize);
             
+            // Configurar timeouts para evitar bloqueos prolongados
+            config.setConnectionTimeout(5000); // 5 segundos de timeout para conexión
+            config.setInitializationFailTimeout(10000); // 10 segundos antes de fallar la inicialización
+            
             // Configuración adicional para mejor rendimiento
             config.addDataSourceProperty("cachePrepStmts", "true");
             config.addDataSourceProperty("prepStmtCacheSize", "250");
@@ -157,7 +179,7 @@ public class DatabaseManager {
             // Obtener una conexión del pool
             connection = dataSource.getConnection();
         } catch (SQLException e) {
-            ((Audience) Bukkit.getConsoleSender()).sendMessage(MiniMessage.miniMessage().deserialize(plugin.PREFIX + "<red>Error al conectar con la base de datos MySQL: " + e.getMessage()));
+            ((Audience) Bukkit.getConsoleSender()).sendMessage(MiniMessage.miniMessage().deserialize(plugin.PREFIX + " <red>Error al conectar con la base de datos MySQL: " + e.getMessage()));
             e.printStackTrace();
         }
     }

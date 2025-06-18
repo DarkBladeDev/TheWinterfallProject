@@ -357,7 +357,6 @@ public class SavageCommand implements CommandExecutor, TabCompleter {
                     ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<yellow>El sistema de temperatura ya está inactivo."));
                 } else {
                     plugin.getTemperatureSystem().shutdown();
-                    ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<green>Sistema de temperatura desactivado."));
                 }
                 break;
 
@@ -496,7 +495,7 @@ public class SavageCommand implements CommandExecutor, TabCompleter {
                     ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<yellow>El sistema de radiación ya está inactivo."));
                 } else {
                     plugin.getRadiationSystem().shutdown();
-                    ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<green>Sistema de radiación desactivado."));
+                    ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>Sistema de radiación desactivado."));
                 }
                 break;
                 

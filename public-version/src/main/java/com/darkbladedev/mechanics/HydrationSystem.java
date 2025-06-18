@@ -424,7 +424,7 @@ public class HydrationSystem implements Listener {
             hydrationTask.cancel();
         }
         isActive = false;
-        Bukkit.getConsoleSender().sendMessage(MiniMessage.miniMessage().deserialize(plugin.PREFIX + "<white> Sistema de hidratación desactivado"));
+        Bukkit.getConsoleSender().sendMessage(MiniMessage.miniMessage().deserialize(plugin.PREFIX + " <red>Sistema de hidratación desactivado"));
     }
 
     /**

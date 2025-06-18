@@ -119,7 +119,7 @@ public class LimbDamageSystem implements Listener {
         if (!isActive) {
             plugin.getServer().getPluginManager().registerEvents(this, plugin);
             isActive = true;
-            plugin.getServer().getConsoleSender().sendMessage(MiniMessage.miniMessage().deserialize(plugin.PREFIX + "<green> Sistema de daño por extremidades activado"));
+            plugin.getServer().getConsoleSender().sendMessage(MiniMessage.miniMessage().deserialize(plugin.PREFIX + " <green>Sistema de daño por extremidades activado"));
         }
     }
     
@@ -129,7 +129,7 @@ public class LimbDamageSystem implements Listener {
     public void shutdown() {
         if (isActive) {
             isActive = false;
-            plugin.getServer().getConsoleSender().sendMessage(MiniMessage.miniMessage().deserialize(plugin.PREFIX + "<red> Sistema de daño por extremidades desactivado"));
+            plugin.getServer().getConsoleSender().sendMessage(MiniMessage.miniMessage().deserialize(plugin.PREFIX + " <red>Sistema de daño por extremidades desactivado"));
         }
     }
     

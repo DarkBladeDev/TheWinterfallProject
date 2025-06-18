@@ -184,7 +184,7 @@ public class NutritionSystem implements Listener {
     public void initialize() {
         // Verificar si el sistema está habilitado en la configuración
         if (!plugin.getConfig().getBoolean("nutrition.enabled", true)) {
-            ((Audience) Bukkit.getConsoleSender()).sendMessage(MiniMessage.miniMessage().deserialize("<yellow>[Winterfall] Sistema de nutrición deshabilitado en la configuración"));
+            ((Audience) Bukkit.getConsoleSender()).sendMessage(MiniMessage.miniMessage().deserialize(plugin.PREFIX + " <yellow>Sistema de nutrición deshabilitado en la configuración"));
             return;
         }
         
@@ -194,7 +194,7 @@ public class NutritionSystem implements Listener {
         // Registrar eventos
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
         
-        ((Audience) Bukkit.getConsoleSender()).sendMessage(MiniMessage.miniMessage().deserialize("<green>[Winterfall] Sistema de nutrición inicializado"));
+        ((Audience) Bukkit.getConsoleSender()).sendMessage(MiniMessage.miniMessage().deserialize(plugin.PREFIX + " <green>Sistema de nutrición inicializado"));
     }
     
     /**
@@ -621,7 +621,7 @@ public class NutritionSystem implements Listener {
             nutritionTask.cancel();
         }
         isActive = false;
-        ((Audience) Bukkit.getConsoleSender()).sendMessage(MiniMessage.miniMessage().deserialize(plugin.PREFIX + " <green>Sistema de nutrición desactivado"));
+        ((Audience) Bukkit.getConsoleSender()).sendMessage(MiniMessage.miniMessage().deserialize(plugin.PREFIX + " <red>Sistema de nutrición desactivado"));
     }
 
     public int getMaxNutrientLevel() {

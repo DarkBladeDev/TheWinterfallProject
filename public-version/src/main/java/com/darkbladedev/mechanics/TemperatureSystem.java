@@ -1083,7 +1083,7 @@ public class TemperatureSystem implements Listener {
             temperatureTask.cancel();
         }
         isActive = false;
-        ((Audience) Bukkit.getConsoleSender()).sendMessage(MiniMessage.miniMessage().deserialize(plugin.PREFIX + " <green>Sistema de temperatura desactivado"));
+        ((Audience) Bukkit.getConsoleSender()).sendMessage(MiniMessage.miniMessage().deserialize(plugin.PREFIX + " <red>Sistema de temperatura desactivado"));
     }
     
     /**
