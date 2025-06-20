@@ -3,6 +3,7 @@ package com.darkbladedev.mechanics;
 import com.darkbladedev.SavageFrontierMain;
 import com.darkbladedev.CustomTypes.CustomDamageTypes;
 import com.darkbladedev.CustomTypes.CustomEnchantments;
+import com.darkbladedev.utils.TemperatureState;
 
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
@@ -70,6 +71,9 @@ public class TemperatureSystem implements Listener {
     private int coldProtectionEffectiveness; // Efectividad del encantamiento de protección contra frío
     @SuppressWarnings("unused")
     private int heatProtectionEffectiveness; // Efectividad del encantamiento de protección contra calor
+    private boolean timeCycleAffectsTemperature; // Si la hora del día afecta a la temperatura
+    private double dayTemperatureModifier; // Modificador de temperatura durante el día
+    private double nightTemperatureModifier; // Modificador de temperatura durante la noche
     
     // Umbrales configurables
     @SuppressWarnings("unused")
@@ -128,6 +132,11 @@ public class TemperatureSystem implements Listener {
             config.set("temperature.enchantments.cold_protection_effectiveness", 10);
             config.set("temperature.enchantments.heat_protection_effectiveness", 10);
             
+            // Configuración del ciclo día/noche
+            config.set("temperature.time_cycle.affects_temperature", true);
+            config.set("temperature.time_cycle.day_modifier", 1.5); // Más calor durante el día
+            config.set("temperature.time_cycle.night_modifier", 0.7); // Más frío durante la noche
+            
             // Umbrales de temperatura
             config.set("temperature.thresholds.hypothermia", DEFAULT_HYPOTHERMIA_THRESHOLD);
             config.set("temperature.thresholds.severe_hypothermia", DEFAULT_SEVERE_HYPOTHERMIA_THRESHOLD);
@@ -150,6 +159,11 @@ public class TemperatureSystem implements Listener {
         coldProtectionEffectiveness = config.getInt("temperature.enchantments.cold_protection_effectiveness", 10);
         heatProtectionEffectiveness = config.getInt("temperature.enchantments.heat_protection_effectiveness", 10);
         
+        // Cargar configuración del ciclo día/noche
+        timeCycleAffectsTemperature = config.getBoolean("temperature.time_cycle.affects_temperature", true);
+        dayTemperatureModifier = config.getDouble("temperature.time_cycle.day_modifier", 1.5);
+        nightTemperatureModifier = config.getDouble("temperature.time_cycle.night_modifier", 0.7);
+        
         // Cargar umbrales de temperatura
         HYPOTHERMIA_THRESHOLD = config.getInt("temperature.thresholds.hypothermia", DEFAULT_HYPOTHERMIA_THRESHOLD);
         SEVERE_HYPOTHERMIA_THRESHOLD = config.getInt("temperature.thresholds.severe_hypothermia", DEFAULT_SEVERE_HYPOTHERMIA_THRESHOLD);
@@ -157,8 +171,8 @@ public class TemperatureSystem implements Listener {
         SEVERE_HYPERTHERMIA_THRESHOLD = config.getInt("temperature.thresholds.severe_hyperthermia", DEFAULT_SEVERE_HYPERTHERMIA_THRESHOLD);
         
         // Cargar temperaturas por bioma
-        String pluginPath = plugin.getDataFolder().getParentFile().getAbsolutePath();
-        temperatureConfigFile = pluginPath + "/biome_temperatures.yml";
+        String pluginPath = plugin.getDataFolder().getPath();
+        temperatureConfigFile = pluginPath + File.separator + "biome_temperatures.yml";
         File temperatureFile = new File(pluginPath, "biome_temperatures.yml");
         // Crear temperatureConfigFile si no existe
         File temperatureConfigDir = new File(temperatureConfigFile).getParentFile();
@@ -185,6 +199,7 @@ public class TemperatureSystem implements Listener {
             biomesSection.set("SNOWY_PLAINS", -10);
             biomesSection.set("ICE_SPIKES", -15);
             biomesSection.set("FROZEN_OCEAN", -12);
+            biomesSection.set("DEEP_FROZEN_OCEAN", -15);
             biomesSection.set("FROZEN_RIVER", -8);
             biomesSection.set("SNOWY_TAIGA", -5);
             
@@ -291,7 +306,7 @@ public class TemperatureSystem implements Listener {
         isActive = true;
         
         // Mensaje de depuración
-        plugin.getLogger().info("Sistema de temperatura iniciado con intervalo de " + updateInterval + " ticks (" + (updateInterval/20.0) + " segundos)");
+        //plugin.getLogger().info("Sistema de temperatura iniciado con intervalo de " + updateInterval + " ticks (" + (updateInterval/20.0) + " segundos)");
     }
 
     /**
@@ -312,13 +327,13 @@ public class TemperatureSystem implements Listener {
     }
     
     /**
-     * Actualiza la temperatura de un jugador basado en su entorno y equipamiento
+     * Actualiza la temperatura de un jugador basado en su entorno, equipamiento y hora del día
      * @param player Jugador a actualizar
      */
     private void updatePlayerTemperature(Player player) {
-        if (player == null || !player.isOnline() || 
-            player.getGameMode() == GameMode.CREATIVE || 
-            player.getGameMode() == GameMode.SPECTATOR) {
+        if (player == null || !player.isOnline() ||
+            player.getGameMode() == GameMode.SPECTATOR ||
+            player.hasPermission("savage.bypass.temperature")) {
             return;
         }
         
@@ -341,7 +356,10 @@ public class TemperatureSystem implements Listener {
         int coldProtectionLevel = getEnchantmentLevel(player, CustomEnchantments.COLD_PROTECTION_KEY);
         int heatProtectionLevel = getEnchantmentLevel(player, CustomEnchantments.HEAT_PROTECTION_KEY);
         
-        // Actualizar temperatura según el entorno y protecciones
+        // Obtener el factor de temperatura basado en la hora del día
+        double timeTemperatureFactor = getTimeTemperatureFactor(player);
+        
+        // Actualizar temperatura según el entorno, protecciones y hora del día
         if (isInColdEnvironment) {
             // Calcular reducción de efecto basada en nivel de protección
             double protectionFactor = 1.0;
@@ -352,7 +370,8 @@ public class TemperatureSystem implements Listener {
             }
             
             // Disminuir temperatura si está en ambiente frío, con reducción si tiene protección
-            decreaseTemperature(player, (int)(temperatureDecreaseAmount * protectionFactor));
+            // Aplicar el factor de hora del día (más frío en la noche)
+            decreaseTemperature(player, (int)(temperatureDecreaseAmount * protectionFactor * timeTemperatureFactor));
         } else if (isInHotEnvironment) {
             // Calcular reducción de efecto basada en nivel de protección
             double protectionFactor = 1.0;
@@ -363,10 +382,25 @@ public class TemperatureSystem implements Listener {
             }
             
             // Aumentar temperatura si está en ambiente caluroso, con reducción si tiene protección
-            increaseTemperature(player, (int)(temperatureIncreaseAmount * 2 * protectionFactor));
+            // Aplicar el factor de hora del día (más calor durante el día)
+            increaseTemperature(player, (int)(temperatureIncreaseAmount * 2 * protectionFactor * timeTemperatureFactor));
         } else {
-            // En biomas templados, normalizar la temperatura
-            normalizeTemperature(player);
+            // En biomas templados, normalizar la temperatura pero considerando la hora del día
+            if (timeTemperatureFactor > 1.0) {
+                // Durante el día, tendencia a aumentar ligeramente la temperatura
+                if (getPlayerTemperature(player) < 18) {
+                    increaseTemperature(player, 1);
+                } else {
+                    normalizeTemperature(player);
+                }
+            } else {
+                // Durante la noche, tendencia a disminuir ligeramente la temperatura
+                if (getPlayerTemperature(player) > 12) {
+                    decreaseTemperature(player, 1);
+                } else {
+                    normalizeTemperature(player);
+                }
+            }
         }
         
         // Obtener temperatura después de actualizar
@@ -570,6 +604,46 @@ public class TemperatureSystem implements Listener {
     }
     
     /**
+     * Calcula un factor de temperatura basado en la hora del día en el mundo del jugador.
+     * Durante el día (entre 6:00 y 18:00) la temperatura tiende a aumentar.
+     * Durante la noche (entre 18:00 y 6:00) la temperatura tiende a disminuir.
+     * 
+     * @param player Jugador para obtener la hora de su mundo
+     * @return Factor multiplicador para aplicar a los cambios de temperatura
+     */
+    private double getTimeTemperatureFactor(Player player) {
+        // Si la característica está desactivada, devolver un factor neutral
+        if (!timeCycleAffectsTemperature) {
+            return 1.0;
+        }
+        
+        // Obtener la hora del mundo del jugador (0-24000 ticks)
+        long worldTime = player.getWorld().getTime();
+        
+        // Convertir a hora del día (0-24)
+        double hourOfDay = (worldTime / 1000.0 + 6) % 24;
+        
+        // Calcular factor según la hora del día usando los modificadores configurados
+        if (hourOfDay >= 6 && hourOfDay <= 12) {
+            // Mañana: temperatura aumenta gradualmente (6:00-12:00)
+            // Factor de 1.0 al dayTemperatureModifier
+            return 1.0 + ((hourOfDay - 6) / 6) * (dayTemperatureModifier - 1.0);
+        } else if (hourOfDay > 12 && hourOfDay <= 18) {
+            // Tarde: temperatura disminuye gradualmente (12:00-18:00)
+            // Factor del dayTemperatureModifier a 1.0
+            return dayTemperatureModifier - ((hourOfDay - 12) / 6) * (dayTemperatureModifier - 1.0);
+        } else if (hourOfDay > 18 && hourOfDay <= 24) {
+            // Noche: temperatura disminuye (18:00-24:00)
+            // Factor de 1.0 al nightTemperatureModifier
+            return 1.0 - ((hourOfDay - 18) / 6) * (1.0 - nightTemperatureModifier);
+        } else {
+            // Madrugada: temperatura en su punto más bajo (0:00-6:00)
+            // Factor del nightTemperatureModifier a 1.0
+            return nightTemperatureModifier + (hourOfDay / 6) * (1.0 - nightTemperatureModifier);
+        }
+    }
+    
+    /**
      * Verifica si el jugador tiene equipamiento de protección contra el frío
      * @param player Jugador a verificar
      * @return true si tiene protección, false en caso contrario
@@ -604,9 +678,9 @@ public class TemperatureSystem implements Listener {
         // Aplicar efectos según el nivel de hipotermia
         if (temperature <= SEVERE_HYPOTHERMIA_THRESHOLD) {
             // Hipotermia severa - daño y efectos graves
-            player.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, updateInterval * 20 + 20, 2));
-            player.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, updateInterval * 20 + 20, 2));
-            player.addPotionEffect(new PotionEffect(PotionEffectType.NAUSEA, updateInterval * 20 + 20, 0));
+            player.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, updateInterval * 20, 2));
+            player.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, updateInterval * 20, 2));
+            player.addPotionEffect(new PotionEffect(PotionEffectType.NAUSEA, updateInterval * 20, 0));
             
             // Daño por hipotermia severa
             DamageSource damageSource = CustomDamageTypes.DamageSourceBuilder(player, player, CustomDamageTypes.HYPOTHERMIA_KEY);
@@ -615,8 +689,8 @@ public class TemperatureSystem implements Listener {
             ((Audience) player).sendMessage(MiniMessage.miniMessage().deserialize("<dark_red>¡Estás sufriendo hipotermia severa! Necesitas protección contra el frío urgentemente."));
         } else if (temperature <= HYPOTHERMIA_THRESHOLD) {
             // Hipotermia moderada - efectos de movimiento y debilidad
-            player.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, updateInterval * 20 + 20, 1));
-            player.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, updateInterval * 20 + 20, 1));
+            player.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, updateInterval * 20, 1));
+            player.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, updateInterval * 20, 1));
             
             // Mensaje de advertencia
             if (temperature % 5 == 0) { // Mostrar mensaje cada 5 puntos de temperatura
@@ -650,16 +724,16 @@ public class TemperatureSystem implements Listener {
             
             // Aplicar efectos reducidos según protección
             if (slownessAmplifier > 0) {
-                player.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, updateInterval * 20 + 20, slownessAmplifier));
+                player.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, updateInterval * 20, slownessAmplifier));
             }
             
             if (weaknessAmplifier > 0) {
-                player.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, updateInterval * 20 + 20, weaknessAmplifier));
+                player.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, updateInterval * 20, weaknessAmplifier));
             }
             
             // Náusea solo si no tiene protección nivel 3
             if (protectionLevel < 3) {
-                player.addPotionEffect(new PotionEffect(PotionEffectType.NAUSEA, updateInterval * 20 + 20, 0));
+                //player.addPotionEffect(new PotionEffect(PotionEffectType.NAUSEA, updateInterval * 20 + 20, 0));
             }
             
             // Daño por hipotermia severa reducido según protección
@@ -686,11 +760,11 @@ public class TemperatureSystem implements Listener {
                 int weaknessAmplifier = Math.max(0, 1 - effectReduction);
                 
                 if (slownessAmplifier > 0) {
-                    player.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, updateInterval * 20 + 20, slownessAmplifier));
+                    player.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, updateInterval * 20, slownessAmplifier));
                 }
                 
                 if (weaknessAmplifier > 0) {
-                    player.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, updateInterval * 20 + 20, weaknessAmplifier));
+                    player.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, updateInterval * 20, weaknessAmplifier));
                 }
                 
                 // Mensaje de advertencia
@@ -730,16 +804,16 @@ public class TemperatureSystem implements Listener {
             
             // Aplicar efectos reducidos según protección
             if (hungerAmplifier > 0) {
-                player.addPotionEffect(new PotionEffect(PotionEffectType.HUNGER, updateInterval * 20 + 20, hungerAmplifier));
+                player.addPotionEffect(new PotionEffect(PotionEffectType.HUNGER, updateInterval * 20, hungerAmplifier));
             }
             
             if (weaknessAmplifier > 0) {
-                player.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, updateInterval * 20 + 20, weaknessAmplifier));
+                player.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, updateInterval * 20, weaknessAmplifier));
             }
             
             // Náusea solo si no tiene protección nivel 3
             if (protectionLevel < 3) {
-                player.addPotionEffect(new PotionEffect(PotionEffectType.NAUSEA, updateInterval * 20 + 20, 0));
+                //player.addPotionEffect(new PotionEffect(PotionEffectType.NAUSEA, updateInterval * 20 + 20, 0));
             }
             
             // Daño por hipertermia severa reducido según protección
@@ -766,11 +840,11 @@ public class TemperatureSystem implements Listener {
                 int weaknessAmplifier = Math.max(0, 0 - effectReduction); // Nivel 0 de debilidad
                 
                 if (hungerAmplifier > 0) {
-                    player.addPotionEffect(new PotionEffect(PotionEffectType.HUNGER, updateInterval * 20 + 20, hungerAmplifier));
+                    player.addPotionEffect(new PotionEffect(PotionEffectType.HUNGER, updateInterval * 20, hungerAmplifier));
                 }
                 
                 if (weaknessAmplifier > 0) {
-                    player.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, updateInterval * 20 + 20, weaknessAmplifier));
+                    player.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, updateInterval * 20, weaknessAmplifier));
                 }
                 
                 // Mensaje de advertencia
@@ -798,7 +872,7 @@ public class TemperatureSystem implements Listener {
         // Inicializar si es necesario
         if (!temperatureLevel.containsKey(playerId)) {
             temperatureLevel.put(playerId, 15); // Inicializar en temperatura neutral (15°C)
-            plugin.getLogger().info("Inicializando temperatura para " + player.getName() + " a 15°C en decreaseTemperature");
+            //plugin.getLogger().info("Inicializando temperatura para " + player.getName() + " a 15°C en decreaseTemperature");
         }
         
         // Obtener nivel actual y reducir
@@ -827,7 +901,7 @@ public class TemperatureSystem implements Listener {
         // Inicializar si es necesario
         if (!temperatureLevel.containsKey(playerId)) {
             temperatureLevel.put(playerId, 15); // Inicializar en temperatura neutral (15°C)
-            plugin.getLogger().info("Inicializando temperatura para " + player.getName() + " a 15°C en getPlayerTemperature");
+            //plugin.getLogger().info("Inicializando temperatura para " + player.getName() + " a 15°C en getPlayerTemperature");
             return 15;
         }
         
@@ -875,7 +949,7 @@ public class TemperatureSystem implements Listener {
         // Inicializar si es necesario
         if (!temperatureLevel.containsKey(playerId)) {
             temperatureLevel.put(playerId, 15); // Inicializar en temperatura neutral (15°C)
-            plugin.getLogger().info("Inicializando temperatura para " + player.getName() + " a 15°C en increaseTemperature");
+            //plugin.getLogger().info("Inicializando temperatura para " + player.getName() + " a 15°C en increaseTemperature");
         }
         
         // Obtener nivel actual y aumentar
@@ -884,7 +958,7 @@ public class TemperatureSystem implements Listener {
         
         // Registrar cambio para depuración
         if (currentLevel != newLevel) {
-            plugin.getLogger().info("increaseTemperature: " + player.getName() + " " + currentLevel + "°C -> " + newLevel + "°C (amount=" + amount + ", rate=" + temperatureIncreaseRate + ")");
+            //plugin.getLogger().info("increaseTemperature: " + player.getName() + " " + currentLevel + "°C -> " + newLevel + "°C (amount=" + amount + ", rate=" + temperatureIncreaseRate + ")");
         }
         
         // Actualizar nivel
@@ -904,7 +978,7 @@ public class TemperatureSystem implements Listener {
         // Inicializar si es necesario
         if (!temperatureLevel.containsKey(playerId)) {
             temperatureLevel.put(playerId, 15); // Inicializar en temperatura neutral (15°C)
-            plugin.getLogger().info("Inicializando temperatura para " + player.getName() + " a 15°C en getTemperatureLevel");
+            //plugin.getLogger().info("Inicializando temperatura para " + player.getName() + " a 15°C en getTemperatureLevel");
         }
         
         return temperatureLevel.get(playerId);
@@ -933,7 +1007,9 @@ public class TemperatureSystem implements Listener {
      * @return Nivel de temperatura (0-100%)
      */
     public int getTemperaturePercentage(Player player) {
-        return getTemperatureLevel(player);
+        int temp = getTemperatureLevel(player);
+        // Convertir el valor de temperatura (entre MIN_TEMPERATURE y MAX_TEMPERATURE) a un porcentaje (0-100)
+        return (int) (((double) (temp - MIN_TEMPERATURE) / (MAX_TEMPERATURE - MIN_TEMPERATURE)) * 100);
     }
     
     /**
@@ -949,22 +1025,36 @@ public class TemperatureSystem implements Listener {
         StringBuilder message = new StringBuilder();
         
         // Determinar el estado de temperatura
-        String temperatureStatus;
-        if (temperature <= SEVERE_HYPOTHERMIA_THRESHOLD) {
-            temperatureStatus = "<dark_red>Hipotermia severa</dark_red>";
-        } else if (temperature <= HYPOTHERMIA_THRESHOLD) {
-            temperatureStatus = "<red>Hipotermia</red>";
-        } else if (temperature >= SEVERE_HYPERTHERMIA_THRESHOLD) {
-            temperatureStatus = "<dark_red>Hipertermia severa</dark_red>";
-        } else if (temperature >= HYPERTHERMIA_THRESHOLD) {
-            temperatureStatus = "<red>Hipertermia</red>";
-        } else {
-            temperatureStatus = "<green>Normal</green>";
-        }
+        TemperatureState state = TemperatureState.fromTemperature(temperature);
         
-        message.append("<yellow>Estado de temperatura:</yellow> ").append(temperatureStatus);
+        
+        message.append("<yellow>Estado de temperatura:</yellow> ").append(state.getFormatted());
         message.append("\n<yellow>Temperatura actual:</yellow> ").append(temperature).append("°C");
         message.append("\n<yellow>Nivel:</yellow> ").append(temperatureBar);
+        
+        // Añadir información sobre el efecto de la hora del día si está activado
+        if (timeCycleAffectsTemperature) {
+            long worldTime = player.getWorld().getTime();
+            int hourOfDay = (int) ((worldTime / 1000.0 + 6) % 24);
+            int minuteOfDay = (int) ((worldTime * 0.06) % 60);
+            
+            // Ajustar para que el rango sea de 0 a 23
+            if (hourOfDay < 0) {
+                hourOfDay += 24;
+            }
+            // Redondear a la unidad más cercana
+            hourOfDay = Math.round(hourOfDay);
+
+            String timeInfo;
+            
+            if (hourOfDay >= 6 && hourOfDay < 18) {
+                timeInfo = "<gold>Día</gold> <gray>(" + String.valueOf(hourOfDay) + ":" + String.valueOf(minuteOfDay) + ")</gray>";
+            } else {
+                timeInfo = "<blue>Noche</blue> <gray>(" + String.valueOf(hourOfDay) + ":" +  String.valueOf(minuteOfDay) + ")</gray>";
+            }
+            
+            message.append("\n<yellow>Hora:</yellow> ").append(timeInfo);
+        }
         
         return mm.deserialize(message.toString());
     }
@@ -976,18 +1066,57 @@ public class TemperatureSystem implements Listener {
      */
     public @NotNull Component getTemperatureBar(Player player) {
         int percentage = getTemperaturePercentage(player);
+
+        int temperature = getTemperatureLevel(player);
         
         StringBuilder bar = new StringBuilder();
         MiniMessage mm = MiniMessage.miniMessage();
         
-        // Determinar color según nivel
-        String barColor;
-        if (percentage > 70) {
+        // Determinar color según rango de temperatura
+        String barColor = null;
+        if (temperature <= SEVERE_HYPOTHERMIA_THRESHOLD) {
+            barColor = "<color:#6b70f3>"; // Hipotermia severa
+        } else if (temperature <= HYPOTHERMIA_THRESHOLD) {
+            barColor = "<blue>"; // Hipotermia
+        } else if (temperature <= 15) {
+            barColor = "<aqua>"; // Temperatura baja
+        } else if (temperature <= 25 && temperature >= 16) {
             barColor = "<green>"; // Temperatura normal
-        } else if (percentage > 30) {
-            barColor = "<yellow>"; // Temperatura baja
-        } else {
-            barColor = "<red>"; // Hipotermia
+        } else if (temperature >= 26) {
+            barColor = "<gold>"; // Calor moderado
+        } else if (temperature >= HYPERTHERMIA_THRESHOLD && temperature <= SEVERE_HYPERTHERMIA_THRESHOLD) {
+            barColor = "<color:ff4d00>"; // Hipertermia
+        } else if (temperature >= SEVERE_HYPERTHERMIA_THRESHOLD) {
+            barColor = "<red>"; // Hipertermia severa
+        }
+
+        @SuppressWarnings("unused")
+        String temperatureHoverText;
+        switch (barColor) {
+            case "<color:#6b70f3>":
+                temperatureHoverText = "Hipotermia severa";
+                break;
+            case "<blue>":
+                temperatureHoverText = "Hipotermia";
+                break;
+            case "<aqua>":
+                temperatureHoverText = "Frio";
+                break;
+            case "<green>":
+                temperatureHoverText = "Temperatura normal";
+                break;
+            case "<gold>":
+                temperatureHoverText = "Calor";
+                break;
+            case "<color:ff4d00>":
+                temperatureHoverText = "Hipertermia";
+                break;
+            case "<red>":
+                temperatureHoverText = "Hipertermia severa";
+                break;
+            default:
+                temperatureHoverText = "Temperatura normal";
+                break;
         }
         
         // Construir barra de progreso
@@ -1001,7 +1130,7 @@ public class TemperatureSystem implements Listener {
             }
         }
         
-        return mm.deserialize(barColor + bar.toString());
+        return mm.deserialize(barColor + bar.toString()); //"<hover:show_text:'Tienes " + barColor + temperatureHoverText + "'>"
     }
     
     /**
@@ -1016,7 +1145,7 @@ public class TemperatureSystem implements Listener {
         // Inicializar temperatura si es un jugador nuevo
         if (!temperatureLevel.containsKey(playerId)) {
             temperatureLevel.put(playerId, 15); // Inicializar en temperatura neutral (15°C)
-            plugin.getLogger().info("Inicializando temperatura para " + player.getName() + " a 15°C en onPlayerJoin");
+            //plugin.getLogger().info("Inicializando temperatura para " + player.getName() + " a 15°C en onPlayerJoin");
         }
         
         // Actualizar temperatura inmediatamente

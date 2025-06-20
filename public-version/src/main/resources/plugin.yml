@@ -21,6 +21,9 @@ permissions:
   savage.bypass.stamina:
     description: Permiso para bypasear el sistema de estamina
     default: false
+  savage.bypass.temperature:
+    description: Permiso para bypasear el sistema de temperatura
+    default: false
   
   savage.admin.snow:
     description: Permiso para activar o desactivar el sistema de nieve

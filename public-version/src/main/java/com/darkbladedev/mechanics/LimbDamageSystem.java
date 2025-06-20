@@ -23,7 +23,7 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * Sistema de daño por extremidades para "The Winterfall Project"
+ * Sistema de daño por extremidades para "Savage Frontier"
  * Gestiona el estado de las diferentes partes del cuerpo de los jugadores
  */
 public class LimbDamageSystem implements Listener {

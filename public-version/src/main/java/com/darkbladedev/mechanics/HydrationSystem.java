@@ -150,7 +150,7 @@ public class HydrationSystem implements Listener {
      */
     private void applyDehydrationEffects(Player player, int level) {
         // Verificar si el jugador tiene permiso para bypass
-        if (player.hasPermission("winterfall.bypass.water")) {
+        if (player.hasPermission("savage.bypass.water")) {
             return; // No aplicar efectos si tiene el permiso
         }
         
@@ -204,7 +204,7 @@ public class HydrationSystem implements Listener {
         }
         
         // Verificar si el jugador tiene permiso para bypass
-        if (player.hasPermission("winterfall.bypass.water")) {
+        if (player.hasPermission("savage.bypass.water")) {
             return; // No disminuir hidratación si tiene el permiso
         }
         

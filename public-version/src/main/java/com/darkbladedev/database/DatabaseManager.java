@@ -255,7 +255,7 @@ public class DatabaseManager {
             // Guardar daño en extremidades
             saveLimbDamageData(playerId);
         } catch (SQLException e) {
-            ((Audience) Bukkit.getConsoleSender()).sendMessage(MiniMessage.miniMessage().deserialize("<red>[Winterfall] Error al guardar datos del jugador: " + e.getMessage()));
+            ((Audience) Bukkit.getConsoleSender()).sendMessage(MiniMessage.miniMessage().deserialize(plugin.PREFIX + " <red>Error al guardar datos del jugador: " + e.getMessage()));
         }
     }
     
@@ -266,9 +266,15 @@ public class DatabaseManager {
     private void saveHydrationData(UUID playerId) throws SQLException {
         int hydrationLevel = plugin.getHydrationSystem().getHydrationLevel(Bukkit.getPlayer(playerId));
         
-        PreparedStatement statement = connection.prepareStatement(
-            "INSERT OR REPLACE INTO hydration (uuid, level) VALUES (?, ?);"
-        );
+        String query;
+        if (dbType.equals("sqlite")) {
+            query = "INSERT OR REPLACE INTO hydration (uuid, level) VALUES (?, ?);";
+        } else {
+            // Para MySQL/MariaDB
+            query = "REPLACE INTO hydration (uuid, level) VALUES (?, ?);";
+        }
+        
+        PreparedStatement statement = connection.prepareStatement(query);
         statement.setString(1, playerId.toString());
         statement.setInt(2, hydrationLevel);
         statement.executeUpdate();
@@ -282,9 +288,15 @@ public class DatabaseManager {
     private void saveNutritionData(UUID playerId) throws SQLException {
         Map<NutrientType, Integer> nutrients = plugin.getNutritionSystem().getAllNutrientLevels(Bukkit.getPlayer(playerId));
         
-        PreparedStatement statement = connection.prepareStatement(
-            "INSERT OR REPLACE INTO nutrition (uuid, protein, fat, carbs, vitamins) VALUES (?, ?, ?, ?, ?);"
-        );
+        String query;
+        if (dbType.equals("sqlite")) {
+            query = "INSERT OR REPLACE INTO nutrition (uuid, protein, fat, carbs, vitamins) VALUES (?, ?, ?, ?, ?);";
+        } else {
+            // Para MySQL/MariaDB
+            query = "REPLACE INTO nutrition (uuid, protein, fat, carbs, vitamins) VALUES (?, ?, ?, ?, ?);";
+        }
+        
+        PreparedStatement statement = connection.prepareStatement(query);
         statement.setString(1, playerId.toString());
         statement.setInt(2, nutrients.get(NutrientType.PROTEIN));
         statement.setInt(3, nutrients.get(NutrientType.FAT));
@@ -339,7 +351,7 @@ public class DatabaseManager {
             // Cargar daño en extremidades
             loadLimbDamageData(playerId);
         } catch (SQLException e) {
-            ((Audience) Bukkit.getConsoleSender()).sendMessage(MiniMessage.miniMessage().deserialize("<red>[Winterfall] Error al cargar datos del jugador: " + e.getMessage()));
+            ((Audience) Bukkit.getConsoleSender()).sendMessage(MiniMessage.miniMessage().deserialize(plugin.PREFIX + " <red>Error al cargar datos del jugador: " + e.getMessage()));
         }
     }
     
@@ -452,7 +464,7 @@ public class DatabaseManager {
                         com.darkbladedev.mechanics.LimbDamageSystem.LimbType.valueOf(limbTypeName);
                     plugin.getLimbDamageSystem().setLimbDamage(player, limbType, damageLevel);
                 } catch (IllegalArgumentException e) {
-                    ((Audience) Bukkit.getConsoleSender()).sendMessage(MiniMessage.miniMessage().deserialize("<red>[Winterfall] Tipo de extremidad desconocido: " + limbTypeName));
+                    ((Audience) Bukkit.getConsoleSender()).sendMessage(MiniMessage.miniMessage().deserialize(plugin.PREFIX + " <red>Tipo de extremidad desconocido: " + limbTypeName));
                 }
             }
         }

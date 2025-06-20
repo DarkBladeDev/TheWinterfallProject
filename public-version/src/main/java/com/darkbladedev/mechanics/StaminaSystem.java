@@ -153,7 +153,7 @@ public class StaminaSystem implements Listener {
      */
     private void applyLowStaminaEffects(Player player, int level) {
         // Verificar si el jugador tiene permiso para bypass
-        if (player.hasPermission("winterfall.bypass.stamina")) {
+        if (player.hasPermission("savage.bypass.stamina")) {
             return; // No aplicar efectos si tiene el permiso
         }
         
@@ -197,7 +197,7 @@ public class StaminaSystem implements Listener {
      */
     public void decreaseStamina(Player player, int amount) {
         // Verificar si el jugador tiene permiso para bypass
-        if (player.hasPermission("winterfall.bypass.stamina")) {
+        if (player.hasPermission("savage.bypass.stamina")) {
             return; // No disminuir estamina si tiene el permiso
         }
         

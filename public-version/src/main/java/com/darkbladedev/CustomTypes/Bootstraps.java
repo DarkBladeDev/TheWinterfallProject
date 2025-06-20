@@ -13,7 +13,6 @@ import io.papermc.paper.registry.keys.DamageTypeKeys;
 import io.papermc.paper.registry.keys.EnchantmentKeys;
 import io.papermc.paper.registry.keys.tags.ItemTypeTagKeys;
 
-import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 
 public class Bootstraps implements PluginBootstrap {
@@ -24,7 +23,7 @@ public class Bootstraps implements PluginBootstrap {
         context.getLifecycleManager().registerEventHandler(RegistryEvents.DAMAGE_TYPE.freeze().newHandler(event -> {
             // Registrar tipo de daño de sangrado
             event.registry().register(
-                DamageTypeKeys.create(Key.key("savage-frontier:bleeding")),
+                DamageTypeKeys.create(CustomDamageTypes.BLEEDING_KEY),
                 b -> b.exhaustion(1.0F)
                     .deathMessageType(DeathMessageType.DEFAULT)
                     .damageEffect(DamageEffect.HURT)
@@ -34,7 +33,7 @@ public class Bootstraps implements PluginBootstrap {
             
             // Registrar tipo de daño de deshidratación
             event.registry().register(
-                DamageTypeKeys.create(Key.key("savage-frontier:dehydration")),
+                DamageTypeKeys.create(CustomDamageTypes.DEHYDRATION_KEY),
                 b -> b.exhaustion(0.5F)
                     .deathMessageType(DeathMessageType.DEFAULT)
                     .damageEffect(DamageEffect.HURT)
@@ -44,7 +43,7 @@ public class Bootstraps implements PluginBootstrap {
             
             // Registrar tipo de daño de congelación
             event.registry().register(
-                DamageTypeKeys.create(Key.key("savage-frontier:freezing")),
+                DamageTypeKeys.create(CustomDamageTypes.FREEZING_KEY),
                 b -> b.exhaustion(0.5F)
                     .deathMessageType(DeathMessageType.DEFAULT)
                     .damageEffect(DamageEffect.HURT)
@@ -54,7 +53,7 @@ public class Bootstraps implements PluginBootstrap {
             
             // Registrar tipo de daño de desnutrición
             event.registry().register(
-                DamageTypeKeys.create(Key.key("savage-frontier:desnutrition")),
+                DamageTypeKeys.create(CustomDamageTypes.DESNUTRITION_KEY),
                 b -> b.exhaustion(0.0F)
                     .deathMessageType(DeathMessageType.DEFAULT)
                     .damageEffect(DamageEffect.HURT)
@@ -64,7 +63,7 @@ public class Bootstraps implements PluginBootstrap {
 
             // Registrar tipo de daño de hipotermia
             event.registry().register(
-                DamageTypeKeys.create(Key.key("savage-frontier:hypothermia")),
+                DamageTypeKeys.create(CustomDamageTypes.HYPOTHERMIA_KEY),
                 b -> b.exhaustion(0.7F)
                     .deathMessageType(DeathMessageType.DEFAULT)
                     .damageEffect(DamageEffect.FREEZING)
@@ -74,7 +73,7 @@ public class Bootstraps implements PluginBootstrap {
 
             // Registrar tipo de daño de hipertermia
             event.registry().register(
-                DamageTypeKeys.create(Key.key("savage-frontier:hyperthermia")),
+                DamageTypeKeys.create(CustomDamageTypes.HYPERTHERMIA_KEY),
                 b -> b.exhaustion(0.7F)
                     .deathMessageType(DeathMessageType.DEFAULT)
                     .damageEffect(DamageEffect.BURNING)

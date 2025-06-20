@@ -216,7 +216,7 @@ public class NutritionSystem implements Listener {
                     Map<NutrientType, Integer> nutrients = playerNutrients.get(playerId);
                     
                     // Verificar si el jugador tiene permiso para bypass de nutrientes
-                    if (!player.hasPermission("winterfall.bypass.nutrients")) {
+                    if (!player.hasPermission("savage.bypass.nutrients")) {
                         // Aplicar reducción a cada nutriente solo si no tiene el permiso
                         for (NutrientType type : NutrientType.values()) {
                             // Probabilidad de reducción basada en actividad
@@ -263,7 +263,7 @@ public class NutritionSystem implements Listener {
      */
     private void applyNutritionEffects(Player player, Map<NutrientType, Integer> nutrients) {
         // Verificar si el jugador tiene permiso para bypass
-        if (player.hasPermission("winterfall.bypass.nutrients")) {
+        if (player.hasPermission("savage.bypass.nutrients")) {
             return; // No aplicar efectos si tiene el permiso
         }
         
