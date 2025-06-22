@@ -86,6 +86,10 @@ public class SavageCommand implements CommandExecutor, TabCompleter {
                 handleConfigCommand(sender, args);
                 break;
                 
+            case "preferences":
+                handlePreferencesCommand(sender, args);
+                break;
+                
             case "reload":
                 handleReloadCommand(sender, args);
                 break;
@@ -1271,7 +1275,7 @@ public class SavageCommand implements CommandExecutor, TabCompleter {
         
         // Autocompletar subcomandos
         if (args.length == 1) {
-            String[] subCommands = {"help", "radiation", "temperature", "bleeding", "hydration", "nutrition", "status", "limb", "config", "enchantment", "reload"};
+            String[] subCommands = {"help", "radiation", "temperature", "bleeding", "hydration", "nutrition", "status", "limb", "config", "enchantment", "reload", "preferences"};
             for (String subCommand : subCommands) {
                 if (subCommand.startsWith(args[0].toLowerCase())) {
                     completions.add(subCommand);
@@ -1353,6 +1357,35 @@ public class SavageCommand implements CommandExecutor, TabCompleter {
                         completions.add("10");
                         completions.add("15");
                         completions.add("20");
+                    }
+                    // Cuarto argumento - nombre de jugador (opcional)
+                    else if (args.length == 4) {
+                        for (Player player : Bukkit.getOnlinePlayers()) {
+                            if (player.getName().toLowerCase().startsWith(args[3].toLowerCase())) {
+                                completions.add(player.getName());
+                            }
+                        }
+                    }
+                    break;
+                    
+                case "preferences":
+                    // Segundo argumento - acción
+                    if (args.length == 2) {
+                        String[] options = {"status-messages", "new-player-protection"};
+                        for (String option : options) {
+                            if (option.startsWith(args[1].toLowerCase())) {
+                                completions.add(option);
+                            }
+                        }
+                    }
+                    // Tercer argumento - valor
+                    else if (args.length == 3) {
+                        String[] values = {"on", "off"};
+                        for (String value : values) {
+                            if (value.startsWith(args[2].toLowerCase())) {
+                                completions.add(value);
+                            }
+                        }
                     }
                     // Cuarto argumento - nombre de jugador (opcional)
                     else if (args.length == 4) {
@@ -1582,5 +1615,97 @@ public class SavageCommand implements CommandExecutor, TabCompleter {
         // Ordenar completions alfabéticamente
         Collections.sort(completions);
         return completions;
+    }
+    
+    /**
+     * Maneja el subcomando "preferences"
+     * @param sender Remitente del comando
+     * @param args Argumentos del comando
+     */
+    private void handlePreferencesCommand(CommandSender sender, String[] args) {
+        // Verificar permisos básicos
+        if (!sender.hasPermission("savage.preferences")) {
+            ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>No tienes permiso para usar este comando."));
+            return;
+        }
+        
+        // Mostrar ayuda si no hay suficientes argumentos
+        if (args.length < 2) {
+            ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize(plugin.PREFIX + " <yellow>Preferencias de usuario:"));
+            ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<green>/savage preferences status-messages <on/off> [jugador]"));
+            ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<gray>  Activa o desactiva los mensajes de estado para ti o para otro jugador."));
+            ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<green>/savage preferences new-player-protection <on/off> [jugador]"));
+            ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<gray>  Activa o desactiva la protección de nuevo jugador para ti o para otro jugador."));
+            return;
+        }
+        
+        // Obtener tipo de preferencia
+        String preferenceType = args[1].toLowerCase();
+        if (!preferenceType.equals("status-messages") && !preferenceType.equals("new-player-protection")) {
+            ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>Tipo de preferencia inválido. Usa status-messages o new-player-protection."));
+            return;
+        }
+        
+        // Verificar si hay suficientes argumentos para el valor
+        if (args.length < 3) {
+            ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>Debes especificar un valor (on/off)."));
+            return;
+        }
+        
+        // Obtener valor
+        String value = args[2].toLowerCase();
+        if (!value.equals("on") && !value.equals("off")) {
+            ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>Valor inválido. Usa on u off."));
+            return;
+        }
+        boolean enabled = value.equals("on");
+        
+        // Determinar el jugador objetivo
+        Player targetPlayer;
+        if (args.length >= 4) {
+            // Verificar permisos para modificar preferencias de otros jugadores
+            if (!sender.hasPermission("savage.preferences.others")) {
+                ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>No tienes permiso para modificar las preferencias de otros jugadores."));
+                return;
+            }
+            
+            targetPlayer = Bukkit.getPlayer(args[3]);
+            if (targetPlayer == null) {
+                ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>Jugador no encontrado o no está en línea."));
+                return;
+            }
+        } else if (sender instanceof Player) {
+            targetPlayer = (Player) sender;
+        } else {
+            ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>Debes especificar un jugador cuando ejecutas este comando desde la consola."));
+            return;
+        }
+        
+        // Aplicar la preferencia según el tipo
+        if (preferenceType.equals("status-messages")) {
+            plugin.getUserPreferencesManager().setStatusMessages(targetPlayer, enabled);
+            String statusText = enabled ? "<green>activados" : "<red>desactivados";
+            
+            // Mensaje para el remitente
+            if (sender == targetPlayer) {
+                ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize(plugin.PREFIX + " <yellow>Mensajes de estado " + statusText + " <yellow>para ti."));
+            } else {
+                ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize(plugin.PREFIX + " <yellow>Mensajes de estado " + statusText + " <yellow>para " + targetPlayer.getName() + "."));
+                // Mensaje para el jugador objetivo
+                ((Audience) targetPlayer).sendMessage(MiniMessage.miniMessage().deserialize(plugin.PREFIX + " <yellow>Tus mensajes de estado han sido " + statusText + " <yellow>por " + sender.getName() + "."));
+            }
+        } else { // new-player-protection
+            plugin.getUserPreferencesManager().setNewPlayerProtection(targetPlayer, enabled);
+            String protectionText = enabled ? "<green>activada" : "<red>desactivada";
+            
+            // Mensaje para el remitente
+            if (sender == targetPlayer) {
+                ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize(plugin.PREFIX + " <yellow>Protección de nuevo jugador " + protectionText + " <yellow>para ti."));
+            } else {
+                ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize(plugin.PREFIX + " <yellow>Protección de nuevo jugador " + protectionText + " <yellow>para " + targetPlayer.getName() + "."));
+                // Mensaje para el jugador objetivo
+                ((Audience) targetPlayer).sendMessage(MiniMessage.miniMessage().deserialize(plugin.PREFIX + " <yellow>Tu protección de nuevo jugador ha sido " + protectionText + " <yellow>por " + sender.getName() + "."));
+            }
+        }
     }
 }

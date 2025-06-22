@@ -2,9 +2,9 @@ package com.darkbladedev.utils;
 
 public enum TemperatureState {
     SEVERE_HYPOTHERMIA("Hipotermia severa", "<color:#6b70f3>", Integer.MIN_VALUE, -6),
-    HYPOTHERMIA("Hipotermia", "<blue>", -5, 5),
+    HYPOTHERMIA("Hipotermia", "<blue>", -5, 15),
     NORMAL("Normal", "<green>", 16, 25),
-    HYPERTHERMIA("Hipertermia", "<red>", 30, 34),
+    HYPERTHERMIA("Hipertermia", "<red>", 26, 34),
     SEVERE_HYPERTHERMIA("Hipertermia severa", "<dark_red>", 35, Integer.MAX_VALUE),
     FALLBACK("Normal (fallback)", "<green>", 0, 0); // Default/fallback case
 

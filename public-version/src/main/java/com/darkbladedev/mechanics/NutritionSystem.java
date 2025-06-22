@@ -215,9 +215,9 @@ public class NutritionSystem implements Listener {
                     // Reducir nutrientes gradualmente
                     Map<NutrientType, Integer> nutrients = playerNutrients.get(playerId);
                     
-                    // Verificar si el jugador tiene permiso para bypass de nutrientes
-                    if (!player.hasPermission("savage.bypass.nutrients")) {
-                        // Aplicar reducción a cada nutriente solo si no tiene el permiso
+                    // Verificar si el jugador tiene permiso para bypass de nutrientes o está protegido como nuevo jugador
+                    if (!player.hasPermission("savage.bypass.nutrients") && !plugin.isPlayerProtectedFromSystem(player, "nutrition")) {
+                        // Aplicar reducción a cada nutriente solo si no tiene el permiso y no está protegido
                         for (NutrientType type : NutrientType.values()) {
                             // Probabilidad de reducción basada en actividad
                             double currentRate = normalDecreaseRate;
@@ -262,9 +262,10 @@ public class NutritionSystem implements Listener {
      * @param nutrients Mapa de nutrientes del jugador
      */
     private void applyNutritionEffects(Player player, Map<NutrientType, Integer> nutrients) {
-        // Verificar si el jugador tiene permiso para bypass
-        if (player.hasPermission("savage.bypass.nutrients")) {
-            return; // No aplicar efectos si tiene el permiso
+        // Verificar si el jugador tiene permiso para bypass o está protegido como nuevo jugador
+        if (player.hasPermission("savage.bypass.nutrients") || 
+            plugin.isPlayerProtectedFromSystem(player, "nutrition")) {
+            return; // No aplicar efectos si tiene el permiso o está protegido
         }
         
         // Contar nutrientes críticos

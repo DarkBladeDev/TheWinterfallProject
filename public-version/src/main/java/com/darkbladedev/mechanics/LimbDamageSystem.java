@@ -221,6 +221,11 @@ public class LimbDamageSystem implements Listener {
      * @param damage Cantidad de daño
      */
     public void applyDamageToLimb(Player player, LimbType limbType, double damage) {
+        // Verificar si el jugador está protegido como nuevo jugador
+        if (plugin.isPlayerProtectedFromSystem(player, "limb_damage")) {
+            return; // No aplicar daño si el jugador está protegido
+        }
+        
         UUID playerId = player.getUniqueId();
         
         // Inicializar mapa de daño para el jugador si no existe
@@ -242,7 +247,9 @@ public class LimbDamageSystem implements Listener {
         DamageState newState = DamageState.fromLevel(newDamage);
         
         if (oldState != newState) {
-            player.sendMessage(MiniMessage.miniMessage().deserialize("<red>Tu " + limbType.getDisplayName() + " <red>está ahora " + newState.getDisplayName()));
+            if (plugin.getUserPreferencesManager().hasStatusMessages(player)) {
+                player.sendMessage(MiniMessage.miniMessage().deserialize("<red>Tu " + limbType.getDisplayName() + " <red>está ahora " + newState.getDisplayName()));
+            }
             applyEffectsForLimbDamage(player, limbType, newState);
         }
     }
@@ -254,6 +261,11 @@ public class LimbDamageSystem implements Listener {
      * @param state Estado de daño
      */
     private void applyEffectsForLimbDamage(Player player, LimbType limbType, DamageState state) {
+        // Verificar si el jugador está protegido como nuevo jugador
+        if (plugin.isPlayerProtectedFromSystem(player, "limb_damage")) {
+            return; // No aplicar efectos si el jugador está protegido
+        }
+        
         // Actualizar la salud máxima del jugador basado en extremidades rotas
         updatePlayerMaxHealth(player);
         
@@ -339,7 +351,9 @@ public class LimbDamageSystem implements Listener {
         
         if (playerLimbDamage.containsKey(limbType)) {
             playerLimbDamage.put(limbType, 0);
-            player.sendMessage(MiniMessage.miniMessage().deserialize("<green>Tu " + limbType.getDisplayName() + " ha sido curada."));
+            if (plugin.getUserPreferencesManager().hasStatusMessages(player)) {
+                player.sendMessage(MiniMessage.miniMessage().deserialize("<green>Tu " + limbType.getDisplayName() + " ha sido curada."));
+            }
             
             // Actualizar la salud máxima del jugador después de curar
             updatePlayerMaxHealth(player);
@@ -363,7 +377,9 @@ public class LimbDamageSystem implements Listener {
             playerLimbDamage.put(limbType, 0);
         }
         
-        player.sendMessage(MiniMessage.miniMessage().deserialize("<green>Todas tus extremidades han sido curadas."));
+        if (plugin.getUserPreferencesManager().hasStatusMessages(player)) {
+            player.sendMessage(MiniMessage.miniMessage().deserialize("<green>Todas tus extremidades han sido curadas."));
+        }
         
         // Restaurar la salud máxima del jugador después de curar todas las extremidades
         player.getAttribute(Attribute.MAX_HEALTH).setBaseValue(20.0);
@@ -437,8 +453,10 @@ public class LimbDamageSystem implements Listener {
             stateMessage = "<dark_red>" + "crítica";
         }
         
-        player.sendMessage(MiniMessage.miniMessage().deserialize("<gray>Tu <yellow>" + limbType.getDisplayName() + " <gray>ahora está " + stateMessage + 
-                "<yellow>" + " (" + damageLevel + "%)"));
+        if (plugin.getUserPreferencesManager().hasStatusMessages(player)) {
+            player.sendMessage(MiniMessage.miniMessage().deserialize("<gray>Tu <yellow>" + limbType.getDisplayName() + " <gray>ahora está " + stateMessage + 
+                    "<yellow>" + " (" + damageLevel + "%)"));
+        }
         
         return newState;
     }
@@ -588,7 +606,7 @@ public class LimbDamageSystem implements Listener {
         player.getAttribute(Attribute.MAX_HEALTH).setBaseValue(maxHealth);
         
         // Informar al jugador si hay cambios significativos
-        if (brokenLimbs > 0) {
+        if (brokenLimbs > 0 && plugin.getUserPreferencesManager().hasStatusMessages(player)) {
             player.sendMessage(MiniMessage.miniMessage().deserialize("<red>Tus extremidades rotas han reducido tu salud máxima a " + 
                     "<gold>" + maxHealth + "<red>" + " puntos."));
         }

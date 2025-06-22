@@ -31,7 +31,7 @@ hydration:
   normal_decrease_rate: 0.1
   # Tasa de disminución durante actividad (probabilidad por tick)
   activity_decrease_rate: 0.3
-  # Intervalo de actualización en ticks (60 = 3 segundos)
+  # Intervalo de actualización en ticks (20 = 1 segundo)
   update_interval: 60
 
 # Configuración del sistema de nutrición
@@ -48,7 +48,7 @@ nutrition:
   normal_decrease_rate: 0.05
   # Tasa de disminución durante actividad (probabilidad por tick)
   activity_decrease_rate: 0.15
-  # Intervalo de actualización en ticks (100 = 5 segundos)
+  # Intervalo de actualización en ticks (20 = 1 segundo)
   update_interval: 100
 
 # Configuración del sistema de daño en extremidades
@@ -98,8 +98,8 @@ stamina:
 temperature:
   # Activar o desactivar el sistema de temperatura
   enabled: true
-  # Intervalo de actualización en ticks (100 = 5 segundos)
-  updateInterval: 100
+  # Intervalo de actualización en ticks (20 = 1 segundo)
+  updateInterval: 20
   # Cantidad que disminuye la temperatura
   decreaseAmount: 1
   # Cantidad que aumenta la temperatura
@@ -118,10 +118,26 @@ temperature:
   # Umbrales de temperatura para efectos
   thresholds:
     # Temperatura por debajo de la cual se considera hipotermia
-    hypothermia: 30
+    hypothermia: 5
     # Temperatura por debajo de la cual se considera hipotermia severa
-    severe_hypothermia: 15
+    severe_hypothermia: -5
     # Temperatura por encima de la cual se considera hipertermia
-    hyperthermia: 70
+    hyperthermia: 30
     # Temperatura por encima de la cual se considera hipertermia severa
-    severe_hyperthermia: 85
+    severe_hyperthermia: 35
+    
+# Configuración de protección para nuevos jugadores
+new_player_protection:
+  # Activar o desactivar la protección para nuevos jugadores
+  enabled: true
+  # Duración de la protección en minutos
+  duration: 60
+  # Sistemas de los que están protegidos los nuevos jugadores
+  protected_systems:
+    temperature: true
+    bleeding: true
+    hydration: true
+    limb_damage: true
+    radiation: true
+    stamina: true
+    nutrition: true

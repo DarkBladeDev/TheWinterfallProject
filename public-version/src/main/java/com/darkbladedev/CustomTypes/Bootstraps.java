@@ -106,7 +106,7 @@ public class Bootstraps implements PluginBootstrap {
             event.registry().register(
                 EnchantmentKeys.create(CustomEnchantments.RADIATION_PROTECTION_KEY),
                 b -> b.maxLevel(3)
-                   .anvilCost(15)
+                   .anvilCost(8)
                    .weight(15)
                    .minimumCost(EnchantmentRegistryEntry.EnchantmentCost.of(5, 3))
                    .maximumCost(EnchantmentRegistryEntry.EnchantmentCost.of(15, 5))
@@ -126,7 +126,7 @@ public class Bootstraps implements PluginBootstrap {
             event.registry().register(
                 EnchantmentKeys.create(CustomEnchantments.COLD_PROTECTION_KEY),
                 b -> b.maxLevel(3)
-                   .anvilCost(15)
+                   .anvilCost(8)
                    .weight(15)
                    .minimumCost(EnchantmentRegistryEntry.EnchantmentCost.of(5, 3))
                    .maximumCost(EnchantmentRegistryEntry.EnchantmentCost.of(15, 5))
@@ -146,7 +146,7 @@ public class Bootstraps implements PluginBootstrap {
             event.registry().register(
                 EnchantmentKeys.create(CustomEnchantments.HEAT_PROTECTION_KEY),
                 b -> b.maxLevel(3)
-                   .anvilCost(15)
+                   .anvilCost(8)
                    .weight(15)
                    .minimumCost(EnchantmentRegistryEntry.EnchantmentCost.of(5, 3))
                    .maximumCost(EnchantmentRegistryEntry.EnchantmentCost.of(15, 5))

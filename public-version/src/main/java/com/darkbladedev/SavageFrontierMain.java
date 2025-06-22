@@ -39,9 +39,15 @@ public class SavageFrontierMain extends JavaPlugin {
     private FreezingSystem freezingSystem;
     private DatabaseManager databaseManager;
     private PlaceholderAPIExpansion placeholders;
+    private com.darkbladedev.managers.UserPreferencesManager userPreferencesManager;
     public static boolean hasExecutableItems = false;
     public static boolean hasItemsAdder = false;
     public final String PREFIX = "<gradient:#20f335:#4dd8e1>Savage Frontier</gradient>";
+    
+    // Configuración de protección para nuevos jugadores
+    private boolean newPlayerProtectionEnabled;
+    private long newPlayerProtectionDuration; // en minutos
+    private java.util.Map<String, Boolean> protectedSystems;
 
     
     @Override
@@ -112,6 +118,9 @@ public class SavageFrontierMain extends JavaPlugin {
      * Inicializa todos los sistemas del plugin
      */
     private void initializeSystems() {
+        // Cargar configuración de protección para nuevos jugadores
+        loadNewPlayerProtectionConfig();
+        
         // Inicializar sistemas de mecánicas
         bleedingSystem = new BleedingSystem(instance);
         radiationSystem = new RadiationSystem(instance);
@@ -125,6 +134,7 @@ public class SavageFrontierMain extends JavaPlugin {
         // Inicializar gestores
         //itemManager = new ItemManager(instance);
         databaseManager = new DatabaseManager(instance);
+        userPreferencesManager = new com.darkbladedev.managers.UserPreferencesManager(instance);
         
         // Activar sistemas
         bleedingSystem.initialize();
@@ -136,6 +146,25 @@ public class SavageFrontierMain extends JavaPlugin {
         temperatureSystem.initialize();
         freezingSystem.initialize();
         databaseManager.initialize();
+    }
+    
+    /**
+     * Carga la configuración de protección para nuevos jugadores
+     */
+    private void loadNewPlayerProtectionConfig() {
+        // Cargar valores desde la configuración
+        newPlayerProtectionEnabled = getConfig().getBoolean("new_player_protection.enabled", true);
+        newPlayerProtectionDuration = getConfig().getLong("new_player_protection.duration", 60);
+        
+        // Inicializar mapa de sistemas protegidos
+        protectedSystems = new java.util.HashMap<>();
+        protectedSystems.put("temperature", getConfig().getBoolean("new_player_protection.protected_systems.temperature", true));
+        protectedSystems.put("bleeding", getConfig().getBoolean("new_player_protection.protected_systems.bleeding", true));
+        protectedSystems.put("hydration", getConfig().getBoolean("new_player_protection.protected_systems.hydration", true));
+        protectedSystems.put("limb_damage", getConfig().getBoolean("new_player_protection.protected_systems.limb_damage", true));
+        protectedSystems.put("radiation", getConfig().getBoolean("new_player_protection.protected_systems.radiation", true));
+        protectedSystems.put("stamina", getConfig().getBoolean("new_player_protection.protected_systems.stamina", true));
+        protectedSystems.put("nutrition", getConfig().getBoolean("new_player_protection.protected_systems.nutrition", true));
     }
     
     /**
@@ -253,6 +282,49 @@ public class SavageFrontierMain extends JavaPlugin {
     }
     
     /**
+     * Obtiene el gestor de preferencias de usuario
+     * @return Gestor de preferencias de usuario
+     */
+    public com.darkbladedev.managers.UserPreferencesManager getUserPreferencesManager() {
+        return userPreferencesManager;
+    }
+    
+    /**
+     * Verifica si un jugador está protegido contra un sistema específico
+     * @param player Jugador a verificar
+     * @param systemName Nombre del sistema (temperature, bleeding, etc.)
+     * @return true si el jugador está protegido, false en caso contrario
+     */
+    public boolean isPlayerProtectedFromSystem(org.bukkit.entity.Player player, String systemName) {
+        // Si la protección está desactivada globalmente, no hay protección
+        if (!newPlayerProtectionEnabled) {
+            return false;
+        }
+        
+        // Si el sistema específico no está en la lista de protección, no hay protección
+        if (!protectedSystems.containsKey(systemName) || !protectedSystems.get(systemName)) {
+            return false;
+        }
+        
+        // Verificar si el jugador tiene la protección activada en sus preferencias
+        if (!userPreferencesManager.hasNewPlayerProtection(player)) {
+            return false;
+        }
+        
+        // Verificar si el jugador es nuevo (basado en su primera vez de juego)
+        long firstPlayedMs = player.getFirstPlayed();
+        if (firstPlayedMs == 0) {
+            return true; // Si es la primera vez que juega, está protegido
+        }
+        
+        // Calcular si el tiempo de protección ha expirado
+        long currentTimeMs = System.currentTimeMillis();
+        long protectionDurationMs = newPlayerProtectionDuration * 60 * 1000; // Convertir minutos a milisegundos
+        
+        return (currentTimeMs - firstPlayedMs) <= protectionDurationMs;
+    }
+    
+    /**
      * Recarga todos los sistemas del plugin
      * Este método es llamado por el comando /savage reload
      */
@@ -264,6 +336,9 @@ public class SavageFrontierMain extends JavaPlugin {
         
         // Recargar configuración
         reloadConfig();
+        
+        // Recargar configuración de protección para nuevos jugadores
+        loadNewPlayerProtectionConfig();
         
         // Reinicializar sistemas
         if (bleedingSystem != null) {

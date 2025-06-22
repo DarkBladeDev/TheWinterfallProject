@@ -104,7 +104,9 @@ public class BleedingSystem implements Listener {
                         
                         if (livingEntity instanceof Player) {
                             Player player = (Player) livingEntity;
-                            player.sendMessage(MiniMessage.miniMessage().deserialize("<green>Tu sangrado se ha detenido."));
+                            if (plugin.getUserPreferencesManager().hasStatusMessages(player)) {
+                                player.sendMessage(MiniMessage.miniMessage().deserialize("<green>Tu sangrado se ha detenido."));
+                            }
                         }
                     } else {
                         // Actualizar duración
@@ -154,6 +156,11 @@ public class BleedingSystem implements Listener {
         // Efectos adicionales para jugadores
         if (entity instanceof Player) {
             Player player = (Player) entity;
+            
+            // Verificar si el jugador está protegido como nuevo jugador
+            if (plugin.isPlayerProtectedFromSystem(player, "bleeding")) {
+                return; // No aplicar efectos si el jugador está protegido
+            }
             
             // Efectos de poción según severidad
             switch (severity) {

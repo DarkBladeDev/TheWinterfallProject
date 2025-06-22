@@ -107,7 +107,9 @@ public class FreezingSystem implements Listener {
                         if (entity instanceof LivingEntity livingEntity && entity.isValid()) {
                             // Notificar al jugador que el efecto terminó
                             if (livingEntity instanceof Player player) {
-                                player.sendMessage(MiniMessage.miniMessage().deserialize("<aqua>El efecto de congelación ha terminado.</aqua>"));
+                                if (plugin.getUserPreferencesManager().hasStatusMessages(player)) {
+                                    player.sendMessage(MiniMessage.miniMessage().deserialize("<aqua>El efecto de congelación ha terminado.</aqua>"));
+                                }
                             }
                         }
                     } else {
@@ -181,6 +183,14 @@ public class FreezingSystem implements Listener {
             return;
         }
         
+        // Verificar si es un jugador y está protegido como nuevo jugador
+        if (entity instanceof Player) {
+            Player player = (Player) entity;
+            if (plugin.isPlayerProtectedFromSystem(player, "freezing")) {
+                return; // No aplicar congelación si el jugador está protegido
+            }
+        }
+        
         UUID entityId = entity.getUniqueId();
         
         // Limitar el nivel máximo
@@ -198,6 +208,14 @@ public class FreezingSystem implements Listener {
     private void applyFreezingEffects(LivingEntity entity) {
         if (entity == null || !entity.isValid()) {
             return;
+        }
+        
+        // Verificar si es un jugador y está protegido como nuevo jugador
+        if (entity instanceof Player) {
+            Player player = (Player) entity;
+            if (plugin.isPlayerProtectedFromSystem(player, "freezing")) {
+                return; // No aplicar efectos si el jugador está protegido
+            }
         }
         
         UUID entityId = entity.getUniqueId();

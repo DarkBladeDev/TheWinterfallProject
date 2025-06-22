@@ -13,6 +13,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
+import org.bukkit.event.player.PlayerToggleSprintEvent;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -120,8 +121,8 @@ public class StaminaSystem implements Listener {
                         // Registrar el último tiempo de sprint
                         lastSprintTime.put(playerId, System.currentTimeMillis());
                         
-                        // Reducir estamina si está corriendo
-                        if (Math.random() < staminaDecreaseRate) {
+                        // Reducir estamina si está corriendo y no está protegido como nuevo jugador
+                        if (Math.random() < staminaDecreaseRate && !plugin.isPlayerProtectedFromSystem(player, "stamina")) {
                             decreaseStamina(player, STAMINA_DECREASE_AMOUNT);
                         }
                     } else {
@@ -152,9 +153,9 @@ public class StaminaSystem implements Listener {
      * @param level Nivel de estamina
      */
     private void applyLowStaminaEffects(Player player, int level) {
-        // Verificar si el jugador tiene permiso para bypass
-        if (player.hasPermission("savage.bypass.stamina")) {
-            return; // No aplicar efectos si tiene el permiso
+        // Verificar si el jugador tiene permiso para bypass o está protegido como nuevo jugador
+        if (player.hasPermission("savage.bypass.stamina") || plugin.isPlayerProtectedFromSystem(player, "stamina")) {
+            return; // No aplicar efectos si tiene el permiso o está protegido
         }
         
         // Efectos según el nivel de estamina
@@ -167,7 +168,7 @@ public class StaminaSystem implements Listener {
             player.setSprinting(false);
             
             // Mensaje (con probabilidad para no spamear)
-            if (Math.random() < 0.3) {
+            if (Math.random() < 0.3 && plugin.getUserPreferencesManager().hasStatusMessages(player)) {
                 player.sendMessage(MiniMessage.miniMessage().deserialize("<dark_red>¡Estás completamente agotado! Necesitas descansar."));
             }
         } else if (level <= 3) {
@@ -176,7 +177,7 @@ public class StaminaSystem implements Listener {
             player.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, 40, 0));
             
             // Mensaje (con probabilidad para no spamear)
-            if (Math.random() < 0.2) {
+            if (Math.random() < 0.2 && plugin.getUserPreferencesManager().hasStatusMessages(player)) {
                 player.sendMessage(MiniMessage.miniMessage().deserialize("<red>Te sientes muy cansado. Deberías dejar de correr."));
             }
         } else if (level <= STAMINA_EFFECT_THRESHOLD) {
@@ -184,7 +185,7 @@ public class StaminaSystem implements Listener {
             player.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 20, 0));
             
             // Mensaje (con probabilidad para no spamear)
-            if (Math.random() < 0.1) {
+            if (Math.random() < 0.1 && plugin.getUserPreferencesManager().hasStatusMessages(player)) {
                 player.sendMessage(MiniMessage.miniMessage().deserialize("<gold>Estás empezando a cansarte."));
             }
         }
@@ -196,9 +197,9 @@ public class StaminaSystem implements Listener {
      * @param amount Cantidad a disminuir
      */
     public void decreaseStamina(Player player, int amount) {
-        // Verificar si el jugador tiene permiso para bypass
-        if (player.hasPermission("savage.bypass.stamina")) {
-            return; // No disminuir estamina si tiene el permiso
+        // Verificar si el jugador tiene permiso para bypass o está protegido como nuevo jugador
+        if (player.hasPermission("savage.bypass.stamina") || plugin.isPlayerProtectedFromSystem(player, "stamina")) {
+            return; // No disminuir estamina si tiene el permiso o está protegido
         }
         
         UUID playerId = player.getUniqueId();
@@ -311,6 +312,30 @@ public class StaminaSystem implements Listener {
         // Si el jugador está corriendo y tiene estamina 0, detener el sprint
         if (player.isSprinting() && getStaminaLevel(player) <= 0) {
             player.setSprinting(false);
+        }
+    }
+    
+    /**
+     * Maneja el evento de activación/desactivación del sprint
+     * @param event Evento de toggle sprint
+     */
+    @EventHandler(priority = EventPriority.NORMAL)
+    public void onPlayerToggleSprint(PlayerToggleSprintEvent event) {
+        Player player = event.getPlayer();
+        
+        // Si el jugador está intentando activar el sprint
+        if (event.isSprinting()) {
+            // Si el jugador tiene estamina 0 o está protegido pero intenta correr con estamina baja
+            if (getStaminaLevel(player) <= 0 || 
+                (plugin.isPlayerProtectedFromSystem(player, "stamina") && getStaminaLevel(player) <= STAMINA_EFFECT_THRESHOLD)) {
+                // Cancelar el sprint
+                event.setCancelled(true);
+                
+                // Informar al jugador si tiene estamina 0
+                if (getStaminaLevel(player) <= 0 && Math.random() < 0.3 && plugin.getUserPreferencesManager().hasStatusMessages(player)) {
+                    player.sendMessage(MiniMessage.miniMessage().deserialize("<red>Estás demasiado cansado para correr."));
+                }
+            }
         }
     }
     

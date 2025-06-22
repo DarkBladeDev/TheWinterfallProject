@@ -24,7 +24,26 @@ permissions:
   savage.bypass.temperature:
     description: Permiso para bypasear el sistema de temperatura
     default: false
-  
+  savage.bypass.bleeding:
+    description: Permiso para bypasear el sistema de sangrado
+    default: false
+  savage.bypass.radiation:
+    description: Permiso para bypasear el sistema de radiación
+    default: false
+  savage.bypass.limb:
+    description: Permiso para bypasear el sistema de daño en extremidades
+    default: false
+  savage.bypass.dehydration:
+    description: Permiso para bypasear el sistema de hidratación
+    default: false
+  savage.bypass.nutrition:
+    description: Permiso para bypasear el sistema de nutrición
+    default: false
+
+    
+  savage.admin.debug:
+    description: Permiso para activar o desactivar el sistema de depuración
+    default: op
   savage.admin.snow:
     description: Permiso para activar o desactivar el sistema de nieve
     default: op

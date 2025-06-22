@@ -121,16 +121,19 @@ public class HydrationSystem implements Listener {
                     // Obtener nivel actual
                     int currentLevel = hydrationLevel.get(playerId);
                     
-                    // Reducir hidratación basado en actividad
-                    if (player.isSprinting() || (player.isFlying() && player.getGameMode().equals(org.bukkit.GameMode.SURVIVAL))) {
-                        // Reducir más rápido si está corriendo o saltando
-                        if (Math.random() < activityDecreaseRate) {
-                            decreaseHydration(player, 1);
-                        }
-                    } else {
-                        // Reducción normal
-                        if (Math.random() < normalDecreaseRate) {
-                            decreaseHydration(player, 1);
+                    // Verificar si el jugador está protegido como nuevo jugador
+                    if (!plugin.isPlayerProtectedFromSystem(player, "hydration")) {
+                        // Reducir hidratación basado en actividad
+                        if (player.isSprinting() || (player.isFlying() && player.getGameMode().equals(org.bukkit.GameMode.SURVIVAL))) {
+                            // Reducir más rápido si está corriendo o saltando
+                            if (Math.random() < activityDecreaseRate) {
+                                decreaseHydration(player, 1);
+                            }
+                        } else {
+                            // Reducción normal
+                            if (Math.random() < normalDecreaseRate) {
+                                decreaseHydration(player, 1);
+                            }
                         }
                     }
                     
@@ -149,9 +152,9 @@ public class HydrationSystem implements Listener {
      * @param level Nivel de hidratación
      */
     private void applyDehydrationEffects(Player player, int level) {
-        // Verificar si el jugador tiene permiso para bypass
-        if (player.hasPermission("savage.bypass.water")) {
-            return; // No aplicar efectos si tiene el permiso
+        // Verificar si el jugador tiene permiso para bypass o está protegido como nuevo jugador
+        if (player.hasPermission("savage.bypass.dehydration") || plugin.isPlayerProtectedFromSystem(player, "hydration")) {
+            return; // No aplicar efectos si tiene el permiso o está protegido
         }
         
         // Efectos según el nivel de hidratación
@@ -170,7 +173,7 @@ public class HydrationSystem implements Listener {
             player.addPotionEffect(new PotionEffect(PotionEffectType.NAUSEA, 100, 0));
             
             // Mensaje (con probabilidad para no spamear)
-            if (Math.random() < 0.3) {
+            if (Math.random() < 0.3 && plugin.getUserPreferencesManager().hasStatusMessages(player)) {
                 player.sendMessage(MiniMessage.miniMessage().deserialize("<red>¡Estás severamente deshidratado! Necesitas agua urgentemente."));
             }
         } else if (level <= 3) {
@@ -179,7 +182,7 @@ public class HydrationSystem implements Listener {
             player.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 80, 0));
             
             // Mensaje (con probabilidad para no spamear)
-            if (Math.random() < 0.2) {
+            if (Math.random() < 0.2 && plugin.getUserPreferencesManager().hasStatusMessages(player)) {
                 player.sendMessage(MiniMessage.miniMessage().deserialize("<red>Te sientes muy débil por la deshidratación. Necesitas beber agua."));
             }
         } else if (level <= HYDRATION_DAMAGE_THRESHOLD) {
@@ -187,7 +190,7 @@ public class HydrationSystem implements Listener {
             player.addPotionEffect(new PotionEffect(PotionEffectType.HUNGER, 60, 0));
             
             // Mensaje (con probabilidad para no spamear)
-            if (Math.random() < 0.1) {
+            if (Math.random() < 0.1 && plugin.getUserPreferencesManager().hasStatusMessages(player)) {
                 player.sendMessage(MiniMessage.miniMessage().deserialize("<gold>Tienes sed. Deberías beber agua pronto."));
             }
         }
@@ -204,7 +207,7 @@ public class HydrationSystem implements Listener {
         }
         
         // Verificar si el jugador tiene permiso para bypass
-        if (player.hasPermission("savage.bypass.water")) {
+        if (player.hasPermission("savage.bypass.dehydration")) {
             return; // No disminuir hidratación si tiene el permiso
         }
         
@@ -215,7 +218,7 @@ public class HydrationSystem implements Listener {
         hydrationLevel.put(playerId, newLevel);
         
         // Notificar al jugador si hay un cambio significativo
-        if (newLevel < currentLevel && (currentLevel % 20 == 0 || newLevel == 0)) {
+        if (newLevel < currentLevel && (currentLevel % 20 == 0 || newLevel == 0) && plugin.getUserPreferencesManager().hasStatusMessages(player)) {
             if (newLevel <= 20) {
                 player.sendMessage(MiniMessage.miniMessage().deserialize("<red>¡Tienes mucha sed! Necesitas beber agua urgentemente."));
             } else {
@@ -246,7 +249,7 @@ public class HydrationSystem implements Listener {
         hydrationLevel.put(playerId, newLevel);
         
         // Notificar al jugador si hay un cambio significativo
-        if (newLevel > currentLevel && (newLevel % 20 == 0 || newLevel == MAX_HYDRATION)) {
+        if (newLevel > currentLevel && (newLevel % 20 == 0 || newLevel == MAX_HYDRATION) && plugin.getUserPreferencesManager().hasStatusMessages(player)) {
             player.sendMessage(MiniMessage.miniMessage().deserialize("<aqua>Te sientes más hidratado."));
         }
         
