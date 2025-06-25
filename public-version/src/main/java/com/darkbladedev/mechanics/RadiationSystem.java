@@ -129,7 +129,7 @@ public class RadiationSystem {
         // Si tiene protección completa (nivel 4), mostrar mensaje y salir
         if (protectionLevel >= 4 && level > 0) {
             if (level % 10 == 0 && plugin.getUserPreferencesManager().hasStatusMessages(player)) { // Mostrar mensaje ocasionalmente
-                player.sendMessage(MiniMessage.miniMessage().deserialize("<green>Tu traje de protección te está protegiendo completamente de la radiación."));
+                player.sendMessage(MiniMessage.miniMessage().deserialize("<green>Tu protección te está protegiendo completamente de la radiación."));
             }
             return;
         }
@@ -141,8 +141,11 @@ public class RadiationSystem {
             if (plugin.getUserPreferencesManager().hasStatusMessages(player)) {
                 if (adjustedLevel == 1 && protectionLevel == 0) {
                     player.sendMessage(MiniMessage.miniMessage().deserialize("<yellow>Sientes un leve mareo... parece que hay radiación en esta zona."));
+                    player.sendActionBar(MiniMessage.miniMessage().deserialize("<yellow>Parece que hay radiación en esta zona."));
                 } else if (adjustedLevel == 1 && protectionLevel > 0) {
                     player.sendMessage(MiniMessage.miniMessage().deserialize("<yellow>Tu protección contra radiación está reduciendo los efectos, pero aún sientes algo de mareo."));
+                    player.sendActionBar(MiniMessage.miniMessage().deserialize("<yellow>Tu protección contra radiación está reduciendo los efectos."));
+
                 }
             }
         }
@@ -150,10 +153,12 @@ public class RadiationSystem {
         // Nivel 6-10: Efectos moderados (debilidad, más náusea)
         if (adjustedLevel >= 6) {
             player.addPotionEffect(new PotionEffect(PotionEffectType.NAUSEA, 160, 0));
-            player.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, 100, 0));
+            plugin.getCustomDebuffEffects().applyWeakness(player);
+            //player.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, 100, 0));
             
             if (adjustedLevel == 6 && plugin.getUserPreferencesManager().hasStatusMessages(player)) {
                 player.sendMessage(MiniMessage.miniMessage().deserialize("<gold>La radiación está afectando tu cuerpo. Deberías salir de esta zona."));
+                player.sendActionBar(MiniMessage.miniMessage().deserialize("<gold>La radiación está afectando tu cuerpo."));
             }
         }
         
@@ -164,6 +169,7 @@ public class RadiationSystem {
             
             if (adjustedLevel == 11 && plugin.getUserPreferencesManager().hasStatusMessages(player)) {
                 player.sendMessage(MiniMessage.miniMessage().deserialize("<red>¡La radiación está dañando tus órganos! ¡Debes salir inmediatamente!"));
+                player.sendActionBar(MiniMessage.miniMessage().deserialize("<red>¡La radiación está dañando tus órganos!"));
             }
         }
         
@@ -174,6 +180,7 @@ public class RadiationSystem {
             
             if (adjustedLevel % 5 == 0 && plugin.getUserPreferencesManager().hasStatusMessages(player)) { // Mensaje cada 5 niveles a partir del 16
                 player.sendMessage(MiniMessage.miniMessage().deserialize("<dark_red>¡La radiación está matándote! ¡Necesitas tratamiento médico urgente!"));
+                player.sendActionBar(MiniMessage.miniMessage().deserialize("<dark_red>¡La radiación está matándote!"));
             }
         }
     }

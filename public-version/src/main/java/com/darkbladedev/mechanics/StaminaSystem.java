@@ -162,7 +162,8 @@ public class StaminaSystem implements Listener {
         if (level <= 0) {
             // Estamina agotada: efectos graves
             player.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 60, 2));
-            player.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, 60, 1));
+            plugin.getCustomDebuffEffects().applyWeakness(player);
+            //player.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, 60, 1));
             
             // Detener el sprint del jugador
             player.setSprinting(false);
@@ -170,15 +171,19 @@ public class StaminaSystem implements Listener {
             // Mensaje (con probabilidad para no spamear)
             if (Math.random() < 0.3 && plugin.getUserPreferencesManager().hasStatusMessages(player)) {
                 player.sendMessage(MiniMessage.miniMessage().deserialize("<dark_red>¡Estás completamente agotado! Necesitas descansar."));
+                player.sendActionBar(MiniMessage.miniMessage().deserialize("<dark_red>¡Estás completamente agotado!"));
             }
         } else if (level <= 3) {
             // Estamina muy baja: efectos moderados
             player.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 40, 1));
-            player.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, 40, 0));
+            plugin.getCustomDebuffEffects().applyWeakness(player);
+            //player.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, 40, 0));
             
             // Mensaje (con probabilidad para no spamear)
             if (Math.random() < 0.2 && plugin.getUserPreferencesManager().hasStatusMessages(player)) {
                 player.sendMessage(MiniMessage.miniMessage().deserialize("<red>Te sientes muy cansado. Deberías dejar de correr."));
+                player.sendActionBar(MiniMessage.miniMessage().deserialize("<red>Te sientes muy cansado."));
+
             }
         } else if (level <= STAMINA_EFFECT_THRESHOLD) {
             // Estamina baja: efectos leves
@@ -187,6 +192,8 @@ public class StaminaSystem implements Listener {
             // Mensaje (con probabilidad para no spamear)
             if (Math.random() < 0.1 && plugin.getUserPreferencesManager().hasStatusMessages(player)) {
                 player.sendMessage(MiniMessage.miniMessage().deserialize("<gold>Estás empezando a cansarte."));
+                player.sendActionBar(MiniMessage.miniMessage().deserialize("<gold>Estás empezando a cansarte."));
+
             }
         }
     }
@@ -334,6 +341,8 @@ public class StaminaSystem implements Listener {
                 // Informar al jugador si tiene estamina 0
                 if (getStaminaLevel(player) <= 0 && Math.random() < 0.3 && plugin.getUserPreferencesManager().hasStatusMessages(player)) {
                     player.sendMessage(MiniMessage.miniMessage().deserialize("<red>Estás demasiado cansado para correr."));
+                    player.sendActionBar(MiniMessage.miniMessage().deserialize("<red>Estás demasiado cansado para correr."));
+
                 }
             }
         }

@@ -680,7 +680,8 @@ public class TemperatureSystem implements Listener {
         if (temperature <= SEVERE_HYPOTHERMIA_THRESHOLD) {
             // Hipotermia severa - daño y efectos graves
             player.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, updateInterval * 20, 2));
-            player.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, updateInterval * 20, 2));
+            plugin.getCustomDebuffEffects().applyWeakness(player);
+            //player.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, updateInterval * 20, 2));
             player.addPotionEffect(new PotionEffect(PotionEffectType.NAUSEA, updateInterval * 20, 0));
             
             // Daño por hipotermia severa
@@ -689,16 +690,20 @@ public class TemperatureSystem implements Listener {
 
             if (plugin.getUserPreferencesManager().hasStatusMessages(player)) {
             ((Audience) player).sendMessage(MiniMessage.miniMessage().deserialize("<dark_red>¡Estás sufriendo hipotermia severa! Necesitas protección contra el frío urgentemente."));
+            player.sendActionBar(MiniMessage.miniMessage().deserialize("<dark_red>¡Estás sufriendo hipotermia severa!"));
             }
         } else if (temperature <= HYPOTHERMIA_THRESHOLD) {
             // Hipotermia moderada - efectos de movimiento y debilidad
             player.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, updateInterval * 20, 1));
-            player.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, updateInterval * 20, 1));
+            plugin.getCustomDebuffEffects().applyWeakness(player);
+            //player.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, updateInterval * 20, 1));
             
             // Mensaje de advertencia
             if (temperature % 5 == 0 && plugin.getUserPreferencesManager().hasStatusMessages(player)) { // Mostrar mensaje cada 5 puntos de temperatura
 
                 ((Audience) player).sendMessage(MiniMessage.miniMessage().deserialize("<red>Estás comenzando a sufrir hipotermia. Necesitas protección contra el frío."));
+                player.sendActionBar(MiniMessage.miniMessage().deserialize("<red>Estás comenzando a sufrir hipotermia."));
+
             }
         }
     }
@@ -737,7 +742,8 @@ public class TemperatureSystem implements Listener {
             }
             
             if (weaknessAmplifier > 0) {
-                player.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, updateInterval * 20, weaknessAmplifier));
+                plugin.getCustomDebuffEffects().applyWeakness(player);
+                //player.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, updateInterval * 20, weaknessAmplifier));
             }
             
             // Náusea solo si no tiene protección nivel 3
@@ -757,10 +763,14 @@ public class TemperatureSystem implements Listener {
                 // Mensaje según nivel de protección
                 if (protectionLevel == 0) {
                     ((Audience) player).sendMessage(MiniMessage.miniMessage().deserialize("<dark_red>¡Estás sufriendo hipotermia severa! Necesitas protección contra el frío urgentemente."));
+                    player.sendActionBar(MiniMessage.miniMessage().deserialize("<dark_red>¡Estás sufriendo hipotermia severa!"));
                 } else if (protectionLevel < 3) {
                     ((Audience) player).sendMessage(MiniMessage.miniMessage().deserialize("<red>Tu protección contra el frío no es suficiente para estas temperaturas extremas."));
+                    player.sendActionBar(MiniMessage.miniMessage().deserialize("<red>Tu protección contra el frío no es suficiente."));
                 } else {
                     ((Audience) player).sendMessage(MiniMessage.miniMessage().deserialize("<yellow>Tu protección contra el frío te está salvando de la hipotermia severa."));
+                    player.sendActionBar(MiniMessage.miniMessage().deserialize("<yellow>Tu protección contra el frío te está salvando."));
+
                 }
             }
         } else if (temperature <= HYPOTHERMIA_THRESHOLD) {
@@ -775,7 +785,8 @@ public class TemperatureSystem implements Listener {
                 }
                 
                 if (weaknessAmplifier > 0) {
-                    player.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, updateInterval * 20, weaknessAmplifier));
+                    plugin.getCustomDebuffEffects().applyWeakness(player);
+                    //player.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, updateInterval * 20, weaknessAmplifier));
                 }
                 
                 // Mensaje de advertencia
@@ -783,8 +794,12 @@ public class TemperatureSystem implements Listener {
 
                     if (protectionLevel == 0 && plugin.isPlayerProtectedFromSystem(player, "temperature")) {
                         ((Audience) player).sendMessage(MiniMessage.miniMessage().deserialize("<red>Estás comenzando a sufrir hipotermia. Necesitas protección contra el frío."));
+                        player.sendActionBar(MiniMessage.miniMessage().deserialize("<red>Estás comenzando a sufrir hipotermia."));
+
                     } else {
                         ((Audience) player).sendMessage(MiniMessage.miniMessage().deserialize("<yellow>Tu protección contra el frío te está ayudando, pero necesitas más abrigo."));
+                        player.sendActionBar(MiniMessage.miniMessage().deserialize("<yellow>Tu protección contra el frío te está ayudando."));
+
                     }
                 }
             }
@@ -825,7 +840,8 @@ public class TemperatureSystem implements Listener {
             }
             
             if (weaknessAmplifier > 0) {
-                player.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, updateInterval * 20, weaknessAmplifier));
+                plugin.getCustomDebuffEffects().applyWeakness(player);
+                //player.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, updateInterval * 20, weaknessAmplifier));
             }
             
             // Náusea solo si no tiene protección nivel 3
@@ -845,10 +861,15 @@ public class TemperatureSystem implements Listener {
                 // Mensaje según nivel de protección
                 if (protectionLevel == 0) {
                 ((Audience) player).sendMessage(MiniMessage.miniMessage().deserialize("<dark_red>¡Estás sufriendo hipertermia severa! Necesitas protección contra el calor urgentemente."));
+                player.sendActionBar(MiniMessage.miniMessage().deserialize("<dark_red>¡Estás sufriendo hipertermia severa!"));
+
                 } else if (protectionLevel < 3) {
                 ((Audience) player).sendMessage(MiniMessage.miniMessage().deserialize("<red>Tu protección contra el calor no es suficiente para estas temperaturas extremas."));
+                player.sendActionBar(MiniMessage.miniMessage().deserialize("<red>Tu protección contra el calor no es suficiente."));
                 } else {
                 ((Audience) player).sendMessage(MiniMessage.miniMessage().deserialize("<yellow>Tu protección contra el calor te está salvando de la hipertermia severa."));
+                player.sendActionBar(MiniMessage.miniMessage().deserialize("<yellow>Tu protección contra el calor te está salvando."));
+
                 }}
         } else if (temperature >= HYPERTHERMIA_THRESHOLD) {
             // Hipertermia moderada - efectos de hambre y debilidad
@@ -862,7 +883,8 @@ public class TemperatureSystem implements Listener {
                 }
                 
                 if (weaknessAmplifier > 0) {
-                    player.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, updateInterval * 20, weaknessAmplifier));
+                    plugin.getCustomDebuffEffects().applyWeakness(player);
+                    //player.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, updateInterval * 20, weaknessAmplifier));
                 }
                 
                 // Mensaje de advertencia
@@ -870,8 +892,13 @@ public class TemperatureSystem implements Listener {
 
                     if (protectionLevel == 0) {
                         ((Audience) player).sendMessage(MiniMessage.miniMessage().deserialize("<red>Estás comenzando a sufrir hipertermia. Necesitas protección contra el calor."));
+                        player.sendActionBar(MiniMessage.miniMessage().deserialize("<red>Estás comenzando a sufrir hipertermia."));
+
                     } else {
                         ((Audience) player).sendMessage(MiniMessage.miniMessage().deserialize("<yellow>Tu protección contra el calor te está ayudando, pero necesitas más protección."));
+                        player.sendActionBar(MiniMessage.miniMessage().deserialize("<yellow>Tu protección contra el calor te está ayudando."));
+
+
                     }
                 }
             }

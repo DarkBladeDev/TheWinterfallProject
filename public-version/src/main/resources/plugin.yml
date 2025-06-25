@@ -12,35 +12,9 @@ commands:
     aliases: [savage-frontier, sf]
 
 permissions:
-  savage.bypass.water:
-    description: Permiso para bypasear el sistema de hidratación
-    default: false
-  savage.bypass.nutrients:
-    description: Permiso para bypasear el sistema de nutrición
-    default: false
-  savage.bypass.stamina:
-    description: Permiso para bypasear el sistema de estamina
-    default: false
-  savage.bypass.temperature:
-    description: Permiso para bypasear el sistema de temperatura
-    default: false
-  savage.bypass.bleeding:
-    description: Permiso para bypasear el sistema de sangrado
-    default: false
-  savage.bypass.radiation:
-    description: Permiso para bypasear el sistema de radiación
-    default: false
-  savage.bypass.limb:
-    description: Permiso para bypasear el sistema de daño en extremidades
-    default: false
-  savage.bypass.dehydration:
-    description: Permiso para bypasear el sistema de hidratación
-    default: false
-  savage.bypass.nutrition:
-    description: Permiso para bypasear el sistema de nutrición
-    default: false
-
-    
+  savage.admin:
+    description: Permite acceso a todos los comandos administrativos
+    default: op
   savage.admin.debug:
     description: Permiso para activar o desactivar el sistema de depuración
     default: op
@@ -68,7 +42,62 @@ permissions:
   savage.admin.temperature:
     description: Permiso para activar o desactivar el sistema de temperatura
     default: op
-
-  savage.status.others:
-    description: Permiso para ver el estado de otros jugadores
+  savage.admin.actionbar:
+    description: Permite configurar el número máximo de slots de la barra de acción
     default: op
+    
+  savage.bypass.water:
+    description: Permiso para bypasear el sistema de hidratación
+    default: false
+  savage.bypass.nutrients:
+    description: Permiso para bypasear el sistema de nutrición
+    default: false
+  savage.bypass.stamina:
+    description: Permiso para bypasear el sistema de estamina
+    default: false
+  savage.bypass.temperature:
+    description: Permiso para bypasear el sistema de temperatura
+    default: false
+  savage.bypass.bleeding:
+    description: Permiso para bypasear el sistema de sangrado
+    default: false
+  savage.bypass.radiation:
+    description: Permiso para bypasear el sistema de radiación
+    default: false
+  savage.bypass.limb:
+    description: Permiso para bypasear el sistema de daño en extremidades
+    default: false
+  savage.bypass.dehydration:
+    description: Permiso para bypasear el sistema de hidratación
+    default: false
+  savage.bypass.nutrition:
+    description: Permiso para bypasear el sistema de nutrición
+    default: false
+    
+  savage.bleeding:
+    description: Permite gestionar el sangrado
+    default: op
+  savage.hydration:
+    description: Permite gestionar la hidratación
+    default: op
+  savage.nutrition:
+    description: Permite gestionar la nutrición
+    default: op
+  savage.limb:
+    description: Permite gestionar el daño de extremidades
+    default: op
+  savage.status:
+    description: Permite ver el estado físico propio
+    default: true
+  savage.status.others:
+    description: Permite ver el estado físico de otros jugadores
+    default: op
+  savage.enchantment:
+    description: Permite gestionar encantamientos personalizados
+    default: op
+  savage.preferences:
+    description: Permite gestionar preferencias de usuario
+    default: true
+  savage.actionbar.menu:
+    description: Permite abrir el menú de configuración de la barra de acción
+    default: true

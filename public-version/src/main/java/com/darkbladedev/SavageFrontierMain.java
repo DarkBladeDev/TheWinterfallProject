@@ -1,9 +1,12 @@
 package com.darkbladedev;
 
+import com.darkbladedev.commands.ActionBarCommand;
 import com.darkbladedev.commands.SavageCommand;
 import com.darkbladedev.database.DatabaseManager;
 import com.darkbladedev.events.PlayerEvents;
 import com.darkbladedev.integrations.PlaceholderAPIExpansion;
+import com.darkbladedev.managers.ActionBarDisplayManager;
+import com.darkbladedev.managers.UserPreferencesManager;
 import com.darkbladedev.mechanics.BleedingSystem;
 import com.darkbladedev.mechanics.RadiationSystem;
 import com.darkbladedev.mechanics.LimbDamageSystem;
@@ -11,6 +14,7 @@ import com.darkbladedev.mechanics.HydrationSystem;
 import com.darkbladedev.mechanics.NutritionSystem;
 import com.darkbladedev.mechanics.StaminaSystem;
 import com.darkbladedev.mechanics.TemperatureSystem;
+import com.darkbladedev.utils.CustomDebuffEffects;
 import com.darkbladedev.mechanics.FreezingSystem;
 
 import org.bukkit.Bukkit;
@@ -39,7 +43,8 @@ public class SavageFrontierMain extends JavaPlugin {
     private FreezingSystem freezingSystem;
     private DatabaseManager databaseManager;
     private PlaceholderAPIExpansion placeholders;
-    private com.darkbladedev.managers.UserPreferencesManager userPreferencesManager;
+    private UserPreferencesManager userPreferencesManager;
+    private CustomDebuffEffects customDebuffEffects;
     public static boolean hasExecutableItems = false;
     public static boolean hasItemsAdder = false;
     public final String PREFIX = "<gradient:#20f335:#4dd8e1>Savage Frontier</gradient>";
@@ -48,6 +53,7 @@ public class SavageFrontierMain extends JavaPlugin {
     private boolean newPlayerProtectionEnabled;
     private long newPlayerProtectionDuration; // en minutos
     private java.util.Map<String, Boolean> protectedSystems;
+    private ActionBarDisplayManager actionBarDisplayManager;
 
     
     @Override
@@ -132,9 +138,13 @@ public class SavageFrontierMain extends JavaPlugin {
         freezingSystem = new FreezingSystem(instance);
         
         // Inicializar gestores
-        //itemManager = new ItemManager(instance);
+        customDebuffEffects = new CustomDebuffEffects(instance);
         databaseManager = new DatabaseManager(instance);
-        userPreferencesManager = new com.darkbladedev.managers.UserPreferencesManager(instance);
+        userPreferencesManager = new UserPreferencesManager(instance);
+        
+        // Cargar configuración de la barra de acción
+        int maxSlots = getConfig().getInt("actionbar.max_slots", 3);
+        actionBarDisplayManager = new ActionBarDisplayManager(instance, maxSlots);
         
         // Activar sistemas
         bleedingSystem.initialize();
@@ -146,6 +156,7 @@ public class SavageFrontierMain extends JavaPlugin {
         temperatureSystem.initialize();
         freezingSystem.initialize();
         databaseManager.initialize();
+        
     }
     
     /**
@@ -179,9 +190,10 @@ public class SavageFrontierMain extends JavaPlugin {
      * Registra todos los comandos del plugin
      */
     private void registerCommands() {
-        SavageCommand commandManager = new SavageCommand(instance);
+        SavageCommand savageCommandManager = new SavageCommand(instance);
+        ActionBarCommand actionBarCommandManager = new ActionBarCommand(instance);
         
-        // Usar el método registerCommand de JavaPlugin para Paper plugins
+        // Registrar comando savage
         this.getServer().getCommandMap().register("savage", new org.bukkit.command.Command("savage") {
             {
                 this.setDescription("Comando principal del plugin Savage Frontier");
@@ -191,14 +203,43 @@ public class SavageFrontierMain extends JavaPlugin {
             
             @Override
             public boolean execute(CommandSender sender, String commandLabel, String[] args) {
-                return commandManager.onCommand(sender, this, commandLabel, args);
+                return savageCommandManager.onCommand(sender, this, commandLabel, args);
             }
             
             @Override
             public List<String> tabComplete(CommandSender sender, String alias, String[] args) {
-                return commandManager.onTabComplete(sender, this, alias, args);
+                return savageCommandManager.onTabComplete(sender, this, alias, args);
             }
         });
+        
+        // Registrar comando actionbar
+        this.getServer().getCommandMap().register("actionbar", new org.bukkit.command.Command("actionbar") {
+            {
+                this.setDescription("Comando para gestionar la barra de acción personalizable");
+                this.setUsage("/actionbar <subcomando>");
+                this.setAliases(List.of("ab", "abar"));
+            }
+            
+            @Override
+            public boolean execute(CommandSender sender, String commandLabel, String[] args) {
+                return actionBarCommandManager.onCommand(sender, this, commandLabel, args);
+            }
+            
+            @Override
+            public List<String> tabComplete(CommandSender sender, String alias, String[] args) {
+                return actionBarCommandManager.onTabComplete(sender, this, alias, args);
+            }
+        });
+    }
+    
+    /**
+     * Recarga el gestor de barras de acción con un nuevo número máximo de slots
+     * @param maxSlots Nuevo número máximo de slots
+     */
+    public void reloadActionBarDisplayManager(int maxSlots) {
+        if (actionBarDisplayManager != null) {
+            actionBarDisplayManager.reload(maxSlots);
+        }
     }
     
     /**
@@ -285,8 +326,16 @@ public class SavageFrontierMain extends JavaPlugin {
      * Obtiene el gestor de preferencias de usuario
      * @return Gestor de preferencias de usuario
      */
-    public com.darkbladedev.managers.UserPreferencesManager getUserPreferencesManager() {
+    public UserPreferencesManager getUserPreferencesManager() {
         return userPreferencesManager;
+    }
+
+    public CustomDebuffEffects getCustomDebuffEffects() {
+        return customDebuffEffects;
+    }
+
+    public ActionBarDisplayManager getActionBarDisplayManager() {
+        return actionBarDisplayManager;
     }
     
     /**

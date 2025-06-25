@@ -105,7 +105,9 @@ public class BleedingSystem implements Listener {
                         if (livingEntity instanceof Player) {
                             Player player = (Player) livingEntity;
                             if (plugin.getUserPreferencesManager().hasStatusMessages(player)) {
+
                                 player.sendMessage(MiniMessage.miniMessage().deserialize("<green>Tu sangrado se ha detenido."));
+                                player.sendActionBar(MiniMessage.miniMessage().deserialize("<green>Tu sangrado se ha detenido."));
                             }
                         }
                     } else {
@@ -169,11 +171,13 @@ public class BleedingSystem implements Listener {
                     break;
                 case 2: // Moderado
                     player.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 60, 0));
-                    player.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, 60, 0));
+                    plugin.getCustomDebuffEffects().applyWeakness(player);
+                    //player.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, 60, 0));
                     break;
                 case 3: // Grave
                     player.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 80, 1));
-                    player.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, 80, 1));
+                    plugin.getCustomDebuffEffects().applyWeakness(player);
+                    //player.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, 80, 1));
                     player.addPotionEffect(new PotionEffect(PotionEffectType.NAUSEA, 100, 0));
                     break;
             }
@@ -183,12 +187,15 @@ public class BleedingSystem implements Listener {
                 switch (severity) {
                     case 1:
                         ((Audience) player).sendMessage(MiniMessage.miniMessage().deserialize("<yellow>Tienes una herida leve que está sangrando."));
+                        player.sendActionBar(MiniMessage.miniMessage().deserialize("<yellow>Tienes una herida leve que está sangrando."));
                         break;
                     case 2:
-                    ((Audience) player).sendMessage(MiniMessage.miniMessage().deserialize("<gold>Estás perdiendo sangre de forma moderada. Necesitas tratamiento."));
+                        ((Audience) player).sendMessage(MiniMessage.miniMessage().deserialize("<gold>Estás perdiendo sangre de forma moderada. Necesitas tratamiento."));
+                        player.sendActionBar(MiniMessage.miniMessage().deserialize("<gold>Estás perdiendo sangre de forma moderada."));
                         break;
                     case 3:
-                    ((Audience) player).sendMessage(MiniMessage.miniMessage().deserialize("<red>¡Estás sangrando gravemente! Necesitas atención médica urgente."));
+                        ((Audience) player).sendMessage(MiniMessage.miniMessage().deserialize("<red>¡Estás sangrando gravemente! Necesitas atención médica urgente."));
+                        player.sendActionBar(MiniMessage.miniMessage().deserialize("<red>Estás sangrando gravemente."));
                         break;
                 }
             }
@@ -243,7 +250,7 @@ public class BleedingSystem implements Listener {
                     break;
             }
             
-            ((Audience) player).sendMessage(MiniMessage.miniMessage().deserialize("<red>¡Estás sangrando! " + "<white>(Nivel: " + severityText + ", Duración: " + duration + " segundos)"));
+            ((Audience) player).sendMessage(MiniMessage.miniMessage().deserialize("<red>¡Estás sangrando! " + "<white>(Nivel: " + severityText + ", Duración: " + duration + " s)"));
         }
     }
     
@@ -296,7 +303,7 @@ public class BleedingSystem implements Listener {
         if (entity instanceof Player) {
             Player player = (Player) entity;
             ((Audience) player).sendMessage(MiniMessage.miniMessage().deserialize("<green>Tu sangrado se ha detenido."));
-            
+            player.sendActionBar(MiniMessage.miniMessage().deserialize("<green>Tu sangrado se ha detenido."));
         }
     }
     

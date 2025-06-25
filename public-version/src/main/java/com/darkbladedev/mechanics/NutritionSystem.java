@@ -280,7 +280,9 @@ public class NutritionSystem implements Listener {
                 // Enviar mensaje de advertencia (con probabilidad para no spamear)
                 if (Math.random() < 0.1) {
                     Component message = MiniMessage.miniMessage().deserialize(type.getColorCode() + "Tienes deficiencia de " + type.getDisplayName() + ". Deberías consumir alimentos ricos en este nutriente.");
+                    Component actionBarMessage = MiniMessage.miniMessage().deserialize(type.getColorCode() + "Deficiencia de " + type.getDisplayName());
                     ((Audience) player).sendMessage(message);
+                    ((Audience) player).sendActionBar(actionBarMessage);
                 }
             }
         }
@@ -288,7 +290,8 @@ public class NutritionSystem implements Listener {
         // Aplicar efectos según cantidad de nutrientes críticos
         if (criticalCount >= 3) {
             // Deficiencia severa (3-4 nutrientes críticos)
-            player.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, 100, 1));
+            plugin.getCustomDebuffEffects().applyWeakness(player);
+            //player.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, 100, 1));
             player.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 100, 1));
             player.addPotionEffect(new PotionEffect(PotionEffectType.HUNGER, 100, 0));
             
@@ -297,10 +300,12 @@ public class NutritionSystem implements Listener {
                 DamageSource damageSource = CustomDamageTypes.DamageSourceBuilder(null, player, CustomDamageTypes.DESNUTRITION_KEY);
                 player.damage(1.0, damageSource); // Medio corazón de daño
                 ((Audience) player).sendMessage(MiniMessage.miniMessage().deserialize("<dark_red>¡Estás severamente desnutrido! Necesitas una dieta equilibrada urgentemente."));
+                ((Audience) player).sendActionBar(MiniMessage.miniMessage().deserialize("<dark_red>¡Estás severamente desnutrido!"));
             }
         } else if (criticalCount >= 1) {
             // Deficiencia moderada (1-2 nutrientes críticos)
-            player.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, 80, 0));
+            plugin.getCustomDebuffEffects().applyWeakness(player);
+            //player.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, 80, 0));
             player.addPotionEffect(new PotionEffect(PotionEffectType.HUNGER, 80, 0));
         }
         
@@ -318,7 +323,7 @@ public class NutritionSystem implements Listener {
             player.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 60, 0));
             
             // Mensaje ocasional
-            if (Math.random() < 0.05) { // 5% de probabilidad
+            if (Math.random() < 0.05 && plugin.getUserPreferencesManager().hasStatusMessages(player)) { // 5% de probabilidad
                 ((Audience) player).sendMessage(MiniMessage.miniMessage().deserialize("<green>Te sientes lleno de energía gracias a tu dieta equilibrada."));
             }
         }
@@ -356,9 +361,11 @@ public class NutritionSystem implements Listener {
                 playerNutrientLevels.put(type, newLevel);
                 
                 // Mostrar información si hay un aumento significativo
-                if (nutritionValue >= 10) {
+                if (nutritionValue >= 10 && plugin.getUserPreferencesManager().hasStatusMessages(player)) {
                     Component message = MiniMessage.miniMessage().deserialize(type.getColorCode() + "Has consumido un alimento rico en " + type.getDisplayName() + ".");
+                    Component actionBarMessage = MiniMessage.miniMessage().deserialize(type.getColorCode() + "Has consumido un alimento rico en " + type.getDisplayName());
                     ((Audience) player).sendMessage(message);
+                    ((Audience) player).sendActionBar(actionBarMessage);
                 }
             }
             
@@ -551,9 +558,11 @@ public class NutritionSystem implements Listener {
         setNutrientLevel(player, type, currentLevel + amount);
         
         // Notificar al jugador si el aumento es significativo
-        if (amount >= 10) {
+        if (amount >= 10 && plugin.getUserPreferencesManager().hasStatusMessages(player)) {
             Component message = MiniMessage.miniMessage().deserialize(type.getColorCode() + "Has aumentado significativamente tu nivel de " + type.getDisplayName() + ".");
+            Component actionBarMessage = MiniMessage.miniMessage().deserialize(type.getColorCode() + "Has aumentado significativamente tu nivel de " + type.getDisplayName());
             ((Audience) player).sendMessage(message);
+            ((Audience) player).sendActionBar(actionBarMessage);
         }
     }
     
@@ -568,9 +577,11 @@ public class NutritionSystem implements Listener {
         setNutrientLevel(player, type, currentLevel - amount);
         
         // Notificar al jugador si la reducción es significativa y el nivel es bajo
-        if (amount >= 10 && currentLevel - amount <= CRITICAL_NUTRIENT_LEVEL) {
+        if (amount >= 10 && currentLevel - amount <= CRITICAL_NUTRIENT_LEVEL && plugin.getUserPreferencesManager().hasStatusMessages(player)) {
             Component message = MiniMessage.miniMessage().deserialize(type.getColorCode() + "Tu nivel de " + type.getDisplayName() + " ha disminuido significativamente.");
+            Component actionBarMessage = MiniMessage.miniMessage().deserialize(type.getColorCode() + "Tu nivel de " + type.getDisplayName() + " ha disminuido mucho.");
             ((Audience) player).sendMessage(message);
+            ((Audience) player).sendActionBar(actionBarMessage);
         }
     }
     

@@ -168,22 +168,26 @@ public class HydrationSystem implements Listener {
                 Bukkit.getConsoleSender().sendMessage(MiniMessage.miniMessage().deserialize(plugin.PREFIX + " <red>Error al aplicar deshidratación con DamageType custom (Aplicando daño default): " + e.getMessage()));
                 player.damage(1.0); // Daño por defecto si hay un error
             }
-            player.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, 100, 1));
+            plugin.getCustomDebuffEffects().applyWeakness(player);
+            //player.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, 100, 1));
             player.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 100, 1));
             player.addPotionEffect(new PotionEffect(PotionEffectType.NAUSEA, 100, 0));
             
             // Mensaje (con probabilidad para no spamear)
             if (Math.random() < 0.3 && plugin.getUserPreferencesManager().hasStatusMessages(player)) {
                 player.sendMessage(MiniMessage.miniMessage().deserialize("<red>¡Estás severamente deshidratado! Necesitas agua urgentemente."));
+                player.sendActionBar(MiniMessage.miniMessage().deserialize("<red>¡Estás severamente deshidratado!"));
             }
         } else if (level <= 3) {
             // Deshidratación moderada: efectos moderados
-            player.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, 80, 0));
+            plugin.getCustomDebuffEffects().applyWeakness(player);
+            //player.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, 80, 0));
             player.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 80, 0));
             
             // Mensaje (con probabilidad para no spamear)
             if (Math.random() < 0.2 && plugin.getUserPreferencesManager().hasStatusMessages(player)) {
                 player.sendMessage(MiniMessage.miniMessage().deserialize("<red>Te sientes muy débil por la deshidratación. Necesitas beber agua."));
+                player.sendActionBar(MiniMessage.miniMessage().deserialize("<red>Te sientes muy débil por la deshidratación."));
             }
         } else if (level <= HYDRATION_DAMAGE_THRESHOLD) {
             // Deshidratación leve: efectos leves
@@ -192,6 +196,7 @@ public class HydrationSystem implements Listener {
             // Mensaje (con probabilidad para no spamear)
             if (Math.random() < 0.1 && plugin.getUserPreferencesManager().hasStatusMessages(player)) {
                 player.sendMessage(MiniMessage.miniMessage().deserialize("<gold>Tienes sed. Deberías beber agua pronto."));
+                player.sendActionBar(MiniMessage.miniMessage().deserialize("<gold>Tienes sed."));
             }
         }
     }
@@ -251,6 +256,7 @@ public class HydrationSystem implements Listener {
         // Notificar al jugador si hay un cambio significativo
         if (newLevel > currentLevel && (newLevel % 20 == 0 || newLevel == MAX_HYDRATION) && plugin.getUserPreferencesManager().hasStatusMessages(player)) {
             player.sendMessage(MiniMessage.miniMessage().deserialize("<aqua>Te sientes más hidratado."));
+            player.sendActionBar(MiniMessage.miniMessage().deserialize("<aqua>Te sientes más hidratado."));
         }
         
     }

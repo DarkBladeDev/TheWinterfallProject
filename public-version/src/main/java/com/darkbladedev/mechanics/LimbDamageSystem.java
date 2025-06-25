@@ -249,6 +249,7 @@ public class LimbDamageSystem implements Listener {
         if (oldState != newState) {
             if (plugin.getUserPreferencesManager().hasStatusMessages(player)) {
                 player.sendMessage(MiniMessage.miniMessage().deserialize("<red>Tu " + limbType.getDisplayName() + " <red>está ahora " + newState.getDisplayName()));
+                player.sendActionBar(MiniMessage.miniMessage().deserialize("<red>Tu " + limbType.getDisplayName() + " <red>está ahora " + newState.getDisplayName()));
             }
             applyEffectsForLimbDamage(player, limbType, newState);
         }
@@ -280,7 +281,8 @@ public class LimbDamageSystem implements Listener {
                 } else if (state == DamageState.BROKEN) {
                     player.addPotionEffect(new PotionEffect(PotionEffectType.NAUSEA, 600, 1));
                     player.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 200, 0));
-                    player.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, 600, 1));
+                    plugin.getCustomDebuffEffects().applyWeakness(player);
+                    //player.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, 600, 1));
                 }
                 break;
                 
@@ -288,13 +290,18 @@ public class LimbDamageSystem implements Listener {
             case RIGHT_ARM:
                 // Daño en los brazos afecta la velocidad de ataque y minado
                 if (state == DamageState.DAMAGED) {
-                    player.addPotionEffect(new PotionEffect(PotionEffectType.MINING_FATIGUE, 600, 0));
+                    plugin.getCustomDebuffEffects().applyMiningFatigue(player);
+                    //player.addPotionEffect(new PotionEffect(PotionEffectType.MINING_FATIGUE, 600, 0));
                 } else if (state == DamageState.CRITICAL) {
-                    player.addPotionEffect(new PotionEffect(PotionEffectType.MINING_FATIGUE, 1200, 1));
-                    player.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, 1200, 0));
+                    plugin.getCustomDebuffEffects().applyWeakness(player);
+                    plugin.getCustomDebuffEffects().applyMiningFatigue(player);
+                    //player.addPotionEffect(new PotionEffect(PotionEffectType.MINING_FATIGUE, 1200, 1));
+                    //player.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, 1200, 0));
                 } else if (state == DamageState.BROKEN) {
-                    player.addPotionEffect(new PotionEffect(PotionEffectType.MINING_FATIGUE, 2400, 2));
-                    player.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, 2400, 1));
+                    plugin.getCustomDebuffEffects().applyMiningFatigue(player);
+                    plugin.getCustomDebuffEffects().applyWeakness(player);
+                    //player.addPotionEffect(new PotionEffect(PotionEffectType.MINING_FATIGUE, 2400, 2));
+                    //player.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, 2400, 1));
                 }
                 break;
                 
@@ -353,6 +360,7 @@ public class LimbDamageSystem implements Listener {
             playerLimbDamage.put(limbType, 0);
             if (plugin.getUserPreferencesManager().hasStatusMessages(player)) {
                 player.sendMessage(MiniMessage.miniMessage().deserialize("<green>Tu " + limbType.getDisplayName() + " ha sido curada."));
+                player.sendActionBar(MiniMessage.miniMessage().deserialize("<green>Tu " + limbType.getDisplayName() + " ha sido curada."));
             }
             
             // Actualizar la salud máxima del jugador después de curar
@@ -379,6 +387,7 @@ public class LimbDamageSystem implements Listener {
         
         if (plugin.getUserPreferencesManager().hasStatusMessages(player)) {
             player.sendMessage(MiniMessage.miniMessage().deserialize("<green>Todas tus extremidades han sido curadas."));
+            player.sendActionBar(MiniMessage.miniMessage().deserialize("<green>Todas tus extremidades han sido curadas."));
         }
         
         // Restaurar la salud máxima del jugador después de curar todas las extremidades

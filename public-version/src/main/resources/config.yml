@@ -141,3 +141,7 @@ new_player_protection:
     radiation: true
     stamina: true
     nutrition: true
+
+# Configuración de la barra de acción
+actionbar:
+  max_slots: 3 # Número máximo de slots en la barra de acción (1-9)

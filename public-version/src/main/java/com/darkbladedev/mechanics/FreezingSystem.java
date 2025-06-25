@@ -73,7 +73,7 @@ public class FreezingSystem implements Listener {
             startFreezingTask();
             
             isActive = true;
-            plugin.getServer().getConsoleSender().sendMessage(MiniMessage.miniMessage().deserialize(plugin.PREFIX + " <aqua>Sistema de congelación activado</aqua>"));
+            plugin.getServer().getConsoleSender().sendMessage(MiniMessage.miniMessage().deserialize(plugin.PREFIX + " <green>Sistema de congelación activado"));
         }
     }
     
@@ -109,6 +109,8 @@ public class FreezingSystem implements Listener {
                             if (livingEntity instanceof Player player) {
                                 if (plugin.getUserPreferencesManager().hasStatusMessages(player)) {
                                     player.sendMessage(MiniMessage.miniMessage().deserialize("<aqua>El efecto de congelación ha terminado.</aqua>"));
+                                    
+                                    player.sendActionBar(MiniMessage.miniMessage().deserialize("<aqua>El efecto de congelación ha terminado.</aqua>"));
                                 }
                             }
                         }
@@ -160,11 +162,18 @@ public class FreezingSystem implements Listener {
                 applyFreezing(victim, enchantLevel);
                 
                 // Notificar al atacante
-                attacker.sendMessage(MiniMessage.miniMessage().deserialize("<aqua>¡Has congelado a tu objetivo!</aqua>"));
+                if (plugin.getUserPreferencesManager().hasStatusMessages(attacker)) {
+                    attacker.sendMessage(MiniMessage.miniMessage().deserialize("<aqua>¡Has congelado a tu objetivo!</aqua>"));
+                    attacker.sendActionBar(MiniMessage.miniMessage().deserialize("<aqua>¡Has congelado a tu objetivo!</aqua>"));
+                }
                 
                 // Notificar a la víctima si es un jugador
                 if (victim instanceof Player) {
-                    ((Player) victim).sendMessage(MiniMessage.miniMessage().deserialize("<aqua>¡Has sido congelado!</aqua>"));
+                    Player player = (Player) victim;
+                    if (plugin.getUserPreferencesManager().hasStatusMessages(player)) {
+                        player.sendMessage(MiniMessage.miniMessage().deserialize("<aqua>¡Has sido congelado!</aqua>"));
+                        player.sendActionBar(MiniMessage.miniMessage().deserialize("<aqua>¡Has sido congelado!</aqua>"));
+                    }
                 }
                 
                 // Efectos visuales y sonoros
