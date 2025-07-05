@@ -3,3 +3,4 @@ winterfall-core/target/
 public-version/target/
 private-version/target/
 private-version/
+public-version/src/main/java/com/darkbladedev/managers/ActionBarCombiner.java

@@ -2,7 +2,7 @@ name: Savage-Frontier
 version: '1.0'
 main: com.darkbladedev.SavageFrontierMain
 description: Aumenta la dificultad de tu survival con Savage Frontier.
-api-version: '1.21.4'
+api-version: '1.20.4'
 bootstrapper: com.darkbladedev.CustomTypes.Bootstraps
 
 dependencies:
@@ -12,4 +12,8 @@ dependencies:
       required: true
       join-classpath: true
 
+    AuraSkills:
+      load: BEFORE
+      required: true
+      join-classpath: true
     

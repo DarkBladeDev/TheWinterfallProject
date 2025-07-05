@@ -10,6 +10,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -18,6 +19,7 @@ import org.bukkit.scheduler.BukkitTask;
 
 import com.darkbladedev.SavageFrontierMain;
 import com.darkbladedev.mechanics.NutritionSystem.NutrientType;
+import com.darkbladedev.integrations.AuraSkillsIntegration;
 
 import java.util.*;
 
@@ -31,10 +33,14 @@ public class ActionBarDisplayManager implements Listener {
     @SuppressWarnings("unused")
     private boolean actionBarEnabled = true;
     private BukkitTask actionBarTask;
+    private final AuraSkillsIntegration auraSkillsIntegration;
+    private final ActionBarCombiner actionBarCombiner;
     
     public ActionBarDisplayManager(SavageFrontierMain plugin, int maxSlots) {
         this.plugin = plugin;
         this.maxSlots = maxSlots;
+        this.auraSkillsIntegration = new AuraSkillsIntegration(plugin);
+        this.actionBarCombiner = new ActionBarCombiner(plugin, this, auraSkillsIntegration);
         Bukkit.getPluginManager().registerEvents(this, plugin);
         startActionBarUpdater();
     }
@@ -51,7 +57,7 @@ public class ActionBarDisplayManager implements Listener {
                     }
                 }
             }
-        }.runTaskTimer(plugin, 0L, 20L); // cada segundo
+        }.runTaskTimer(plugin, 0L, 5L); // cada 5 ticks (1/4 de segundo) para mayor fluidez
     }
     
     /**
@@ -82,6 +88,26 @@ public class ActionBarDisplayManager implements Listener {
     }
 
     public void sendActionBar(Player player) {
+        // Verificar si AuraSkills ya ha mostrado una actionbar recientemente
+        if (auraSkillsIntegration.hasActionBarBeenShown(player)) {
+            return; // Evitamos mostrar nuestra actionbar si AuraSkills ya mostró una
+        }
+        
+        // Verificar si está habilitado el modo combinado
+        if (plugin.getConfig().getBoolean("actionbar.auraskills_integration.combine_mode", false)) {
+            actionBarCombiner.sendCombinedActionBar(player);
+            return;
+        }
+        
+        // Verificar si AuraSkills debe manejar la actionbar para este jugador
+        if (!auraSkillsIntegration.shouldShowSavageActionBar(player)) {
+            return; // AuraSkills está manejando la actionbar para este jugador
+        }
+        
+        if (!isActionBarEnabled(player)) {
+            return;
+        }
+        
         List<StatType> selected = playerDisplays.getOrDefault(player.getUniqueId(), getDefaultDisplay());
         List<String> parts = new ArrayList<>();
 
@@ -94,13 +120,16 @@ public class ActionBarDisplayManager implements Listener {
         }
 
         player.sendActionBar(MiniMessage.miniMessage().deserialize(String.join(" <gray>| ", parts)));
+        
+        // Marcamos que hemos mostrado una actionbar para este jugador
+        auraSkillsIntegration.markActionBarShown(player);
     }
 
-    private String getStamina(Player player) {
+    public String getStamina(Player player) {
         return plugin.getStaminaSystem().getStaminaLevel(player) + "/" + plugin.getStaminaSystem().getMaxStamina();
     }
 
-    private String getNutrients(Player player) {
+    public String getNutrients(Player player) {
         return String.valueOf(NutrientType.PROTEIN.getColorCode() + plugin.getNutritionSystem().getNutrientLevel(player, NutrientType.PROTEIN)) + "<gray>/" +
         String.valueOf(NutrientType.CARBS.getColorCode() + plugin.getNutritionSystem().getNutrientLevel(player, NutrientType.CARBS)) + "<gray>/" +
         String.valueOf(NutrientType.FAT.getColorCode() + plugin.getNutritionSystem().getNutrientLevel(player, NutrientType.FAT)) + "<gray>/" +
@@ -149,9 +178,25 @@ public class ActionBarDisplayManager implements Listener {
      * @param player The player to check
      * @return true if the action bar is enabled, false otherwise
      */
-    @SuppressWarnings("unused")
-    private boolean isActionBarEnabled(Player player) {
+    public boolean isActionBarEnabled(Player player) {
         return playerActionBarStates.getOrDefault(player.getUniqueId(), true);
+    }
+    
+    /**
+     * Obtiene la integración con AuraSkills
+     * @return La instancia de AuraSkillsIntegration
+     */
+    public AuraSkillsIntegration getAuraSkillsIntegration() {
+        return auraSkillsIntegration;
+    }
+    
+    /**
+     * Obtiene las estadísticas habilitadas para un jugador
+     * @param player El jugador
+     * @return Lista de estadísticas habilitadas
+     */
+    public List<StatType> getEnabledStats(Player player) {
+        return playerDisplays.getOrDefault(player.getUniqueId(), getDefaultDisplay());
     }
 
     @EventHandler
@@ -179,11 +224,17 @@ public class ActionBarDisplayManager implements Listener {
     public void onJoin(PlayerJoinEvent e) {
         playerDisplays.putIfAbsent(e.getPlayer().getUniqueId(), getDefaultDisplay());
     }
+    
+    @EventHandler
+    public void onPlayerQuit(PlayerQuitEvent e) {
+        // Limpiar datos de AuraSkills cuando el jugador se desconecta
+        auraSkillsIntegration.onPlayerQuit(e.getPlayer());
+    }
 
     enum StatType {
-        HEALTH("RED_STAINED_GLASS_PANE"),
-        STAMINA("LIME_STAINED_GLASS_PANE"),
-        NUTRIENTS("YELLOW_STAINED_GLASS_PANE");
+        HEALTH("RED_DYE"),
+        STAMINA("LEATHER_BOOTS"),
+        NUTRIENTS("CARROT");
 
         public final String material;
 

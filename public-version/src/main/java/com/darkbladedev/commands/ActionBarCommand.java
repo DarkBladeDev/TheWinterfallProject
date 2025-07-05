@@ -53,6 +53,15 @@ public class ActionBarCommand implements CommandExecutor, TabCompleter {
             case "maxslots":
                 handleMaxSlotsCommand(sender, args);
                 break;
+            case "toggle":
+                handleToggleCommand(sender);
+                break;
+            case "status":
+                handleStatusCommand(sender);
+                break;
+            case "combine":
+                handleCombineCommand(sender);
+                break;
             default:
                 showHelp(sender);
                 break;
@@ -70,6 +79,9 @@ public class ActionBarCommand implements CommandExecutor, TabCompleter {
         ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<aqua>ActionBar<gray> - Comandos:"));
         ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<yellow>/actionbar help<gray> - Muestra esta ayuda"));
         ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<yellow>/actionbar menu<gray> - Abre el menú de configuración de la barra de acción"));
+        ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<yellow>/actionbar toggle<gray> - Alterna entre ActionBar de AuraSkills y éste plugin"));
+        ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<yellow>/actionbar status<gray> - Muestra el estado actual de las ActionBars"));
+        ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<yellow>/actionbar combine<gray> - Alterna el modo combinado de ActionBars (Admin)"));
         ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<yellow>/actionbar maxslots <cantidad><gray> - Configura el número máximo de slots (Admin)"));
         ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<gray>----------------------------------------"));
     }
@@ -138,6 +150,109 @@ public class ActionBarCommand implements CommandExecutor, TabCompleter {
 
         ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<green>Número máximo de slots configurado a " + maxSlots + "."));
     }
+    
+    /**
+     * Maneja el comando para alternar entre ActionBars
+     * @param sender Remitente del comando
+     */
+    private void handleToggleCommand(CommandSender sender) {
+        // Verificar si el remitente es un jugador
+        if (!(sender instanceof Player player)) {
+            ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>Este comando solo puede ser ejecutado por un jugador."));
+            return;
+        }
+
+        // Verificar permisos
+        if (!player.hasPermission("savage.actionbar.menu")) {
+            ((Audience) player).sendMessage(MiniMessage.miniMessage().deserialize("<red>No tienes permiso para usar este comando."));
+            return;
+        }
+
+        var auraSkillsIntegration = plugin.getActionBarDisplayManager().getAuraSkillsIntegration();
+        if (!auraSkillsIntegration.isToggleAllowed()) {
+            ((Audience) player).sendMessage(MiniMessage.miniMessage().deserialize("<red>El cambio entre actionbars no está disponible."));
+            return;
+        }
+
+        boolean currentlyUsingAuraSkills = auraSkillsIntegration.isPlayerUsingAuraSkillsActionBar(player);
+        auraSkillsIntegration.setPlayerAuraSkillsActionBar(player, !currentlyUsingAuraSkills);
+
+        if (!currentlyUsingAuraSkills) {
+            ((Audience) player).sendMessage(MiniMessage.miniMessage().deserialize("<green>Cambiado a la ActionBar de AuraSkills."));
+        } else {
+            ((Audience) player).sendMessage(MiniMessage.miniMessage().deserialize("<green>Cambiado a la ActionBar de Savage Frontier."));
+        }
+    }
+    
+    /**
+     * Maneja el comando para mostrar el estado de las ActionBars
+     * @param sender Remitente del comando
+     */
+    private void handleStatusCommand(CommandSender sender) {
+        // Verificar si el remitente es un jugador
+        if (!(sender instanceof Player player)) {
+            ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>Este comando solo puede ser ejecutado por un jugador."));
+            return;
+        }
+
+        // Verificar permisos
+        if (!player.hasPermission("savage.actionbar.menu")) {
+            ((Audience) player).sendMessage(MiniMessage.miniMessage().deserialize("<red>No tienes permiso para usar este comando."));
+            return;
+        }
+
+        var auraSkillsIntegration = plugin.getActionBarDisplayManager().getAuraSkillsIntegration();
+
+        ((Audience) player).sendMessage(MiniMessage.miniMessage().deserialize("<gold>=== Estado de ActionBar ==="));
+        ((Audience) player).sendMessage(MiniMessage.miniMessage().deserialize("<yellow>AuraSkills instalado: " + 
+            (auraSkillsIntegration.isAuraSkillsEnabled() ? "<green>Sí" : "<red>No")));
+
+        if (auraSkillsIntegration.isAuraSkillsEnabled()) {
+            boolean combineMode = plugin.getConfig().getBoolean("actionbar.auraskills_integration.combine_mode", false);
+            ((Audience) player).sendMessage(MiniMessage.miniMessage().deserialize("<yellow>AuraSkills ActionBar habilitada: " + 
+                (auraSkillsIntegration.isAuraSkillsActionBarEnabled() ? "<green>Sí" : "<red>No")));
+            ((Audience) player).sendMessage(MiniMessage.miniMessage().deserialize("<yellow>Modo combinado: " + 
+                (combineMode ? "<green>Habilitado" : "<red>Deshabilitado")));
+            
+            if (combineMode) {
+                ((Audience) player).sendMessage(MiniMessage.miniMessage().deserialize("<yellow>Mostrando: <aqua>ActionBars combinadas"));
+            } else {
+                ((Audience) player).sendMessage(MiniMessage.miniMessage().deserialize("<yellow>Usando ActionBar de: " + 
+                    (auraSkillsIntegration.isPlayerUsingAuraSkillsActionBar(player) ? 
+                        "<aqua>AuraSkills" : "<green>Savage Frontier")));
+            }
+        } else {
+            ((Audience) player).sendMessage(MiniMessage.miniMessage().deserialize("<yellow>Usando ActionBar de: <green>Savage Frontier"));
+        }
+    }
+    
+    /**
+     * Maneja el comando para alternar el modo combinado
+     * @param sender Remitente del comando
+     */
+    private void handleCombineCommand(CommandSender sender) {
+        // Verificar permisos
+        if (!sender.hasPermission("savage.admin.actionbar")) {
+            ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>No tienes permiso para usar este comando."));
+            return;
+        }
+
+        var auraSkillsIntegration = plugin.getActionBarDisplayManager().getAuraSkillsIntegration();
+        if (!auraSkillsIntegration.isAuraSkillsEnabled()) {
+            ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>AuraSkills no está instalado o habilitado."));
+            return;
+        }
+
+        boolean currentCombineMode = plugin.getConfig().getBoolean("actionbar.auraskills_integration.combine_mode", false);
+        plugin.getConfig().set("actionbar.auraskills_integration.combine_mode", !currentCombineMode);
+        plugin.saveConfig();
+
+        String newMode = !currentCombineMode ? "habilitado" : "deshabilitado";
+        ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<green>Modo combinado de ActionBars " + newMode + "."));
+        
+        // Recargar la integración para aplicar los cambios
+        auraSkillsIntegration.reload();
+    }
 
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
@@ -150,7 +265,7 @@ public class ActionBarCommand implements CommandExecutor, TabCompleter {
 
         // Autocompletar subcomandos
         if (args.length == 1) {
-            String[] subCommands = {"help", "menu", "maxslots"};
+            String[] subCommands = {"help", "menu", "maxslots", "toggle", "status", "combine"};
             for (String subCommand : subCommands) {
                 if (subCommand.startsWith(args[0].toLowerCase())) {
                     completions.add(subCommand);

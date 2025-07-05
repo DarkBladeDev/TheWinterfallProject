@@ -124,6 +124,9 @@ public class SavageFrontierMain extends JavaPlugin {
      * Inicializa todos los sistemas del plugin
      */
     private void initializeSystems() {
+
+        this.saveDefaultConfig();
+        this.saveResource("biome_temperatures.yml", false);
         // Cargar configuración de protección para nuevos jugadores
         loadNewPlayerProtectionConfig();
         
@@ -145,6 +148,9 @@ public class SavageFrontierMain extends JavaPlugin {
         // Cargar configuración de la barra de acción
         int maxSlots = getConfig().getInt("actionbar.max_slots", 3);
         actionBarDisplayManager = new ActionBarDisplayManager(instance, maxSlots);
+        
+        // Inicializar el interceptor de actionbar para AuraSkills
+        //actionBarInterceptor = new com.darkbladedev.listeners.ActionBarInterceptor(instance, actionBarDisplayManager.getAuraSkillsIntegration());
         
         // Activar sistemas
         bleedingSystem.initialize();
@@ -338,6 +344,7 @@ public class SavageFrontierMain extends JavaPlugin {
         return actionBarDisplayManager;
     }
     
+
     /**
      * Verifica si un jugador está protegido contra un sistema específico
      * @param player Jugador a verificar
@@ -388,6 +395,8 @@ public class SavageFrontierMain extends JavaPlugin {
         
         // Recargar configuración de protección para nuevos jugadores
         loadNewPlayerProtectionConfig();
+
+        
         
         // Reinicializar sistemas
         if (bleedingSystem != null) {

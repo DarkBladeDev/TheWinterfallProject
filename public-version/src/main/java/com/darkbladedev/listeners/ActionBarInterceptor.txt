@@ -1,0 +1,200 @@
+package com.darkbladedev.listeners;
+
+import com.darkbladedev.SavageFrontierMain;
+import com.darkbladedev.integrations.AuraSkillsIntegration;
+import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
+import org.bukkit.event.HandlerList;
+import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.plugin.Plugin;
+import org.bukkit.scheduler.BukkitRunnable;
+
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
+import java.util.function.Consumer;
+import java.util.logging.Level;
+
+/**
+ * Esta clase se encarga de interceptar y coordinar las actionbars enviadas por AuraSkills
+ * para evitar el parpadeo cuando ambos plugins intentan mostrar actionbars simultáneamente.
+ */
+public class ActionBarInterceptor implements Listener {
+    private final SavageFrontierMain plugin;
+    private final AuraSkillsIntegration auraSkillsIntegration;
+    private boolean hookInstalled = false;
+    private Object auraSkillsActionBarManager = null;
+    private Method originalSendActionBarMethod = null;
+    @SuppressWarnings("unused")
+    private Consumer<Player> originalSendActionBarConsumer = null;
+    private final Map<UUID, Long> lastInterceptedActionBars = new HashMap<>();
+    
+    public ActionBarInterceptor(SavageFrontierMain plugin, AuraSkillsIntegration auraSkillsIntegration) {
+        this.plugin = plugin;
+        this.auraSkillsIntegration = auraSkillsIntegration;
+        
+        // Intentamos instalar el hook cuando se carga el plugin
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                installHook();
+            }
+        }.runTaskLater(plugin, 40L); // Esperamos 2 segundos para asegurarnos de que AuraSkills esté cargado
+    }
+    
+    /**
+     * Intenta instalar un hook en AuraSkills para interceptar sus actionbars
+     */
+    private void installHook() {
+        if (hookInstalled) {
+            return;
+        }
+        
+        Plugin auraSkillsPlugin = plugin.getServer().getPluginManager().getPlugin("AuraSkills");
+        if (auraSkillsPlugin == null || !auraSkillsPlugin.isEnabled()) {
+            plugin.getLogger().info("AuraSkills no encontrado o no habilitado. No se instalará el interceptor de actionbar.");
+            return;
+        }
+        
+        try {
+            // Registramos nuestro listener con la máxima prioridad para interceptar eventos
+            plugin.getServer().getPluginManager().registerEvents(this, plugin); 
+            
+            // Intentamos obtener el ActionBarManager de AuraSkills
+            @SuppressWarnings("unused")
+            Object actionBarManagerClass = null; //Class.forName("dev.aurelium.auraskills.api.actionbar.ActionBarManager");
+            
+            // Obtener la instancia del ActionBarManager de AuraSkills
+            Class<?> auraSkillsClass = auraSkillsPlugin.getClass();
+            Method getActionBarManagerMethod = auraSkillsClass.getMethod("getActionBarManager");
+            auraSkillsActionBarManager = getActionBarManagerMethod.invoke(auraSkillsPlugin);
+            
+            if (auraSkillsActionBarManager != null) {
+                // Guardar referencia al método original
+                // TODO: redeclarar originalSendActionBarMethod con el método correcto
+                //originalSendActionBarMethod = actionBarManagerClass.getDeclaredMethod("sendActionBar", Player.class);
+                
+                // Crear un consumidor que intercepte las llamadas a sendActionBar
+                originalSendActionBarConsumer = player -> {
+                    try {
+                        // Verificar si debemos permitir que AuraSkills muestre su barra de acción
+                        if (shouldAllowAuraSkillsActionBar(player)) {
+                            originalSendActionBarMethod.invoke(auraSkillsActionBarManager, player);
+                        } else {
+                            // Registramos que interceptamos una actionbar
+                            lastInterceptedActionBars.put(player.getUniqueId(), System.currentTimeMillis());
+                        }
+                    } catch (Exception e) {
+                        plugin.getLogger().warning("Error al invocar el método original sendActionBar: " + e.getMessage());
+                    }
+                };
+                
+                // Reemplazar el campo sendActionBarConsumer en ActionBarManager
+                // TODO: redeclarar originalSendActionBarMethod con el método correcto
+                // Field sendActionBarConsumerField = actionBarManagerClass.getDeclaredField("sendActionBarConsumer");
+                // sendActionBarConsumerField.setAccessible(true);
+                // sendActionBarConsumerField.set(auraSkillsActionBarManager, originalSendActionBarConsumer);
+                
+                // TODO: agregar un bucle para verificar si debemos interceptar una actionbar
+                //new BukkitRunnable() {
+                //    @Override
+                //    public void run() {
+                //        checkInterceptedActionBar(player);
+                //    }
+                //}.runTaskLater(plugin, 20L); // Esperamos 1 segundo para verificar
+            }
+        } catch (Exception e) {
+            plugin.getLogger().log(Level.WARNING, "Error al instalar el interceptor de actionbar para AuraSkills", e);
+        }
+    }
+    
+    /**
+     * Cuando un jugador se une, verificamos si debemos interceptar las actionbars de AuraSkills
+     */
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onPlayerJoin(PlayerJoinEvent event) {
+        if (!hookInstalled) {
+            installHook();
+        }
+    }
+    
+    /**
+     * Cuando un jugador se desconecta, limpiamos sus datos
+     */
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onPlayerQuit(PlayerQuitEvent event) {
+        lastInterceptedActionBars.remove(event.getPlayer().getUniqueId());
+    }
+    
+    /**
+     * Desinstala el hook de AuraSkills y restaura su funcionamiento original
+     */
+    public void uninstall() {
+        if (hookInstalled && auraSkillsActionBarManager != null && originalSendActionBarMethod != null) {
+            try {
+                // Restaurar el consumidor original
+                Class<?> actionBarManagerClass = Class.forName("com.archyx.auralibspigot.actionbar.ActionBarManager");
+                Field sendActionBarConsumerField = actionBarManagerClass.getDeclaredField("sendActionBarConsumer");
+                sendActionBarConsumerField.setAccessible(true);
+                
+                // Crear un nuevo consumidor que simplemente llame al método original
+                Consumer<Player> defaultConsumer = player -> {
+                    try {
+                        originalSendActionBarMethod.invoke(auraSkillsActionBarManager, player);
+                    } catch (Exception e) {
+                        plugin.getLogger().warning("Error al invocar el método original sendActionBar durante la desinstalación: " + e.getMessage());
+                    }
+                };
+                
+                sendActionBarConsumerField.set(auraSkillsActionBarManager, defaultConsumer);
+                
+                plugin.getLogger().info("Interceptor de actionbar para AuraSkills desinstalado correctamente.");
+            } catch (Exception e) {
+                plugin.getLogger().warning("Error al desinstalar el interceptor de actionbar para AuraSkills: " + e.getMessage());
+                e.printStackTrace();
+            }
+        }
+        
+        // Desregistrar eventos
+        HandlerList.unregisterAll(this);
+        
+        // Limpiar datos
+        lastInterceptedActionBars.clear();
+        hookInstalled = false;
+    }
+    
+    /**
+     * Verifica si debemos permitir que AuraSkills muestre su actionbar
+     * @param player El jugador al que se le mostraría la actionbar
+     * @return true si AuraSkills puede mostrar su actionbar, false si debemos bloquearla
+     */
+    public boolean shouldAllowAuraSkillsActionBar(Player player) {
+        // Si estamos en modo combinado, no permitimos que AuraSkills muestre su actionbar directamente
+        if (plugin.getConfig().getBoolean("actionbar.auraskills_integration.combine_mode", false)) {
+            return false;
+        }
+        
+        // Si SavageFrontier ya mostró una actionbar recientemente, no permitimos que AuraSkills muestre la suya
+        if (auraSkillsIntegration.hasActionBarBeenShown(player)) {
+            return false;
+        }
+        
+        // Si recientemente interceptamos una actionbar para este jugador, no permitimos que se muestre otra
+        // hasta que pase un tiempo mínimo (100ms) para evitar parpadeos
+        Long lastIntercepted = lastInterceptedActionBars.get(player.getUniqueId());
+        if (lastIntercepted != null) {
+            long elapsed = System.currentTimeMillis() - lastIntercepted;
+            if (elapsed < 100) { // 100ms es un buen valor para evitar parpadeos
+                return false;
+            }
+        }
+        
+        // Si el jugador prefiere la actionbar de AuraSkills, permitimos que la muestre
+        return auraSkillsIntegration.isPlayerUsingAuraSkillsActionBar(player);
+    }
+}

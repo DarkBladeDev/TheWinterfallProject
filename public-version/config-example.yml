@@ -1,0 +1,144 @@
+# Configuración de ejemplo para Savage Frontier con integración AuraSkills
+# Este archivo muestra todas las opciones disponibles con comentarios detallados
+
+# Configuración de la base de datos
+database:
+  type: sqlite
+  file: "database.db"
+  save_interval: 300
+  mysql:
+    host: "localhost"
+    port: 3306
+    database: "savage_frontier"
+    username: "root"
+    password: ""
+    pool_size: 10
+
+# Sistema de hidratación
+hydration:
+  enabled: true
+  max_level: 20
+  water_bottle_hydration: 6
+  damage_threshold: 6
+  normal_decrease_rate: 0.1
+  activity_decrease_rate: 0.3
+  update_interval: 60
+
+# Sistema de nutrición
+nutrition:
+  enabled: true
+  max_nutrient_level: 100
+  default_nutrient_level: 70
+  critical_nutrient_level: 20
+  normal_decrease_rate: 0.05
+  activity_decrease_rate: 0.15
+  update_interval: 100
+
+# Sistema de daño en extremidades
+limb_damage:
+  enabled: true
+  fall_damage_chance: 0.7
+  attack_damage_chance: 0.3
+  explosion_damage_chance: 0.8
+  natural_healing_time: 1200
+
+# Sistema de sangrado
+bleeding:
+  enabled: true
+  bleeding_chance: 0.3
+  bleeding_damage: 1.0
+  bleeding_interval: 100
+
+# Sistema de radiación
+radiation:
+  enabled: true
+  radiation_damage: 1.0
+  radiation_interval: 60
+
+# Sistema de stamina
+stamina:
+  enabled: true
+  max_level: 20
+  recovery_amount: 1
+  decrease_amount: 1
+  effect_threshold: 6
+  update_interval: 20
+  recovery_rate: 0.3
+  decrease_rate: 0.5
+
+# Sistema de temperatura
+temperature:
+  enabled: true
+  updateInterval: 20
+  decreaseAmount: 1
+  increaseAmount: 2
+  decreaseRate: 0.8
+  increaseRate: 0.5
+  enchantments:
+    cold_protection_effectiveness: 10
+    heat_protection_effectiveness: 10
+  thresholds:
+    hypothermia: 5
+    severe_hypothermia: -5
+    hyperthermia: 30
+    severe_hyperthermia: 35
+
+# Protección para nuevos jugadores
+new_player_protection:
+  enabled: true
+  duration: 60
+  protected_systems:
+    temperature: true
+    bleeding: true
+    hydration: true
+    limb_damage: true
+    radiation: true
+    stamina: true
+    nutrition: true
+
+# ===== CONFIGURACIÓN DE ACTIONBAR =====
+# Esta sección controla la barra de acción personalizada
+actionbar:
+  # Número máximo de estadísticas que se pueden mostrar (1-9)
+  max_slots: 3
+  
+  # ===== INTEGRACIÓN CON AURASKILLS =====
+  auraskills_integration:
+    # Habilita o deshabilita completamente la integración con AuraSkills
+    enabled: true
+    
+    # Permite a los jugadores alternar entre las ActionBars usando /actionbar toggle
+    # Si está deshabilitado, se usará siempre la prioridad por defecto
+    allow_toggle: true
+    
+    # Prioridad por defecto cuando un jugador se conecta por primera vez
+    # Opciones: 'savage' (usar ActionBar de Savage Frontier) o 'auraskills' (usar ActionBar de AuraSkills)
+    default_priority: 'savage'
+    
+    # Modo combinado: muestra información de ambos plugins en una sola ActionBar
+    # Cuando está habilitado, ignora las preferencias individuales y el toggle
+    # Formato: "❤ Vida | ⚡ Stamina | 🍎 Nutrientes | ✦ Mana"
+    combine_mode: false
+
+# ===== EJEMPLOS DE CONFIGURACIÓN =====
+
+# Configuración para servidor RPG (prioriza AuraSkills):
+# auraskills_integration:
+#   enabled: true
+#   allow_toggle: true
+#   default_priority: 'auraskills'
+#   combine_mode: false
+
+# Configuración para servidor Survival Hardcore (combina ambas):
+# auraskills_integration:
+#   enabled: true
+#   allow_toggle: false
+#   default_priority: 'savage'
+#   combine_mode: true
+
+# Configuración para deshabilitar integración:
+# auraskills_integration:
+#   enabled: false
+#   allow_toggle: false
+#   default_priority: 'savage'
+#   combine_mode: false

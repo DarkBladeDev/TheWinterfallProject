@@ -145,3 +145,12 @@ new_player_protection:
 # Configuración de la barra de acción
 actionbar:
   max_slots: 3 # Número máximo de slots en la barra de acción (1-9)
+  # Integración con AuraSkills
+  auraskills_integration:
+    enabled: true
+    # Si está habilitado, permite a los jugadores alternar entre las actionbars
+    allow_toggle: true
+    # Prioridad por defecto: 'auraskills' o 'savage'
+    default_priority: 'savage'
+    # Si está habilitado, combina ambas actionbars en lugar de alternar
+    combine_mode: false
