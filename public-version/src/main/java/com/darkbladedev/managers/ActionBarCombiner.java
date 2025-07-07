@@ -47,7 +47,7 @@ public class ActionBarCombiner {
                 }
             }
         };
-        this.actionBarPauseTask.runTaskTimer(plugin, 0, 20);
+        this.actionBarPauseTask.runTaskTimer(plugin, 0, 15);
     }
     
     /**
@@ -135,6 +135,12 @@ public class ActionBarCombiner {
                     String nutrientInfo = savageActionBar.getNutrients(player);
                     if (!nutrientInfo.isEmpty()) {
                         content.append("<green>🍎 ").append(nutrientInfo);
+                    }
+                    break;
+                case WATER:
+                    String waterInfo = savageActionBar.getWater(player);
+                    if (!waterInfo.isEmpty()) {
+                        content.append("<blue>💧 ").append(waterInfo);
                     }
                     break;
             }

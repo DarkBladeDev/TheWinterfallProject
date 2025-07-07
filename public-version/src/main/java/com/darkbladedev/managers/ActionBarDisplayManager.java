@@ -20,7 +20,6 @@ import org.bukkit.scheduler.BukkitTask;
 import com.darkbladedev.SavageFrontierMain;
 import com.darkbladedev.mechanics.NutritionSystem.NutrientType;
 import com.darkbladedev.integrations.AuraSkillsIntegration;
-
 import java.util.*;
 
 public class ActionBarDisplayManager implements Listener {
@@ -116,6 +115,7 @@ public class ActionBarDisplayManager implements Listener {
                 case HEALTH -> "<red>❤ " + (int) player.getHealth() + "/" + (int) player.getAttribute(Attribute.MAX_HEALTH).getValue();
                 case STAMINA -> "<green>⚡ " + getStamina(player);
                 case NUTRIENTS -> "<gold>🍽 (" + getNutrients(player) + ")";
+                case WATER -> "<blue>💧 " + getWater(player);
             });
         }
 
@@ -125,8 +125,12 @@ public class ActionBarDisplayManager implements Listener {
         auraSkillsIntegration.markActionBarShown(player);
     }
 
+    public String getWater(Player player) {
+        return plugin.getHydrationSystem().getHydrationLevel(player) + "/" + plugin.getHydrationSystem().getMaxHydration();
+    }
+
     public String getStamina(Player player) {
-        return plugin.getStaminaSystem().getStaminaLevel(player) + "/" + plugin.getStaminaSystem().getMaxStamina();
+        return plugin.getStaminaSystem().getStaminaLevel(player) + "/" + plugin.getStaminaSystem().getMaxStamina(player);
     }
 
     public String getNutrients(Player player) {
@@ -231,10 +235,11 @@ public class ActionBarDisplayManager implements Listener {
         auraSkillsIntegration.onPlayerQuit(e.getPlayer());
     }
 
-    enum StatType {
+    public static enum StatType {
         HEALTH("RED_DYE"),
         STAMINA("LEATHER_BOOTS"),
-        NUTRIENTS("CARROT");
+        NUTRIENTS("CARROT"),
+        WATER("WATER_BUCKET");
 
         public final String material;
 
@@ -251,6 +256,7 @@ public class ActionBarDisplayManager implements Listener {
                 case HEALTH -> "Salud máxima y actual";
                 case STAMINA -> "Energía o resistencia";
                 case NUTRIENTS -> "Nutrientes (proteínas, grasas, carbohidratos, vitaminas)";
+                case WATER -> "Niveles de hidratación";
             };
         }
     }

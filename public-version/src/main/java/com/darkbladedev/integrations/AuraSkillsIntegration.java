@@ -86,11 +86,11 @@ public class AuraSkillsIntegration {
                 auraSkillsActionBarEnabled = auraConfig.getBoolean("action_bar.enabled", true) && 
                                            auraConfig.getBoolean("action_bar.idle", true);
                 
-                if (auraSkillsActionBarEnabled) {
-                    plugin.getLogger().info("AuraSkills tiene la actionbar habilitada. Se coordinará el uso.");
-                } else {
-                    plugin.getLogger().info("AuraSkills tiene la actionbar deshabilitada. Savage Frontier tendrá control total.");
-                }
+                // if (auraSkillsActionBarEnabled) {
+                //     plugin.getLogger().info("AuraSkills tiene la actionbar habilitada. Se coordinará el uso.");
+                // } else {
+                //     plugin.getLogger().info("AuraSkills tiene la actionbar deshabilitada. Savage Frontier tendrá control total.");
+                // }
             }
         } catch (Exception e) {
             plugin.getLogger().warning("Error al leer la configuración de AuraSkills: " + e.getMessage());

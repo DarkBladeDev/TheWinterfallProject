@@ -2,6 +2,7 @@ package com.darkbladedev.mechanics;
 
 import com.darkbladedev.SavageFrontierMain;
 import com.darkbladedev.CustomTypes.CustomDamageTypes;
+import com.darkbladedev.utils.AuraSkillsUtil;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
@@ -224,6 +225,23 @@ public class LimbDamageSystem implements Listener {
         // Verificar si el jugador está protegido como nuevo jugador
         if (plugin.isPlayerProtectedFromSystem(player, "limb_damage")) {
             return; // No aplicar daño si el jugador está protegido
+        }
+        // INTEGRACIÓN AURASKILLS: Puedes consultar aquí el stat de fortaleza para modificar la severidad del daño
+        int fortitudeLevel = AuraSkillsUtil.getCustomStatLevel(player, "fortitude");
+        // Ejemplo: Si el jugador tiene la habilidad ColdResistanceSkill, podrías reducir el daño a las piernas por congelación, etc.
+        // Lógica de skills: Modificar el daño recibido según el nivel de fortaleza (fortitude)
+        // Por ejemplo, cada nivel de fortaleza reduce el daño en un 2% (máx 40%)
+        double fortitudeReduction = Math.min(0.02 * fortitudeLevel, 0.4);
+        damage = damage * (1.0 - fortitudeReduction);
+        
+        // INTEGRACIÓN AURASKILLS: Reducción de daño por PainToleranceSkill
+        // Si el jugador tiene la habilidad, reduce el daño recibido en extremidades un 30%
+        Map<String, Integer> stats = new HashMap<>();
+        stats.put("vitality", AuraSkillsUtil.getCustomStatLevel(player, "vitality"));
+        boolean hasPainTolerance = com.darkbladedev.mechanics.auraskills.skilltrees.SkillTreeManager.getInstance()
+                .hasSkill(player, com.darkbladedev.mechanics.auraskills.skills.vitality.PainToleranceSkill.class, stats);
+        if (hasPainTolerance) {
+            damage = damage * 0.7; // Reduce el daño en un 30%
         }
         
         UUID playerId = player.getUniqueId();

@@ -14,7 +14,11 @@ import com.darkbladedev.mechanics.HydrationSystem;
 import com.darkbladedev.mechanics.NutritionSystem;
 import com.darkbladedev.mechanics.StaminaSystem;
 import com.darkbladedev.mechanics.TemperatureSystem;
+import com.darkbladedev.mechanics.auraskills.stats.StaminaSystemExpansion;
 import com.darkbladedev.utils.CustomDebuffEffects;
+
+import dev.aurelium.auraskills.api.AuraSkillsApi;
+
 import com.darkbladedev.mechanics.FreezingSystem;
 
 import org.bukkit.Bukkit;
@@ -22,6 +26,11 @@ import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.command.CommandSender;
 
+import java.io.File;
+import java.io.InputStream;
+import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.List;
 
 import net.kyori.adventure.audience.Audience;
@@ -61,6 +70,8 @@ public class SavageFrontierMain extends JavaPlugin {
         // Guardar instancia para acceso estático
         instance = this;
         
+        copyResourceFolder("auraskills" + File.separator + "stats.yml", new File(getDataFolder(), "auraskills"));
+        
         // Inicializar sistemas
         initializeSystems();
         
@@ -74,7 +85,6 @@ public class SavageFrontierMain extends JavaPlugin {
         if (Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null) {
             placeholders = new PlaceholderAPIExpansion(instance);
             placeholders.register();
-            ((Audience) Bukkit.getConsoleSender()).sendMessage(MiniMessage.miniMessage().deserialize(PREFIX + " <green>PlaceholderAPI detectado y placeholders registrados"));
         } else {
             ((Audience) Bukkit.getConsoleSender()).sendMessage(MiniMessage.miniMessage().deserialize(PREFIX + " <yellow>PlaceholderAPI no detectado. Los placeholders no estarán disponibles."));
         }
@@ -126,7 +136,15 @@ public class SavageFrontierMain extends JavaPlugin {
     private void initializeSystems() {
 
         this.saveDefaultConfig();
-        this.saveResource("biome_temperatures.yml", false);
+        if (!Files.exists(new File(getDataFolder(), "biome_temperatures.yml").toPath())) {
+            try (InputStream in = getResource("biome_temperatures.yml")) {
+                if (in != null) {
+                    this.saveResource("biome_temperatures.yml", false);                    
+                }
+            } catch (Exception omitted) {
+                
+            }
+        }
         // Cargar configuración de protección para nuevos jugadores
         loadNewPlayerProtectionConfig();
         
@@ -137,6 +155,13 @@ public class SavageFrontierMain extends JavaPlugin {
         hydrationSystem = new HydrationSystem(instance);
         nutritionSystem = new NutritionSystem(instance);
         staminaSystem = new StaminaSystem(instance);
+        
+        // Inicializar la integración de AuraSkills con el sistema de stamina
+        if (getConfig().getBoolean("stamina.auraskills_integration.enabled", false)) {
+            StaminaSystemExpansion staminaAuraSkillsIntegration = new StaminaSystemExpansion(this, this.staminaSystem, AuraSkillsApi.get());
+            staminaAuraSkillsIntegration.initialize();
+        }
+        
         temperatureSystem = new TemperatureSystem(instance);
         freezingSystem = new FreezingSystem(instance);
         
@@ -447,5 +472,38 @@ public class SavageFrontierMain extends JavaPlugin {
         
         // Mensaje de recarga
         ((Audience) Bukkit.getConsoleSender()).sendMessage(MiniMessage.miniMessage().deserialize(PREFIX + " <green>Todos los sistemas han sido recargados!"));
+    }
+
+    public void copyResourceFolder(String resourcePath, File targetDir) {
+        if (!targetDir.exists()) {
+            targetDir.mkdirs();
+        }
+        try {
+            // Obtiene todos los recursos dentro de la carpeta
+            try (InputStream in = getClass().getClassLoader().getResourceAsStream(resourcePath)) {
+                if (in == null) return;
+                // Si es un archivo, cópialo
+                Files.copy(in, new File(targetDir, new File(resourcePath).getName()).toPath(), StandardCopyOption.REPLACE_EXISTING);
+            } catch (Exception e) {
+                // Si es una carpeta, recorre los archivos
+                URL url = getClass().getClassLoader().getResource(resourcePath);
+                if (url != null) {
+                    File[] files = new File(url.toURI()).listFiles();
+                    if (files != null) {
+                        for (File file : files) {
+                            if (file.isDirectory()) {
+                                copyResourceFolder(resourcePath + "/" + file.getName(), new File(targetDir, file.getName()));
+                            } else {
+                                try (InputStream in = getClass().getClassLoader().getResourceAsStream(resourcePath + "/" + file.getName())) {
+                                    Files.copy(in, new File(targetDir, file.getName()).toPath(), StandardCopyOption.REPLACE_EXISTING);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

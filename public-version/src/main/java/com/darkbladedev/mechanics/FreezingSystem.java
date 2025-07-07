@@ -3,6 +3,7 @@ package com.darkbladedev.mechanics;
 import com.darkbladedev.SavageFrontierMain;
 import com.darkbladedev.CustomTypes.CustomDamageTypes;
 import com.darkbladedev.CustomTypes.CustomEnchantments;
+import com.darkbladedev.utils.AuraSkillsUtil;
 
 import net.kyori.adventure.text.minimessage.MiniMessage;
 
@@ -32,8 +33,7 @@ import java.util.Random;
 import java.util.UUID;
 
 /**
- * Sistema que maneja el efecto de congelación en "El Eternauta"
- * Aplica efectos de ralentización y daño por congelación a los enemigos
+ * Sistema que maneja el efecto de congelación del plugin
  */
 public class FreezingSystem implements Listener {
 
@@ -231,6 +231,22 @@ public class FreezingSystem implements Listener {
         
         // Obtener nivel de congelación
         int level = freezingLevel.getOrDefault(entityId, 1);
+        
+        // INTEGRACIÓN AURASKILLS: Reducción de efectos por ColdResistanceSkill
+        if (entity instanceof Player player) {
+            int fortitudeLevel = AuraSkillsUtil.getCustomStatLevel(player, "fortitude");
+            java.util.Map<String, Integer> stats = new java.util.HashMap<>();
+            stats.put("fortitude", fortitudeLevel);
+            boolean hasColdResistance = com.darkbladedev.mechanics.auraskills.skilltrees.SkillTreeManager.getInstance()
+                .hasSkill(player, com.darkbladedev.mechanics.auraskills.skills.fortitude.ColdResistanceSkill.class, stats);
+            if (hasColdResistance) {
+                // Reduce la severidad y duración del congelamiento en un 40%
+                level = Math.max(1, (int) Math.ceil(level * 0.6));
+                int duration = freezingDuration.getOrDefault(entityId, DEFAULT_DURATION * level);
+                duration = (int) Math.ceil(duration * 0.6);
+                freezingDuration.put(entityId, duration);
+            }
+        }
         
         // Aplicar efectos según el nivel
         switch (level) {

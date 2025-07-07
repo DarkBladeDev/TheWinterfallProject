@@ -93,6 +93,9 @@ stamina:
   update_interval: 20
   recovery_rate: 0.3
   decrease_rate: 0.5
+  # Integración con AuraSkills
+  auraskills_integration:
+    enabled: true
 
 # Configuración del sistema de temperatura
 temperature:

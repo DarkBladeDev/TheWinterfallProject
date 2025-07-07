@@ -1,0 +1,81 @@
+stats:
+  savage-frontier/endurance:
+    enabled: true
+    display-name: "Resistencia"
+    description: "Mejora tu capacidad y recuperación de estamina"
+    symbol: "Res"
+    color: "aqua"
+    item:
+      material: "IRON_BOOTS"
+      group: "lower"
+      order: 2
+    traits:
+      savage-frontier/stamina_capacity:
+        modifier: 1.0
+      savage-frontier/stamina_recovery:
+        modifier: 0.5
+
+  savage-frontier/vitality:
+    enabled: true
+    display-name: "Vitalidad"
+    description: "Aumenta la vida máxima y resistencia a efectos negativos"
+    symbol: "Vit"
+    color: "red"
+    item:
+      material: "RED_DYE"
+      group: "upper"
+      order: 1
+
+  savage-frontier/fortitude:
+    enabled: true
+    display-name: "Fortaleza"
+    description: "Reduce el daño ambiental (frío, calor, radiación)"
+    symbol: "For"
+    color: "blue"
+    item:
+      material: "SHIELD"
+      group: "upper"
+      order: 2
+
+  savage-frontier/hydration:
+    enabled: true
+    display-name: "Hidratación"
+    description: "Mejora la eficiencia del agua y reduce el consumo"
+    symbol: "Hyd"
+    color: "aqua"
+    item:
+      material: "WATER_BUCKET"
+      group: "lower"
+      order: 3
+
+  savage-frontier/nutrition:
+    enabled: true
+    display-name: "Nutrición"
+    description: "Mejora la eficiencia de la comida y reduce el consumo de energía"
+    symbol: "Nut"
+    color: "gold"
+    item:
+      material: "BREAD"
+      group: "lower"
+      order: 4
+
+  savage-frontier/recovery:
+    enabled: true
+    display-name: "Recuperación"
+    description: "Aumenta la velocidad de recuperación de efectos negativos"
+    symbol: "Rec"
+    color: "green"
+    item:
+      material: "GOLDEN_APPLE"
+      group: "upper"
+      order: 3
+
+traits:
+  savage-frontier/stamina_capacity:
+    enabled: true
+    display_name: "Capacidad de Estamina"
+    description: "Aumenta la capacidad máxima de estamina del jugador."
+  savage-frontier/stamina_recovery:
+    enabled: true
+    display_name: "Recuperación de Estamina"
+    description: "Aumenta la velocidad de recuperación de estamina del jugador."

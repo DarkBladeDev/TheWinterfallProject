@@ -2,6 +2,12 @@ package com.darkbladedev.mechanics;
 
 import com.darkbladedev.SavageFrontierMain;
 import com.darkbladedev.CustomTypes.CustomDamageTypes;
+import com.darkbladedev.mechanics.auraskills.skilltrees.SkillTreeManager;
+import com.darkbladedev.utils.AuraSkillsUtil;
+import com.darkbladedev.mechanics.auraskills.skills.vitality.ThickSkinSkill;
+import com.darkbladedev.mechanics.auraskills.skills.recovery.QuickHealerSkill;
+import com.darkbladedev.mechanics.auraskills.skills.recovery.MedicSkill;
+
 import org.bukkit.Bukkit;
 
 import net.kyori.adventure.audience.Audience;
@@ -28,8 +34,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Sistema que maneja el sangrado en "El Eternauta"
- * Simula heridas causadas por los ataques de los invasores alienígenas
+ * Sistema que maneja el sangrado del plugin
  */
 public class BleedingSystem implements Listener {
 
@@ -144,14 +149,29 @@ public class BleedingSystem implements Listener {
         }
         
         // Daño por sangrado según severidad
+        double bleedingDamage = severity * 0.5;
+        if (entity instanceof Player) {
+            Player player = (Player) entity;
+            // --- INTEGRACIÓN AURASKILLS: Reducción de daño por sangrado con ThickSkinSkill ---
+            int vitalityLevel = AuraSkillsUtil.getCustomStatLevel(player, "vitality");
+            int recoveryLevel = AuraSkillsUtil.getCustomStatLevel(player, "recovery");
+            // ThickSkinSkill: Reduce el daño por sangrado un 40%
+            if (SkillTreeManager.getInstance().hasSkill(player, ThickSkinSkill.class, java.util.Map.of("vitality", vitalityLevel))) {
+                bleedingDamage *= 0.6;
+            }
+            // MedicSkill: Reduce el daño por sangrado un 20% adicional si está presente
+            if (SkillTreeManager.getInstance().hasSkill(player, MedicSkill.class, java.util.Map.of("recovery", recoveryLevel))) {
+                bleedingDamage *= 0.8;
+            }
+        }
+        // Aplicar daño
         if (random.nextInt(5) < severity) {
             try {
-                // Crear DamageSource personalizado para sangrado
                 DamageSource damageSource = CustomDamageTypes.DamageSourceBuilder(null, entity, CustomDamageTypes.BLEEDING_KEY);
-                entity.damage(severity * 0.5, damageSource); // 0.5, 1.0 o 1.5 corazones de daño
+                entity.damage(bleedingDamage, damageSource);
             } catch (Exception e) {
-                ((Audience) ((Audience) Bukkit.getConsoleSender())).sendMessage(MiniMessage.miniMessage().deserialize(plugin.PREFIX + " <red>Error al aplicar sangrado con DamageType custom (Aplicando daño default): " + e.getMessage()));
-                entity.damage(severity * 0.5); // Daño por defecto si hay un error
+                ((Audience) Bukkit.getConsoleSender()).sendMessage(MiniMessage.miniMessage().deserialize(plugin.PREFIX + " <red>Error al aplicar sangrado con DamageType custom (Aplicando daño default): " + e.getMessage()));
+                entity.damage(bleedingDamage);
             }
         }
         
@@ -197,6 +217,20 @@ public class BleedingSystem implements Listener {
                         ((Audience) player).sendMessage(MiniMessage.miniMessage().deserialize("<red>¡Estás sangrando gravemente! Necesitas atención médica urgente."));
                         player.sendActionBar(MiniMessage.miniMessage().deserialize("<red>Estás sangrando gravemente."));
                         break;
+                }
+            }
+        }
+        
+        // QuickHealerSkill: Reduce la duración del sangrado en un 30%
+        if (entity instanceof Player) {
+            Player player = (Player) entity;
+            int recoveryLevel = AuraSkillsUtil.getCustomStatLevel(player, "recovery");
+            if (SkillTreeManager.getInstance().hasSkill(player, QuickHealerSkill.class, java.util.Map.of("recovery", recoveryLevel))) {
+                UUID entityId = player.getUniqueId();
+                if (bleedingDuration.containsKey(entityId)) {
+                    int duration = bleedingDuration.get(entityId);
+                    int reduced = (int) Math.ceil(duration * 0.7);
+                    bleedingDuration.put(entityId, reduced);
                 }
             }
         }

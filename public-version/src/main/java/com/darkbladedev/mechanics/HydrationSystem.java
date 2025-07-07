@@ -2,6 +2,14 @@ package com.darkbladedev.mechanics;
 
 import com.darkbladedev.SavageFrontierMain;
 import com.darkbladedev.CustomTypes.CustomDamageTypes;
+import com.darkbladedev.mechanics.auraskills.skilltrees.SkillTreeManager;
+import com.darkbladedev.utils.AuraSkillsUtil;
+import com.darkbladedev.mechanics.auraskills.skills.hydration.EfficientDrinkerSkill;
+import com.darkbladedev.mechanics.auraskills.skills.hydration.DesertWalkerSkill;
+import com.darkbladedev.mechanics.auraskills.skills.hydration.RainCollectorSkill;
+import dev.aurelium.auraskills.api.AuraSkillsApi;
+import dev.aurelium.auraskills.api.registry.NamespacedId;
+import dev.aurelium.auraskills.api.stat.CustomStat;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.Sound;
@@ -53,6 +61,19 @@ public class HydrationSystem implements Listener {
     // Factores de disminución (configurables)
     private double normalDecreaseRate; // Probabilidad base de disminución
     private double activityDecreaseRate; // Probabilidad de disminución durante actividad
+    
+    // Stat de hidratación personalizado (debe inicializarse igual que en StaminaSystemExpansion)
+    private CustomStat hydrationStat;
+    @SuppressWarnings("unused")
+	private void ensureHydrationStatLoaded() {
+        if (hydrationStat == null) {
+            try {
+                AuraSkillsApi api = AuraSkillsApi.get();
+                var registry = api.getGlobalRegistry();
+                hydrationStat = (CustomStat) registry.getStat(NamespacedId.of("savage-frontier", "hydration"));
+            } catch (Exception ignored) {}
+        }
+    }
     
     /**
      * Constructor del sistema de hidratación
@@ -108,7 +129,7 @@ public class HydrationSystem implements Listener {
      */
     private void startHydrationSystem() {
         hydrationTask = new BukkitRunnable() {
-            @Override
+			@Override
             public void run() {
                 for (Player player : Bukkit.getOnlinePlayers()) {
                     UUID playerId = player.getUniqueId();
@@ -123,17 +144,38 @@ public class HydrationSystem implements Listener {
                     
                     // Verificar si el jugador está protegido como nuevo jugador
                     if (!plugin.isPlayerProtectedFromSystem(player, "hydration")) {
+                        // DesertWalkerSkill: Reduce el consumo de hidratación en biomas cálidos
+                        int hydrationStatLevel = AuraSkillsUtil.getCustomStatLevel(player, "hydration");
+                        boolean hasDesertWalker = SkillTreeManager.getInstance().hasSkill(player, DesertWalkerSkill.class, java.util.Map.of("hydration", hydrationStatLevel));
+                        double decreaseModifier = 1.0;
+                        if (hasDesertWalker) {
+                            org.bukkit.block.Biome biome = player.getLocation().getBlock().getBiome();
+                            // Compatibilidad con Minecraft 1.20+ (evita uso de .name() deprecado)
+                            String biomeKey = biome.getKey().getKey().toUpperCase();
+                            if (biomeKey.contains("DESERT") || biomeKey.contains("SAVANNA") || biomeKey.contains("BADLANDS")) {
+                                decreaseModifier = 0.5; // Reduce el consumo a la mitad en biomas cálidos
+                            }
+                        }
                         // Reducir hidratación basado en actividad
                         if (player.isSprinting() || (player.isFlying() && player.getGameMode().equals(org.bukkit.GameMode.SURVIVAL))) {
                             // Reducir más rápido si está corriendo o saltando
-                            if (Math.random() < activityDecreaseRate) {
+                            if (Math.random() < activityDecreaseRate * decreaseModifier) {
                                 decreaseHydration(player, 1);
                             }
                         } else {
                             // Reducción normal
-                            if (Math.random() < normalDecreaseRate) {
+                            if (Math.random() < normalDecreaseRate * decreaseModifier) {
                                 decreaseHydration(player, 1);
                             }
+                        }
+                    }
+                    
+                    // INTEGRACIÓN AURASKILLS: Habilidades pasivas de hidratación
+                    int hydrationLevel = AuraSkillsUtil.getCustomStatLevel(player, "hydration");
+                    // RainCollectorSkill: Recupera hidratación bajo la lluvia
+                    if (SkillTreeManager.getInstance().hasSkill(player, RainCollectorSkill.class, java.util.Map.of("hydration", hydrationLevel))) {
+                        if (player.getWorld().hasStorm() && player.getLocation().getBlock().getY() + 1 == player.getWorld().getHighestBlockYAt(player.getLocation())) {
+                            increaseHydration(player, 1); // Recupera 1 punto por tick bajo la lluvia
                         }
                     }
                     
@@ -340,14 +382,19 @@ public class HydrationSystem implements Listener {
     public void onPlayerItemConsume(PlayerItemConsumeEvent event) {
         Player player = event.getPlayer();
         ItemStack item = event.getItem();
-        
+        int hydrationStatLevel = AuraSkillsUtil.getCustomStatLevel(player, "hydration");
+        // EfficientDrinkerSkill: Aumenta la hidratación recibida al beber agua
+        double hydrationMultiplier = 1.0;
+        if (SkillTreeManager.getInstance().hasSkill(player, EfficientDrinkerSkill.class, java.util.Map.of("hydration", hydrationStatLevel))) {
+            hydrationMultiplier = 1.5;
+        }
         // Verificar si es una botella de agua
         if (item.getType() == Material.POTION) {
             PotionMeta meta = (PotionMeta) item.getItemMeta();
             if (meta != null && meta.getBasePotionData().getType() == PotionType.WATER) {
-                // Aumentar hidratación
-                increaseHydration(player, WATER_BOTTLE_HYDRATION);
-                
+                // Aumentar hidratación con multiplicador
+                int hydrationToAdd = (int) Math.round(WATER_BOTTLE_HYDRATION * hydrationMultiplier);
+                increaseHydration(player, hydrationToAdd);
                 // Efectos de sonido
                 player.playSound(player.getLocation(), Sound.ENTITY_GENERIC_DRINK, 1.0f, 1.0f);
             }

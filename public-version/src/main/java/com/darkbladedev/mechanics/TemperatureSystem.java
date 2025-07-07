@@ -4,7 +4,6 @@ import com.darkbladedev.SavageFrontierMain;
 import com.darkbladedev.CustomTypes.CustomDamageTypes;
 import com.darkbladedev.CustomTypes.CustomEnchantments;
 import com.darkbladedev.utils.TemperatureState;
-
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.NamespacedKey;
@@ -401,6 +400,35 @@ public class TemperatureSystem implements Listener {
                 } else {
                     normalizeTemperature(player);
                 }
+            }
+        }
+        
+        // INTEGRACIÓN AURASKILLS: Resistencia al frío y calor
+        int fortitudeLevel = com.darkbladedev.utils.AuraSkillsUtil.getCustomStatLevel(player, "fortitude");
+        java.util.Map<String, Integer> stats = new java.util.HashMap<>();
+        stats.put("fortitude", fortitudeLevel);
+        boolean hasColdResistance = com.darkbladedev.mechanics.auraskills.skilltrees.SkillTreeManager.getInstance()
+                .hasSkill(player, com.darkbladedev.mechanics.auraskills.skills.fortitude.ColdResistanceSkill.class, stats);
+        boolean hasHeatResistance = com.darkbladedev.mechanics.auraskills.skilltrees.SkillTreeManager.getInstance()
+                .hasSkill(player, com.darkbladedev.mechanics.auraskills.skills.fortitude.HeatResistanceSkill.class, stats);
+        int temperature = (int) getPlayerTemperature(player);
+        // Si el jugador tiene resistencia al frío, reduce los efectos negativos de frío (hipotermia)
+        if (temperature <= SEVERE_HYPOTHERMIA_THRESHOLD && hasColdResistance) {
+            // Reduce la severidad de los efectos de hipotermia severa
+            player.removePotionEffect(org.bukkit.potion.PotionEffectType.SLOWNESS);
+            player.removePotionEffect(org.bukkit.potion.PotionEffectType.WEAKNESS);
+            player.addPotionEffect(new org.bukkit.potion.PotionEffect(org.bukkit.potion.PotionEffectType.SLOWNESS, 200, 0));
+            // Mensaje opcional
+            if (plugin.getUserPreferencesManager().hasStatusMessages(player)) {
+                player.sendActionBar(net.kyori.adventure.text.minimessage.MiniMessage.miniMessage().deserialize("<aqua>Tu resistencia al frío reduce los efectos de la hipotermia severa.</aqua>"));
+            }
+        }
+        // Si el jugador tiene resistencia al calor, reduce los efectos negativos de calor (hipertermia)
+        if (temperature >= SEVERE_HYPERTHERMIA_THRESHOLD && hasHeatResistance) {
+            player.removePotionEffect(org.bukkit.potion.PotionEffectType.WEAKNESS);
+            player.addPotionEffect(new org.bukkit.potion.PotionEffect(org.bukkit.potion.PotionEffectType.WEAKNESS, 200, 0));
+            if (plugin.getUserPreferencesManager().hasStatusMessages(player)) {
+                player.sendActionBar(net.kyori.adventure.text.minimessage.MiniMessage.miniMessage().deserialize("<gold>Tu resistencia al calor reduce los efectos de la hipertermia severa.</gold>"));
             }
         }
         
@@ -813,92 +841,44 @@ public class TemperatureSystem implements Listener {
      */
     private void applyHyperthermiaEffects(Player player, int protectionLevel) {
         int temperature = getTemperatureLevel(player);
-        
-        // Limpiar efectos anteriores si la temperatura es normal
-        if (temperature < HYPERTHERMIA_THRESHOLD) {
-            return;
-        }
-        
-        // Verificar si el jugador está protegido como nuevo jugador
-        if (plugin.isPlayerProtectedFromSystem(player, "temperature")) {
-            return; // No aplicar efectos si el jugador está protegido
-        }
-        
-        // Calcular reducción de efectos basada en nivel de protección
+        if (temperature < HYPERTHERMIA_THRESHOLD) return;
+        if (plugin.isPlayerProtectedFromSystem(player, "temperature")) return;
         int effectReduction = protectionLevel;
-        
-        // Aplicar efectos según el nivel de hipertermia
         if (temperature >= SEVERE_HYPERTHERMIA_THRESHOLD) {
-            // Hipertermia severa - daño y efectos graves
-            // Reducir la potencia de los efectos según el nivel de protección
             int hungerAmplifier = Math.max(0, 2 - effectReduction);
             int weaknessAmplifier = Math.max(0, 1 - effectReduction);
-            
-            // Aplicar efectos reducidos según protección
-            if (hungerAmplifier > 0) {
-                player.addPotionEffect(new PotionEffect(PotionEffectType.HUNGER, updateInterval * 20, hungerAmplifier));
-            }
-            
-            if (weaknessAmplifier > 0) {
-                plugin.getCustomDebuffEffects().applyWeakness(player);
-                //player.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, updateInterval * 20, weaknessAmplifier));
-            }
-            
-            // Náusea solo si no tiene protección nivel 3
-            if (protectionLevel < 3) {
-                //player.addPotionEffect(new PotionEffect(PotionEffectType.NAUSEA, updateInterval * 20 + 20, 0));
-            }
-            
-            // Daño por hipertermia severa reducido según protección
+            if (hungerAmplifier > 0) player.addPotionEffect(new PotionEffect(PotionEffectType.HUNGER, updateInterval * 20, hungerAmplifier));
+            if (weaknessAmplifier > 0) plugin.getCustomDebuffEffects().applyWeakness(player);
             if (protectionLevel < 3) {
                 DamageSource damageSource = CustomDamageTypes.DamageSourceBuilder(player, player, CustomDamageTypes.HYPERTHERMIA_KEY);
                 double damageAmount = 1.5 * Math.max(0.1, 1.0 - (protectionLevel * 0.3));
-
                 player.damage(damageAmount, damageSource);
             }
-            
             if (plugin.getUserPreferencesManager().hasStatusMessages(player)) {
-                // Mensaje según nivel de protección
                 if (protectionLevel == 0) {
-                ((Audience) player).sendMessage(MiniMessage.miniMessage().deserialize("<dark_red>¡Estás sufriendo hipertermia severa! Necesitas protección contra el calor urgentemente."));
-                player.sendActionBar(MiniMessage.miniMessage().deserialize("<dark_red>¡Estás sufriendo hipertermia severa!"));
-
+                    ((Audience) player).sendMessage(MiniMessage.miniMessage().deserialize("<dark_red>¡Estás sufriendo hipertermia severa! Necesitas protección contra el calor urgentemente."));
+                    player.sendActionBar(MiniMessage.miniMessage().deserialize("<dark_red>¡Estás sufriendo hipertermia severa!"));
                 } else if (protectionLevel < 3) {
-                ((Audience) player).sendMessage(MiniMessage.miniMessage().deserialize("<red>Tu protección contra el calor no es suficiente para estas temperaturas extremas."));
-                player.sendActionBar(MiniMessage.miniMessage().deserialize("<red>Tu protección contra el calor no es suficiente."));
+                    ((Audience) player).sendMessage(MiniMessage.miniMessage().deserialize("<red>Tu protección contra el calor no es suficiente para estas temperaturas extremas."));
+                    player.sendActionBar(MiniMessage.miniMessage().deserialize("<red>Tu protección contra el calor no es suficiente."));
                 } else {
-                ((Audience) player).sendMessage(MiniMessage.miniMessage().deserialize("<yellow>Tu protección contra el calor te está salvando de la hipertermia severa."));
-                player.sendActionBar(MiniMessage.miniMessage().deserialize("<yellow>Tu protección contra el calor te está salvando."));
-
-                }}
+                    ((Audience) player).sendMessage(MiniMessage.miniMessage().deserialize("<yellow>Tu protección contra el calor te está salvando de la hipertermia severa."));
+                    player.sendActionBar(MiniMessage.miniMessage().deserialize("<yellow>Tu protección contra el calor te está salvando."));
+                }
+            }
         } else if (temperature >= HYPERTHERMIA_THRESHOLD) {
-            // Hipertermia moderada - efectos de hambre y debilidad
-            // Solo aplicar si la protección no es suficiente
             if (protectionLevel < 2) {
                 int hungerAmplifier = Math.max(0, 1 - effectReduction);
-                int weaknessAmplifier = Math.max(0, 0 - effectReduction); // Nivel 0 de debilidad
-                
-                if (hungerAmplifier > 0) {
-                    player.addPotionEffect(new PotionEffect(PotionEffectType.HUNGER, updateInterval * 20, hungerAmplifier));
-                }
-                
-                if (weaknessAmplifier > 0) {
-                    plugin.getCustomDebuffEffects().applyWeakness(player);
-                    //player.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, updateInterval * 20, weaknessAmplifier));
-                }
-                
-                // Mensaje de advertencia
-                if (temperature % 5 == 0 && plugin.getUserPreferencesManager().hasStatusMessages(player)) { // Mostrar mensaje cada 5 puntos de temperatura
-
+                int weaknessAmplifier = Math.max(0, 0 - effectReduction);
+                if (hungerAmplifier > 0) player.addPotionEffect(new PotionEffect(PotionEffectType.HUNGER, updateInterval * 20, hungerAmplifier));
+                if (weaknessAmplifier > 0) plugin.getCustomDebuffEffects().applyWeakness(player);
+                if (temperature % 5 == 0 && plugin.getUserPreferencesManager().hasStatusMessages(player)) {
                     if (protectionLevel == 0) {
                         ((Audience) player).sendMessage(MiniMessage.miniMessage().deserialize("<red>Estás comenzando a sufrir hipertermia. Necesitas protección contra el calor."));
                         player.sendActionBar(MiniMessage.miniMessage().deserialize("<red>Estás comenzando a sufrir hipertermia."));
-
                     } else {
                         ((Audience) player).sendMessage(MiniMessage.miniMessage().deserialize("<yellow>Tu protección contra el calor te está ayudando, pero necesitas más protección."));
                         player.sendActionBar(MiniMessage.miniMessage().deserialize("<yellow>Tu protección contra el calor te está ayudando."));
-
-
                     }
                 }
             }

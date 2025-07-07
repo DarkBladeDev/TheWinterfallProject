@@ -1,11 +1,14 @@
 package com.darkbladedev.mechanics;
 
 import com.darkbladedev.SavageFrontierMain;
+import com.darkbladedev.mechanics.auraskills.stats.StaminaSystemExpansion;
 
+import dev.aurelium.auraskills.api.AuraSkillsApi;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 
 import org.bukkit.Bukkit;
+import org.bukkit.attribute.Attribute;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -14,8 +17,6 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerToggleSprintEvent;
-import org.bukkit.potion.PotionEffect;
-import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
@@ -35,9 +36,10 @@ public class StaminaSystem implements Listener {
     private final Map<UUID, Integer> staminaLevel;
     private final Map<UUID, Long> lastSprintTime;
     private boolean isActive;
+    private StaminaSystemExpansion auraSkillsIntegration;
     
     // Constantes y configuraciones
-    private int MAX_STAMINA;
+    private int BASE_MAX_STAMINA; // Valor base de estamina máxima
     private int STAMINA_RECOVERY_AMOUNT; // Cantidad de estamina que se recupera en reposo
     private int STAMINA_DECREASE_AMOUNT; // Cantidad de estamina que se pierde al correr
     private int STAMINA_EFFECT_THRESHOLD; // Nivel por debajo del cual se empiezan a aplicar efectos
@@ -47,6 +49,10 @@ public class StaminaSystem implements Listener {
     private double staminaRecoveryRate; // Probabilidad de recuperación en reposo
     private double staminaDecreaseRate; // Probabilidad de disminución al correr
     
+    // Mapas para almacenar modificadores personalizados por jugador
+    private final Map<UUID, Integer> maxStaminaModifiers;
+    private final Map<UUID, Double> recoveryRateModifiers;
+    
     /**
      * Constructor del sistema de estamina
      * @param plugin Instancia del plugin principal
@@ -55,6 +61,8 @@ public class StaminaSystem implements Listener {
         this.plugin = plugin;
         this.staminaLevel = new HashMap<>();
         this.lastSprintTime = new HashMap<>();
+        this.maxStaminaModifiers = new HashMap<>();
+        this.recoveryRateModifiers = new HashMap<>();
         this.isActive = false;
         
         // Cargar configuración
@@ -68,7 +76,7 @@ public class StaminaSystem implements Listener {
         FileConfiguration config = plugin.getConfig();
         
         // Cargar valores desde la configuración o usar valores predeterminados
-        MAX_STAMINA = config.getInt("stamina.max_level", 20);
+        BASE_MAX_STAMINA = config.getInt("stamina.max_level", 20);
         STAMINA_RECOVERY_AMOUNT = config.getInt("stamina.recovery_amount", 1);
         STAMINA_DECREASE_AMOUNT = config.getInt("stamina.decrease_amount", 1);
         STAMINA_EFFECT_THRESHOLD = config.getInt("stamina.effect_threshold", 6);
@@ -88,6 +96,9 @@ public class StaminaSystem implements Listener {
             Bukkit.getConsoleSender().sendMessage(MiniMessage.miniMessage().deserialize(plugin.PREFIX + " <yellow>Sistema de estamina deshabilitado en la configuración"));
             return;
         }
+        
+        // Inicializar integración con AuraSkills
+        this.auraSkillsIntegration = new StaminaSystemExpansion(plugin, this, AuraSkillsApi.get());
         
         startStaminaSystem();
         isActive = true;
@@ -110,7 +121,7 @@ public class StaminaSystem implements Listener {
                     
                     // Inicializar estamina si es necesario
                     if (!staminaLevel.containsKey(playerId)) {
-                        staminaLevel.put(playerId, MAX_STAMINA);
+                        staminaLevel.put(playerId, getMaxStamina(player));
                     }
                     
                     // Obtener nivel actual
@@ -131,8 +142,9 @@ public class StaminaSystem implements Listener {
                         long currentTime = System.currentTimeMillis();
                         
                         // Recuperar estamina después de 2 segundos sin correr
-                        if (currentTime - lastSprint > 2000 && currentLevel < MAX_STAMINA) {
-                            if (Math.random() < staminaRecoveryRate) {
+                        if (currentTime - lastSprint > 2000 && currentLevel < getMaxStamina(player)) {
+                            // Usar la tasa de recuperación personalizada del jugador
+                            if (Math.random() < getPlayerStaminaRecoveryRate(player)) {
                                 increaseStamina(player, STAMINA_RECOVERY_AMOUNT);
                             }
                         }
@@ -161,36 +173,35 @@ public class StaminaSystem implements Listener {
         // Efectos según el nivel de estamina
         if (level <= 0) {
             // Estamina agotada: efectos graves
-            player.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 60, 2));
+            player.getAttribute(Attribute.MOVEMENT_SPEED).setBaseValue(0.3);
             plugin.getCustomDebuffEffects().applyWeakness(player);
-            //player.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, 60, 1));
             
             // Detener el sprint del jugador
             player.setSprinting(false);
             
             // Mensaje (con probabilidad para no spamear)
-            if (Math.random() < 0.3 && plugin.getUserPreferencesManager().hasStatusMessages(player)) {
+            if (Math.random() < 0.03 && plugin.getUserPreferencesManager().hasStatusMessages(player)) {
                 player.sendMessage(MiniMessage.miniMessage().deserialize("<dark_red>¡Estás completamente agotado! Necesitas descansar."));
                 player.sendActionBar(MiniMessage.miniMessage().deserialize("<dark_red>¡Estás completamente agotado!"));
             }
         } else if (level <= 3) {
             // Estamina muy baja: efectos moderados
-            player.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 40, 1));
+            player.getAttribute(Attribute.MOVEMENT_SPEED).setBaseValue(0.6);
             plugin.getCustomDebuffEffects().applyWeakness(player);
-            //player.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, 40, 0));
+            
             
             // Mensaje (con probabilidad para no spamear)
-            if (Math.random() < 0.2 && plugin.getUserPreferencesManager().hasStatusMessages(player)) {
+            if (Math.random() < 0.02 && plugin.getUserPreferencesManager().hasStatusMessages(player)) {
                 player.sendMessage(MiniMessage.miniMessage().deserialize("<red>Te sientes muy cansado. Deberías dejar de correr."));
                 player.sendActionBar(MiniMessage.miniMessage().deserialize("<red>Te sientes muy cansado."));
 
             }
         } else if (level <= STAMINA_EFFECT_THRESHOLD) {
             // Estamina baja: efectos leves
-            player.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 20, 0));
+            player.getAttribute(Attribute.MOVEMENT_SPEED).setBaseValue(0.8);
             
             // Mensaje (con probabilidad para no spamear)
-            if (Math.random() < 0.1 && plugin.getUserPreferencesManager().hasStatusMessages(player)) {
+            if (Math.random() < 0.01 && plugin.getUserPreferencesManager().hasStatusMessages(player)) {
                 player.sendMessage(MiniMessage.miniMessage().deserialize("<gold>Estás empezando a cansarte."));
                 player.sendActionBar(MiniMessage.miniMessage().deserialize("<gold>Estás empezando a cansarte."));
 
@@ -213,7 +224,7 @@ public class StaminaSystem implements Listener {
         
         // Inicializar si es necesario
         if (!staminaLevel.containsKey(playerId)) {
-            staminaLevel.put(playerId, MAX_STAMINA);
+            staminaLevel.put(playerId, getMaxStamina(player));
         }
         
         // Obtener nivel actual y reducir
@@ -234,12 +245,12 @@ public class StaminaSystem implements Listener {
         
         // Inicializar si es necesario
         if (!staminaLevel.containsKey(playerId)) {
-            staminaLevel.put(playerId, MAX_STAMINA);
+            staminaLevel.put(playerId, getMaxStamina(player));
         }
         
         // Obtener nivel actual y aumentar
         int currentLevel = staminaLevel.get(playerId);
-        int newLevel = Math.min(MAX_STAMINA, currentLevel + amount);
+        int newLevel = Math.min(getMaxStamina(player), currentLevel + amount);
         
         // Actualizar nivel
         staminaLevel.put(playerId, newLevel);
@@ -257,7 +268,7 @@ public class StaminaSystem implements Listener {
         
         // Inicializar si es necesario
         if (!staminaLevel.containsKey(playerId)) {
-            staminaLevel.put(playerId, MAX_STAMINA);
+            staminaLevel.put(playerId, getMaxStamina(player));
         }
         
         return staminaLevel.get(playerId);
@@ -270,7 +281,7 @@ public class StaminaSystem implements Listener {
      */
     public int getStaminaPercentage(Player player) {
         int level = getStaminaLevel(player);
-        return (level * 100) / MAX_STAMINA;
+        return (level * 100) / getMaxStamina(player);
     }
     
     /**
@@ -359,7 +370,12 @@ public class StaminaSystem implements Listener {
         
         // Inicializar estamina si es un jugador nuevo
         if (!staminaLevel.containsKey(playerId)) {
-            staminaLevel.put(playerId, MAX_STAMINA);
+            staminaLevel.put(playerId, getMaxStamina(player));
+        }
+        
+        // Actualizar modificadores si hay integración con AuraSkills
+        if (auraSkillsIntegration != null && auraSkillsIntegration.isEnabled()) {
+            auraSkillsIntegration.updatePlayerModifiers(player);
         }
     }
     
@@ -423,7 +439,7 @@ public class StaminaSystem implements Listener {
         UUID playerId = player.getUniqueId();
         
         // Asegurar que el nivel esté dentro de los límites
-        int newLevel = Math.max(0, Math.min(MAX_STAMINA, level));
+        int newLevel = Math.max(0, Math.min(getMaxStamina(player), level));
         
         // Actualizar nivel
         staminaLevel.put(playerId, newLevel);
@@ -434,7 +450,125 @@ public class StaminaSystem implements Listener {
         }
     }
 
-    public int getMaxStamina() {
-        return MAX_STAMINA;
+    /**
+     * Obtiene la estamina máxima base sin modificadores
+     * @return Estamina máxima base
+     */
+    public int getBaseMaxStamina() {
+        return BASE_MAX_STAMINA;
+    }
+    
+    /**
+     * Obtiene la estamina máxima de un jugador considerando modificadores y AuraSkills
+     * @param player Jugador
+     * @return Estamina máxima del jugador
+     */
+    public int getMaxStamina(Player player) {
+        if (player == null) return BASE_MAX_STAMINA;
+        
+        UUID playerId = player.getUniqueId();
+        int maxStamina = BASE_MAX_STAMINA;
+        
+        // Aplicar modificador local si existe
+        if (maxStaminaModifiers.containsKey(playerId)) {
+            maxStamina += maxStaminaModifiers.get(playerId);
+        }
+        // Integración con AuraSkills: sumar modificador de capacidad si está habilitada
+        if (auraSkillsIntegration != null && auraSkillsIntegration.isEnabled()) {
+            maxStamina += auraSkillsIntegration.calculateStaminaCapacityModifier(player);
+        }
+        return Math.max(1, maxStamina); // Asegurar que siempre sea al menos 1
+    }
+    
+    /**
+     * Establece un modificador de estamina máxima para un jugador
+     * @param player Jugador
+     * @param modifier Valor del modificador (puede ser positivo o negativo)
+     */
+    public void setMaxStaminaModifier(Player player, int modifier) {
+        if (player == null) return;
+        
+        UUID playerId = player.getUniqueId();
+        maxStaminaModifiers.put(playerId, modifier);
+        
+        // Ajustar el nivel actual si excede el nuevo máximo
+        if (staminaLevel.containsKey(playerId)) {
+            int currentLevel = staminaLevel.get(playerId);
+            int maxStamina = getMaxStamina(player);
+            
+            if (currentLevel > maxStamina) {
+                staminaLevel.put(playerId, maxStamina);
+            }
+        }
+    }
+    
+    /**
+     * Obtiene el modificador de estamina máxima de un jugador
+     * @param player Jugador
+     * @return Valor del modificador
+     */
+    public int getMaxStaminaModifier(Player player) {
+        if (player == null) return 0;
+        
+        UUID playerId = player.getUniqueId();
+        return maxStaminaModifiers.getOrDefault(playerId, 0);
+    }
+    
+    /**
+     * Obtiene la tasa de recuperación de estamina para un jugador específico, considerando AuraSkills
+     * @param player Jugador
+     * @return Tasa de recuperación personalizada
+     */
+    public double getPlayerStaminaRecoveryRate(Player player) {
+        if (player == null) return staminaRecoveryRate;
+        
+        UUID playerId = player.getUniqueId();
+        double baseRate = staminaRecoveryRate;
+        
+        // Aplicar modificador local si existe
+        if (recoveryRateModifiers.containsKey(playerId)) {
+            baseRate += recoveryRateModifiers.get(playerId);
+        }
+        // Integración con AuraSkills: sumar modificador de recuperación si está habilitada
+        if (auraSkillsIntegration != null && auraSkillsIntegration.isEnabled()) {
+            baseRate += auraSkillsIntegration.calculateStaminaRecoveryModifier(player);
+        }
+        return Math.max(0.0, Math.min(1.0, baseRate)); // Limitar entre 0 y 1
+    }
+    
+    /**
+     * Establece un modificador de tasa de recuperación para un jugador
+     * @param player Jugador
+     * @param modifier Valor del modificador (puede ser positivo o negativo)
+     */
+    public void setRecoveryRateModifier(Player player, double modifier) {
+        if (player == null) return;
+        
+        UUID playerId = player.getUniqueId();
+        recoveryRateModifiers.put(playerId, modifier);
+    }
+    
+    /**
+     * Obtiene el modificador de tasa de recuperación de un jugador
+     * @param player Jugador
+     * @return Valor del modificador
+     */
+    public double getRecoveryRateModifier(Player player) {
+        if (player == null) return 0.0;
+        
+        UUID playerId = player.getUniqueId();
+        return recoveryRateModifiers.getOrDefault(playerId, 0.0);
+    }
+    
+    /**
+     * Elimina todos los modificadores de un jugador
+     * @param player Jugador
+     */
+    public void clearPlayerModifiers(Player player) {
+        if (player == null) return;
+        
+        UUID playerId = player.getUniqueId();
+        maxStaminaModifiers.remove(playerId);
+        recoveryRateModifiers.remove(playerId);
     }
 }

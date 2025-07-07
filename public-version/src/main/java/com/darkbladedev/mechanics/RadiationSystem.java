@@ -18,6 +18,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
 import com.darkbladedev.CustomTypes.CustomEnchantments;
+import com.darkbladedev.utils.AuraSkillsUtil;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -51,7 +52,7 @@ public class RadiationSystem {
         startRadiationSystem();
         isActive = true;
         
-        Bukkit.getConsoleSender().sendMessage(MiniMessage.miniMessage().deserialize(plugin.PREFIX + " Sistema de radiación inicializado"));
+        Bukkit.getConsoleSender().sendMessage(MiniMessage.miniMessage().deserialize(plugin.PREFIX + " <green>Sistema de radiación inicializado"));
     }
     
     /**
@@ -118,6 +119,20 @@ public class RadiationSystem {
         if (plugin.isPlayerProtectedFromSystem(player, "radiation")) {
             return; // No aplicar efectos si el jugador está protegido
         }
+        
+        // INTEGRACIÓN AURASKILLS: Puedes consultar aquí el stat de fortitude para modificar la severidad de los efectos
+        int fortitudeLevel = AuraSkillsUtil.getCustomStatLevel(player, "fortitude");
+        // INTEGRACIÓN AURASKILLS: Reducción de efectos por RadiationShieldSkill
+        Map<String, Integer> stats = new java.util.HashMap<>();
+        stats.put("fortitude", fortitudeLevel);
+        boolean hasRadiationShield = com.darkbladedev.mechanics.auraskills.skilltrees.SkillTreeManager.getInstance()
+                .hasSkill(player, com.darkbladedev.mechanics.auraskills.skills.fortitude.RadiationShieldSkill.class, stats);
+        if (hasRadiationShield) {
+            // Reduce los efectos negativos de radiación en un 40%
+            level = (int) Math.ceil(level * 0.6);
+        }
+        // Ejemplo: Si el jugador tiene la habilidad RadiationShieldSkill, podrías reducir los efectos negativos
+        // ...lógica de skills...
         
         // Verificar si el jugador tiene protección contra radiación
         int protectionLevel = getRadiationProtectionLevel(player);

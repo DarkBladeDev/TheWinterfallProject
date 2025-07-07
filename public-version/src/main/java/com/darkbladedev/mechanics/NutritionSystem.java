@@ -2,10 +2,18 @@ package com.darkbladedev.mechanics;
 
 import com.darkbladedev.SavageFrontierMain;
 import com.darkbladedev.CustomTypes.CustomDamageTypes;
+import com.darkbladedev.mechanics.auraskills.skilltrees.SkillTreeManager;
+import com.darkbladedev.utils.AuraSkillsUtil;
+import com.darkbladedev.mechanics.auraskills.skills.nutrition.EfficientEaterSkill;
+import com.darkbladedev.mechanics.auraskills.skills.nutrition.MetabolicBoostSkill;
+import com.darkbladedev.mechanics.auraskills.skills.nutrition.IronStomachSkill;
+
+import dev.aurelium.auraskills.api.AuraSkillsApi;
+import dev.aurelium.auraskills.api.registry.NamespacedId;
+import dev.aurelium.auraskills.api.stat.CustomStat;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
-import org.bukkit.Sound;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.damage.DamageSource;
 import org.bukkit.entity.Player;
@@ -51,6 +59,19 @@ public class NutritionSystem implements Listener {
     // Factores de disminución (configurables)
     private double normalDecreaseRate = 0.05; // Probabilidad base de disminución (5%)
     private double activityDecreaseRate = 0.15; // Probabilidad de disminución durante actividad (15%)
+    
+    // Stat de nutrición personalizado (debe inicializarse igual que en StaminaSystemExpansion)
+    private CustomStat nutritionStat;
+    @SuppressWarnings("unused")
+	private void ensureHydrationStatLoaded() {
+        if (nutritionStat == null) {
+            try {
+                AuraSkillsApi api = AuraSkillsApi.get();
+                var registry = api.getGlobalRegistry();
+                nutritionStat = (CustomStat) registry.getStat(NamespacedId.of("savage-frontier", "nutrition"));
+            } catch (Exception ignored) {}
+        }
+    }
     
     /**
      * Tipos de nutrientes que maneja el sistema
@@ -236,6 +257,12 @@ public class NutritionSystem implements Listener {
                     
                     // Aplicar efectos según niveles nutricionales
                     applyNutritionEffects(player, nutrients);
+                    
+                    // INTEGRACIÓN AURASKILLS: Habilidades pasivas de nutrición
+                    // EfficientEaterSkill: La comida recupera más nutrición (aplicar en evento de consumo)
+                    // MetabolicBoostSkill: Recupera estamina más rápido después de comer (aplicar en evento de consumo)
+                    // IronStomachSkill: Reduce efectos negativos de comida podrida (aplicar en evento de consumo)
+                    // Aquí puedes aplicar efectos pasivos globales si los hubiera
                 }
             }
         }.runTaskTimer(plugin, UPDATE_INTERVAL, UPDATE_INTERVAL); // Ejecutar según el intervalo configurado
@@ -333,44 +360,45 @@ public class NutritionSystem implements Listener {
      * Maneja el evento de consumo de alimentos
      * @param event Evento de consumo
      */
-    @EventHandler(priority = EventPriority.NORMAL)
+    @SuppressWarnings("unused")
+	@EventHandler(priority = EventPriority.NORMAL)
     public void onPlayerItemConsume(PlayerItemConsumeEvent event) {
         Player player = event.getPlayer();
+        int nutritionLevel = AuraSkillsUtil.getCustomStatLevel(player, "nutrition");
+        Map<NutrientType, Integer> nutrients = playerNutrients.get(player.getUniqueId());
         ItemStack item = event.getItem();
         Material foodType = item.getType();
-        
         // Verificar si el alimento tiene valores nutricionales definidos
         if (foodNutrients.containsKey(foodType)) {
             UUID playerId = player.getUniqueId();
-            
-            // Inicializar nutrientes si es necesario
             if (!playerNutrients.containsKey(playerId)) {
                 initializePlayerNutrients(playerId);
             }
-            
             Map<NutrientType, Integer> playerNutrientLevels = playerNutrients.get(playerId);
             Map<NutrientType, Integer> foodNutrientValues = foodNutrients.get(foodType);
-            
+            // EfficientEaterSkill: La comida recupera más nutrición
+            double nutritionMultiplier = 1.0;
+            if (SkillTreeManager.getInstance().hasSkill(player, EfficientEaterSkill.class, java.util.Map.of("nutrition", nutritionLevel))) {
+                nutritionMultiplier = 1.5;
+            }
             // Aplicar valores nutricionales del alimento
             for (NutrientType type : NutrientType.values()) {
                 int currentLevel = playerNutrientLevels.get(type);
                 int nutritionValue = foodNutrientValues.get(type);
-                
-                // Aumentar nivel de nutriente
-                int newLevel = Math.min(MAX_NUTRIENT_LEVEL, currentLevel + nutritionValue);
-                playerNutrientLevels.put(type, newLevel);
-                
-                // Mostrar información si hay un aumento significativo
-                if (nutritionValue >= 10 && plugin.getUserPreferencesManager().hasStatusMessages(player)) {
-                    Component message = MiniMessage.miniMessage().deserialize(type.getColorCode() + "Has consumido un alimento rico en " + type.getDisplayName() + ".");
-                    Component actionBarMessage = MiniMessage.miniMessage().deserialize(type.getColorCode() + "Has consumido un alimento rico en " + type.getDisplayName());
-                    ((Audience) player).sendMessage(message);
-                    ((Audience) player).sendActionBar(actionBarMessage);
-                }
+                int added = (int) Math.round(nutritionValue * nutritionMultiplier);
+                playerNutrientLevels.put(type, Math.min(MAX_NUTRIENT_LEVEL, currentLevel + added));
             }
-            
-            // Efectos de sonido
-            player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_BURP, 0.8f, 1.0f);
+        }
+        // IronStomachSkill: Reduce efectos negativos de comida podrida
+        if (SkillTreeManager.getInstance().hasSkill(player, IronStomachSkill.class, java.util.Map.of("nutrition", nutritionLevel))) {
+            if (item.getType().name().contains("ROTTEN") || item.getType().name().contains("POISON")) {
+                player.removePotionEffect(PotionEffectType.POISON);
+                player.removePotionEffect(PotionEffectType.HUNGER);
+            }
+        }
+        // MetabolicBoostSkill: Recupera estamina más rápido después de comer
+        if (SkillTreeManager.getInstance().hasSkill(player, MetabolicBoostSkill.class, java.util.Map.of("nutrition", nutritionLevel))) {
+            plugin.getStaminaSystem().increaseStamina(player, 2);
         }
     }
     
