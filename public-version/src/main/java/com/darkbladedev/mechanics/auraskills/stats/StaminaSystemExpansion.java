@@ -72,23 +72,39 @@ public class StaminaSystemExpansion implements Listener {
             return;
         }
         try {
-            // Usar AuraSkillsUtil para crear y registrar traits/stats
-            Object[] staminaObjects = AuraSkillsUtil.createStaminaTraitsAndStat();
-            this.staminaCapacityTrait = (CustomTrait) staminaObjects[0];
-            this.staminaRecoveryTrait = (CustomTrait) staminaObjects[1];
-            this.enduranceStat = (CustomStat) staminaObjects[2];
-            NamespacedRegistry registry = this.auraSkillsApi.useRegistry("savage-frontier", new File(plugin.getDataFolder(), "auraskills"));
-            AuraSkillsUtil.registerStaminaTraitsAndStat(registry, staminaCapacityTrait, staminaRecoveryTrait, enduranceStat);
-            Bukkit.getConsoleSender().sendMessage(MiniMessage.miniMessage().deserialize(plugin.PREFIX + " <green>Traits y stats de AuraSkills registrados correctamente"));
+            // Obtener las instancias de traits y stats desde CustomTraits
+            if (plugin.getCustomTraits() != null) {
+                this.enduranceStat = plugin.getCustomStats().getStat("endurance");
+                
+                this.staminaCapacityTrait = plugin.getCustomTraits().getStaminaCapacityTrait();
+                this.staminaRecoveryTrait = plugin.getCustomTraits().getStaminaRecoveryTrait();
+                
+                if (this.staminaCapacityTrait == null || this.staminaRecoveryTrait == null || this.enduranceStat == null) {
+                    throw new IllegalStateException("Los traits o stats de estamina no están inicializados correctamente");
+                }
+                
+                Bukkit.getConsoleSender().sendMessage(MiniMessage.miniMessage().deserialize(plugin.PREFIX + " <green>Traits y stats de AuraSkills obtenidos correctamente"));
+            } else {
+                // Si CustomTraits no está disponible, usar el método antiguo como fallback
+                Object[] staminaObjects = AuraSkillsUtil.createStaminaTraitsAndStat();
+                this.staminaCapacityTrait = (CustomTrait) staminaObjects[0];
+                this.staminaRecoveryTrait = (CustomTrait) staminaObjects[1];
+                this.enduranceStat = (CustomStat) staminaObjects[2];
+                NamespacedRegistry registry = this.auraSkillsApi.useRegistry("savage-frontier", new File(plugin.getDataFolder(), "auraskills"));
+                AuraSkillsUtil.registerStaminaTraitsAndStat(registry, staminaCapacityTrait, staminaRecoveryTrait, enduranceStat);
+                Bukkit.getConsoleSender().sendMessage(MiniMessage.miniMessage().deserialize(plugin.PREFIX + " <yellow>Usando método antiguo para registrar traits y stats de AuraSkills"));
+            }
+            
             // Crear y registrar el manejador de traits
             this.traitHandler = new StaminaTraitHandler(auraSkillsApi, staminaSystem);
+            
             // Registrar eventos
             plugin.getServer().getPluginManager().registerEvents(this, plugin);
             plugin.getServer().getPluginManager().registerEvents(traitHandler, plugin);
             this.enabled = true;
-            Bukkit.getConsoleSender().sendMessage(MiniMessage.miniMessage().deserialize(plugin.PREFIX + " <green>Integración con AuraSkills inicializada correctamente"));
+            
         } catch (Exception e) {
-            Bukkit.getConsoleSender().sendMessage(MiniMessage.miniMessage().deserialize(plugin.PREFIX + " <red>Error al inicializar la integración con AuraSkills: " + e.getMessage()));
+            Bukkit.getConsoleSender().sendMessage(MiniMessage.miniMessage().deserialize(plugin.PREFIX + " <red>Error al inicializar la integración con AuraSkills (StaminaSystem): " + e.getMessage()));
             e.printStackTrace();
         }
     }

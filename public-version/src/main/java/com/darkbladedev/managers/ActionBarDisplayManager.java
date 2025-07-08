@@ -149,14 +149,16 @@ public class ActionBarDisplayManager implements Listener {
 
         List<StatType> current = playerDisplays.getOrDefault(player.getUniqueId(), getDefaultDisplay());
 
-        for (int i = 3; i < maxSlots; i++) {
+        for (int i = 0; i < maxSlots; i++) {
+            int slot = 1;
             StatType stat = i < current.size() ? current.get(i) : StatType.HEALTH;
             ItemStack item = new ItemStack(Material.valueOf(stat.material));
             ItemMeta meta = item.getItemMeta();
             meta.displayName(Component.text("Slot " + (i + 1) + ": " + stat.name()));
             meta.lore(List.of(Component.text("Clic para cambiar"), Component.text("Actual: " + stat.name()), Component.text("Opciones: " + stat.catalogue())));
             item.setItemMeta(meta);
-            gui.setItem(i, item);
+            gui.setItem(slot, item);
+            slot++;
         }
 
         player.openInventory(gui);

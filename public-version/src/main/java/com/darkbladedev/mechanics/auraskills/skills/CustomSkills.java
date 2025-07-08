@@ -1,25 +1,72 @@
 package com.darkbladedev.mechanics.auraskills.skills;
 
+import java.io.File;
+
+import org.bukkit.Bukkit;
+import org.bukkit.Material;
+
+import com.darkbladedev.SavageFrontierMain;
+
+import dev.aurelium.auraskills.api.AuraSkillsApi;
 import dev.aurelium.auraskills.api.item.ItemContext;
 import dev.aurelium.auraskills.api.registry.NamespacedId;
+import dev.aurelium.auraskills.api.registry.NamespacedRegistry;
 import dev.aurelium.auraskills.api.skill.CustomSkill;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 
 public class CustomSkills {
     private static final String pluginName = "savage-frontier";
+    private final SavageFrontierMain plugin;
 
-    /*       EJEMPLO DE CÓMO SE DEBE HACER
+    public CustomSkills(SavageFrontierMain plugin) {
+        this.plugin = plugin;
+    }
 
-        public static final CustomSkill TRADING = CustomSkill
-            .builder(NamespacedId.of("pluginname", "trading"))
-            .displayName("Trading")
-            .description("Trade with villagers to gain Trading XP")
-            .item(ItemContext.builder()
-                    .material("emerald")
-                    .pos("4,4")
-                    .build())
-            .build();
-    */
 
+    public void registerCustomSkills(AuraSkillsApi api, File contentFolder) {
+        if (api == null) {
+            Bukkit.getConsoleSender().sendMessage(MiniMessage.miniMessage().deserialize(plugin.PREFIX + " <red>Error: AuraSkillsApi es null"));
+            return;
+        }
+        
+        if (contentFolder == null) {
+            // Si el directorio de contenido es null, crear uno por defecto
+            contentFolder = new File(plugin.getDataFolder(), "auraskills");
+            if (!contentFolder.exists()) {
+                contentFolder.mkdirs();
+            }
+            Bukkit.getConsoleSender().sendMessage(MiniMessage.miniMessage().deserialize(plugin.PREFIX + " <yellow>Directorio de contenido no proporcionado, usando: " + contentFolder.getAbsolutePath()));
+        }
+        
+        try {
+            // Asegurarse de que el directorio existe
+            if (!contentFolder.exists()) {
+                contentFolder.mkdirs();
+                Bukkit.getConsoleSender().sendMessage(MiniMessage.miniMessage().deserialize(plugin.PREFIX + " <yellow>Creando directorio de contenido: " + contentFolder.getAbsolutePath()));
+            }
+            
+            // Usar useRegistry en lugar de getNamespacedRegistry
+            NamespacedRegistry registry = api.useRegistry(pluginName, contentFolder);
+            
+            if (registry == null) {
+                Bukkit.getConsoleSender().sendMessage(MiniMessage.miniMessage().deserialize(plugin.PREFIX + " <red>Error: No se pudo obtener el registro de AuraSkills"));
+                return;
+            }
+            
+            // Registrar habilidades personalizadas
+            registry.registerSkill(NUTRITION);
+            registry.registerSkill(HYDRATION);
+            registry.registerSkill(ENDURANCE);
+            registry.registerSkill(FORTITUDE);
+            registry.registerSkill(RECOVERY);
+            
+            // Mensaje de éxito
+            Bukkit.getConsoleSender().sendMessage(MiniMessage.miniMessage().deserialize(plugin.PREFIX + " <green>Habilidades personalizadas registradas correctamente."));
+        } catch (Exception e) {
+            Bukkit.getConsoleSender().sendMessage(MiniMessage.miniMessage().deserialize(plugin.PREFIX + " <red>Error al registrar habilidades personalizadas: " + e.getMessage()));
+            e.printStackTrace();
+        }
+    }
     
     public static final CustomSkill NUTRITION = CustomSkill
             .builder(NamespacedId.of(pluginName, "nutrition"))
@@ -51,16 +98,6 @@ public class CustomSkills {
                     .build())
             .build();
 
-    public static final CustomSkill VITALITY = CustomSkill
-            .builder(NamespacedId.of(pluginName, "vitality"))
-            .displayName("Vitalidad")
-            .description("Aumenta la vida máxima y resistencia al daño.")
-            .item(ItemContext.builder()
-                    .material("GOLDEN_APPLE")
-                    .pos("2,4")
-                    .build())
-            .build();
-
     public static final CustomSkill FORTITUDE = CustomSkill
             .builder(NamespacedId.of(pluginName, "fortitude"))
             .displayName("Fortaleza")
@@ -76,18 +113,9 @@ public class CustomSkills {
             .displayName("Recuperación")
             .description("Mejora la curación y recuperación de heridas.")
             .item(ItemContext.builder()
-                    .material("GLOW_BERRIES")
+                    .material(Material.GLOW_BERRIES.toString())
                     .pos("5,4")
                     .build())
             .build();
 
-    public static final CustomSkill STAMINA = CustomSkill
-            .builder(NamespacedId.of(pluginName, "stamina"))
-            .displayName("Estamina")
-            .description("Aumenta la estamina máxima y su recuperación.")
-            .item(ItemContext.builder()
-                    .material("SUGAR")
-                    .pos("6,2")
-                    .build())
-            .build();
 }

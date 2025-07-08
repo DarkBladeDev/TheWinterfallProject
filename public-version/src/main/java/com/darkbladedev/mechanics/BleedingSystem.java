@@ -4,8 +4,8 @@ import com.darkbladedev.SavageFrontierMain;
 import com.darkbladedev.CustomTypes.CustomDamageTypes;
 import com.darkbladedev.mechanics.auraskills.skilltrees.SkillTreeManager;
 import com.darkbladedev.utils.AuraSkillsUtil;
-import com.darkbladedev.mechanics.auraskills.skills.vitality.ThickSkinSkill;
 import com.darkbladedev.mechanics.auraskills.skills.recovery.QuickHealerSkill;
+import com.darkbladedev.mechanics.auraskills.skills.vitality.ThickSkinSkill;
 import com.darkbladedev.mechanics.auraskills.skills.recovery.MedicSkill;
 
 import org.bukkit.Bukkit;

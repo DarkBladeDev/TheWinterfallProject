@@ -14,10 +14,14 @@ import com.darkbladedev.mechanics.HydrationSystem;
 import com.darkbladedev.mechanics.NutritionSystem;
 import com.darkbladedev.mechanics.StaminaSystem;
 import com.darkbladedev.mechanics.TemperatureSystem;
+import com.darkbladedev.mechanics.auraskills.skills.CustomSkills;
+import com.darkbladedev.mechanics.auraskills.stats.CustomStats;
 import com.darkbladedev.mechanics.auraskills.stats.StaminaSystemExpansion;
+import com.darkbladedev.mechanics.auraskills.traits.CustomTraits;
 import com.darkbladedev.utils.CustomDebuffEffects;
 
 import dev.aurelium.auraskills.api.AuraSkillsApi;
+import dev.aurelium.auraskills.api.registry.NamespacedRegistry;
 
 import com.darkbladedev.mechanics.FreezingSystem;
 
@@ -54,6 +58,11 @@ public class SavageFrontierMain extends JavaPlugin {
     private PlaceholderAPIExpansion placeholders;
     private UserPreferencesManager userPreferencesManager;
     private CustomDebuffEffects customDebuffEffects;
+
+    private CustomTraits customTraits;
+    private CustomSkills customSkills;
+    private CustomStats customStats;
+    
     public static boolean hasExecutableItems = false;
     public static boolean hasItemsAdder = false;
     public final String PREFIX = "<gradient:#20f335:#4dd8e1>Savage Frontier</gradient>";
@@ -64,14 +73,60 @@ public class SavageFrontierMain extends JavaPlugin {
     private java.util.Map<String, Boolean> protectedSystems;
     private ActionBarDisplayManager actionBarDisplayManager;
 
+    @SuppressWarnings("unused")
+    private NamespacedRegistry registry;
     
     @Override
     public void onEnable() {
         // Guardar instancia para acceso estático
         instance = this;
         
+        // Preparar carpeta para AuraSkills
         copyResourceFolder("auraskills" + File.separator + "stats.yml", new File(getDataFolder(), "auraskills"));
         
+        // Inicializar integración con AuraSkills si está disponible
+        if (Bukkit.getPluginManager().getPlugin("AuraSkills") != null) {
+            try {
+                // Obtener la API de AuraSkills
+                AuraSkillsApi auraSkillsApi = AuraSkillsApi.get();
+                if (auraSkillsApi != null) {
+                    
+                    // Inicializar el registro
+                    // Asegurarse de que el directorio de AuraSkills existe
+                    File auraskillsDir = new File(getDataFolder(), "auraskills");
+                    if (!auraskillsDir.exists()) {
+                        auraskillsDir.mkdirs();
+                        ((Audience) Bukkit.getConsoleSender()).sendMessage(MiniMessage.miniMessage().deserialize(
+                            PREFIX + " <yellow>Creando directorio para AuraSkills: " + auraskillsDir.getAbsolutePath()
+                        ));
+                    }
+                    
+                    // Inicializar y registrar habilidades personalizadas
+                    customSkills = new CustomSkills(this);
+                    customSkills.registerCustomSkills(auraSkillsApi, auraskillsDir);
+
+                    // Inicializar y registrar stats personalizados
+                    customStats = new CustomStats();
+                    customStats.registerStats(auraSkillsApi, auraskillsDir);
+                    
+                    // Inicializar y registrar traits personalizados
+                    customTraits = new CustomTraits(this, auraSkillsApi);
+                    customTraits.initialize();
+                    
+                    ((Audience) Bukkit.getConsoleSender()).sendMessage(MiniMessage.miniMessage().deserialize(
+                        PREFIX + " <green>Integración con AuraSkills inicializada correctamente"
+                    ));
+                } else {
+                    ((Audience) Bukkit.getConsoleSender()).sendMessage(MiniMessage.miniMessage().deserialize(
+                        PREFIX + " <yellow>AuraSkills no detectado. Las habilidades personalizadas no estarán disponibles."
+                    ));
+                }
+            }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
         // Inicializar sistemas
         initializeSystems();
         
@@ -86,7 +141,9 @@ public class SavageFrontierMain extends JavaPlugin {
             placeholders = new PlaceholderAPIExpansion(instance);
             placeholders.register();
         } else {
-            ((Audience) Bukkit.getConsoleSender()).sendMessage(MiniMessage.miniMessage().deserialize(PREFIX + " <yellow>PlaceholderAPI no detectado. Los placeholders no estarán disponibles."));
+            ((Audience) Bukkit.getConsoleSender()).sendMessage(MiniMessage.miniMessage().deserialize(
+                PREFIX + " <yellow>PlaceholderAPI no detectado. Los placeholders no estarán disponibles."
+            ));
         }
     }
 
@@ -157,9 +214,23 @@ public class SavageFrontierMain extends JavaPlugin {
         staminaSystem = new StaminaSystem(instance);
         
         // Inicializar la integración de AuraSkills con el sistema de stamina
-        if (getConfig().getBoolean("stamina.auraskills_integration.enabled", false)) {
-            StaminaSystemExpansion staminaAuraSkillsIntegration = new StaminaSystemExpansion(this, this.staminaSystem, AuraSkillsApi.get());
-            staminaAuraSkillsIntegration.initialize();
+        if (getConfig().getBoolean("stamina.auraskills_integration.enabled", false) && 
+            Bukkit.getPluginManager().getPlugin("AuraSkills") != null) {
+            try {
+                AuraSkillsApi auraSkillsApi = AuraSkillsApi.get();
+                if (auraSkillsApi != null) {
+                    StaminaSystemExpansion staminaAuraSkillsIntegration = new StaminaSystemExpansion(this, this.staminaSystem, auraSkillsApi);
+                    staminaAuraSkillsIntegration.initialize();
+                    ((Audience) Bukkit.getConsoleSender()).sendMessage(MiniMessage.miniMessage().deserialize(
+                        PREFIX + " <green>Integración de estamina con AuraSkills inicializada correctamente"
+                    ));
+                }
+            } catch (Exception e) {
+                ((Audience) Bukkit.getConsoleSender()).sendMessage(MiniMessage.miniMessage().deserialize(
+                    PREFIX + " <red>Error al inicializar la integración de estamina con AuraSkills: " + e.getMessage()
+                ));
+                e.printStackTrace();
+            }
         }
         
         temperatureSystem = new TemperatureSystem(instance);
@@ -369,6 +440,26 @@ public class SavageFrontierMain extends JavaPlugin {
         return actionBarDisplayManager;
     }
     
+    /**
+     * Obtiene la instancia de CustomTraits para la integración con AuraSkills
+     * @return Instancia de CustomTraits
+     */
+    public CustomTraits getCustomTraits() {
+        return customTraits;
+    }
+
+    /**
+     * Obtiene la instancia de CustomSkills para la integración con AuraSkills
+     * @return Instancia de CustomSkills
+     */
+    public CustomSkills getCustomSkills() {
+        return customSkills;
+    }
+
+    public CustomStats getCustomStats() {
+        return customStats;
+    }
+    
 
     /**
      * Verifica si un jugador está protegido contra un sistema específico
@@ -492,7 +583,7 @@ public class SavageFrontierMain extends JavaPlugin {
                     if (files != null) {
                         for (File file : files) {
                             if (file.isDirectory()) {
-                                copyResourceFolder(resourcePath + "/" + file.getName(), new File(targetDir, file.getName()));
+                                copyResourceFolder(resourcePath + File.separator + file.getName(), new File(targetDir, file.getName()));
                             } else {
                                 try (InputStream in = getClass().getClassLoader().getResourceAsStream(resourcePath + "/" + file.getName())) {
                                     Files.copy(in, new File(targetDir, file.getName()).toPath(), StandardCopyOption.REPLACE_EXISTING);

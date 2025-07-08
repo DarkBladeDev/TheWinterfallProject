@@ -14,7 +14,6 @@ public class SkillTreeManager {
     private SkillTreeManager() {
         // Registrar todos los árboles
         skillTrees.add(new EnduranceSkillTree());
-        skillTrees.add(new VitalitySkillTree());
         skillTrees.add(new FortitudeSkillTree());
         skillTrees.add(new HydrationSkillTree());
         skillTrees.add(new NutritionSkillTree());

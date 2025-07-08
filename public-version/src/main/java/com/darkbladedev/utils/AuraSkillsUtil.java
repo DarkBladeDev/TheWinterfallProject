@@ -2,6 +2,7 @@ package com.darkbladedev.utils;
 
 import dev.aurelium.auraskills.api.AuraSkillsApi;
 import dev.aurelium.auraskills.api.registry.NamespacedId;
+import dev.aurelium.auraskills.api.registry.NamespacedRegistry;
 import dev.aurelium.auraskills.api.registry.GlobalRegistry;
 import dev.aurelium.auraskills.api.stat.CustomStat;
 import dev.aurelium.auraskills.api.trait.CustomTrait;
@@ -94,5 +95,16 @@ public class AuraSkillsUtil {
         registry.registerTrait(staminaCapacityTrait);
         registry.registerTrait(staminaRecoveryTrait);
         registry.registerStat(enduranceStat);
+    }
+
+    public static void registerStatsAndTraits(NamespacedRegistry registry, CustomStat stat, CustomTrait... traits) {
+        if (stat != null) {
+            registry.registerStat(stat);
+        }
+        for (CustomTrait trait : traits) {
+            if (trait != null) {
+                registry.registerTrait(trait);
+            }
+        }
     }
 }
