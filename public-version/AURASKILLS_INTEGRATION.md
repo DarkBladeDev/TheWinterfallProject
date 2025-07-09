@@ -9,7 +9,14 @@ Este documento describe la integración del plugin Savage Frontier con AuraSkill
 - Se inicializa la integración solo si AuraSkills está disponible
 - Funciona de forma independiente si AuraSkills no está presente
 
-### 2. Modos de Operación
+### 2. Sistema de Estamina y Traits
+- Integración con el sistema de estamina para aplicar modificadores basados en estadísticas
+- Trait de capacidad de estamina: aumenta la capacidad máxima de estamina
+- Trait de recuperación de estamina: aumenta la velocidad de recuperación
+- Verificación periódica automática para asegurar que los traits estén correctamente aplicados
+- Comando administrativo para verificar y corregir traits manualmente
+
+### 3. Modos de Operación
 
 #### Modo Alternado (Por defecto)
 - Los jugadores pueden alternar entre la ActionBar de AuraSkills y Savage Frontier
@@ -23,7 +30,7 @@ Este documento describe la integración del plugin Savage Frontier con AuraSkill
 - Comando de administrador: `/actionbar combine`
 - Formato: `❤ Vida | ⚡ Stamina | 🍎 Nutrientes | ✦ Mana`
 
-### 3. Configuración
+### 4. Configuración
 
 ```yaml
 actionbar:
@@ -33,9 +40,15 @@ actionbar:
     allow_toggle: true              # Permite alternar entre ActionBars
     default_priority: 'savage'      # Prioridad por defecto: 'savage' o 'auraskills'
     combine_mode: false             # Modo combinado
+
+stamina:
+  # ... otras opciones de stamina ...
+  # Intervalo en minutos para verificar y corregir automáticamente los traits de estamina
+  # Establece a 0 para deshabilitar la verificación periódica
+  verify-traits-interval: 60        # Verificación automática cada 60 minutos
 ```
 
-### 4. Comandos
+### 5. Comandos
 
 | Comando | Descripción | Permiso |
 |---------|-------------|----------|
@@ -43,11 +56,14 @@ actionbar:
 | `/actionbar status` | Muestra el estado actual | `savage.actionbar.menu` |
 | `/actionbar combine` | Alterna modo combinado (Admin) | `savage.admin.actionbar` |
 | `/actionbar menu` | Abre menú de configuración | `savage.actionbar.menu` |
+| `/checkstaminatraits <jugador>` | Verifica y corrige traits de estamina para un jugador | `savage.admin` |
+| `/checkstaminatraits all` | Verifica y corrige traits de estamina para todos los jugadores en línea | `savage.admin` |
 
-### 5. Permisos
+### 6. Permisos
 
 - `savage.actionbar.menu` - Permite usar comandos básicos de ActionBar
-- `savage.admin.actionbar` - Permite configurar opciones administrativas
+- `savage.admin.actionbar` - Permite configurar opciones administrativas de ActionBar
+- `savage.admin` - Permite usar comandos administrativos, incluyendo verificación de traits
 
 ## Funcionamiento Técnico
 
@@ -67,6 +83,12 @@ actionbar:
    - Coordina la visualización de ActionBars
    - Decide qué ActionBar mostrar según la configuración
    - Integra con el sistema de eventos
+
+4. **StaminaSystemExpansion**
+   - Integra el sistema de estamina con AuraSkills
+   - Gestiona los traits de capacidad y recuperación de estamina
+   - Verifica y corrige automáticamente los traits de los jugadores
+   - Proporciona comandos administrativos para gestión de traits
 
 ### Flujo de Decisión
 
@@ -153,3 +175,10 @@ integration.reload();
 - Comando `/actionbar combine`
 - Mejoras en el comando `/actionbar status`
 - Documentación completa
+
+### v1.2.0
+- Integración del sistema de estamina con AuraSkills
+- Traits de capacidad y recuperación de estamina
+- Comando `/checkstaminatraits` para verificar y corregir traits
+- Verificación periódica automática de traits
+- Mejoras en la estabilidad de la integración

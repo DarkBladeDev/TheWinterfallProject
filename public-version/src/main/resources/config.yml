@@ -1,5 +1,5 @@
 # Configuración del plugin Savage Frontier
-
+debug: false
 # Configuración de la base de datos
 database:
   # Tipo de base de datos (sqlite o mysql)
@@ -96,6 +96,8 @@ stamina:
   # Integración con AuraSkills
   auraskills_integration:
     enabled: true
+    # Intervalo de verificación de traits de estamina en minutos
+    verify_traits_interval: 15
 
 # Configuración del sistema de temperatura
 temperature:
@@ -156,4 +158,4 @@ actionbar:
     # Prioridad por defecto: 'auraskills' o 'savage'
     default_priority: 'savage'
     # Si está habilitado, combina ambas actionbars en lugar de alternar
-    combine_mode: false
+    combine_mode: true

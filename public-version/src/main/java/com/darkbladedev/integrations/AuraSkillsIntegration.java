@@ -2,6 +2,8 @@ package com.darkbladedev.integrations;
 
 import com.darkbladedev.SavageFrontierMain;
 import dev.aurelium.auraskills.api.AuraSkillsApi;
+import dev.aurelium.auraskills.api.registry.NamespacedRegistry;
+
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
@@ -20,7 +22,7 @@ public class AuraSkillsIntegration {
     private final SavageFrontierMain plugin;
     private boolean auraSkillsEnabled = false;
     private boolean auraSkillsActionBarEnabled = false;
-    private AuraSkillsApi auraSkillsApi;
+    private final AuraSkillsApi auraSkillsApi;
     private final Map<UUID, Boolean> playerAuraSkillsActionBarState = new HashMap<>();
     private boolean integrationEnabled = true;
     private boolean allowToggle = true;
@@ -29,8 +31,9 @@ public class AuraSkillsIntegration {
     // Mapa para rastrear jugadores que ya tienen una actionbar mostrada en este tick
     private final Map<UUID, Long> actionBarShownTimestamps = new HashMap<>();
     
-    public AuraSkillsIntegration(SavageFrontierMain plugin) {
+    public AuraSkillsIntegration(SavageFrontierMain plugin, AuraSkillsApi auraSkillsApi) {
         this.plugin = plugin;
+        this.auraSkillsApi = auraSkillsApi;
         loadConfiguration();
         checkAuraSkillsIntegration();
     }
@@ -42,6 +45,10 @@ public class AuraSkillsIntegration {
         integrationEnabled = plugin.getConfig().getBoolean("actionbar.auraskills_integration.enabled", true);
         allowToggle = plugin.getConfig().getBoolean("actionbar.auraskills_integration.allow_toggle", true);
         defaultPriority = plugin.getConfig().getString("actionbar.auraskills_integration.default_priority", "savage");
+
+        NamespacedRegistry registry = auraSkillsApi.getNamespacedRegistry("savage-frontier");
+
+        registry.setMenuDirectory(new File(plugin.getDataFolder(), "auraskills" + File.separator + "menus"));
     }
     
     /**
@@ -58,7 +65,6 @@ public class AuraSkillsIntegration {
         
         if (auraSkillsPlugin != null && auraSkillsPlugin.isEnabled()) {
             try {
-                auraSkillsApi = AuraSkillsApi.get();
                 auraSkillsEnabled = true;
                 checkAuraSkillsActionBarConfig();
                 plugin.getLogger().info("Integración con AuraSkills habilitada.");

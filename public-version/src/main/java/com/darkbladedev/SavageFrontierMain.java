@@ -59,9 +59,12 @@ public class SavageFrontierMain extends JavaPlugin {
     private UserPreferencesManager userPreferencesManager;
     private CustomDebuffEffects customDebuffEffects;
 
+    private AuraSkillsApi auraSkillsApi;
     private CustomTraits customTraits;
     private CustomSkills customSkills;
     private CustomStats customStats;
+
+    private StaminaSystemExpansion staminaAuraSkillsIntegration;
     
     public static boolean hasExecutableItems = false;
     public static boolean hasItemsAdder = false;
@@ -88,7 +91,7 @@ public class SavageFrontierMain extends JavaPlugin {
         if (Bukkit.getPluginManager().getPlugin("AuraSkills") != null) {
             try {
                 // Obtener la API de AuraSkills
-                AuraSkillsApi auraSkillsApi = AuraSkillsApi.get();
+                auraSkillsApi = AuraSkillsApi.get();
                 if (auraSkillsApi != null) {
                     
                     // Inicializar el registro
@@ -219,7 +222,7 @@ public class SavageFrontierMain extends JavaPlugin {
             try {
                 AuraSkillsApi auraSkillsApi = AuraSkillsApi.get();
                 if (auraSkillsApi != null) {
-                    StaminaSystemExpansion staminaAuraSkillsIntegration = new StaminaSystemExpansion(this, this.staminaSystem, auraSkillsApi);
+                    staminaAuraSkillsIntegration = new StaminaSystemExpansion(this, this.staminaSystem, auraSkillsApi);
                     staminaAuraSkillsIntegration.initialize();
                     ((Audience) Bukkit.getConsoleSender()).sendMessage(MiniMessage.miniMessage().deserialize(
                         PREFIX + " <green>Integración de estamina con AuraSkills inicializada correctamente"
@@ -439,6 +442,10 @@ public class SavageFrontierMain extends JavaPlugin {
     public ActionBarDisplayManager getActionBarDisplayManager() {
         return actionBarDisplayManager;
     }
+
+    public AuraSkillsApi getAuraSkillsApi() {
+        return auraSkillsApi;
+    }
     
     /**
      * Obtiene la instancia de CustomTraits para la integración con AuraSkills
@@ -458,6 +465,10 @@ public class SavageFrontierMain extends JavaPlugin {
 
     public CustomStats getCustomStats() {
         return customStats;
+    }
+
+    public StaminaSystemExpansion getStaminaAuraSkillsIntegration() {
+        return staminaAuraSkillsIntegration;
     }
     
 
@@ -596,5 +607,11 @@ public class SavageFrontierMain extends JavaPlugin {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+
+
+    public boolean isDebugMode() {
+        return getConfig().getBoolean("debug");
     }
 }

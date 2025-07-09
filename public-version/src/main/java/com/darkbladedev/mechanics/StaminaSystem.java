@@ -2,8 +2,12 @@ package com.darkbladedev.mechanics;
 
 import com.darkbladedev.SavageFrontierMain;
 import com.darkbladedev.mechanics.auraskills.stats.StaminaSystemExpansion;
+import com.darkbladedev.mechanics.auraskills.traits.CustomTraits;
 
 import dev.aurelium.auraskills.api.AuraSkillsApi;
+import dev.aurelium.auraskills.api.trait.TraitModifier;
+import dev.aurelium.auraskills.api.user.SkillsUser;
+import dev.aurelium.auraskills.api.util.AuraSkillsModifier.Operation;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 
@@ -375,7 +379,19 @@ public class StaminaSystem implements Listener {
         
         // Actualizar modificadores si hay integración con AuraSkills
         if (auraSkillsIntegration != null && auraSkillsIntegration.isEnabled()) {
-            auraSkillsIntegration.updatePlayerModifiers(player);
+            // Retrasar la actualización para asegurar que AuraSkills haya cargado los datos del jugador
+            Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                auraSkillsIntegration.updatePlayerModifiers(player);
+                
+                // Registrar en la consola para depuración
+                if (plugin.isDebugMode()) {
+                    Bukkit.getConsoleSender().sendMessage(MiniMessage.miniMessage().deserialize(
+                        plugin.PREFIX + " <green>Modificadores de estamina actualizados para " + player.getName() + 
+                        ": Capacidad +" + getMaxStaminaModifier(player, "auraskills") + 
+                        ", Recuperación +" + getRecoveryRateModifier(player, "auraskills")
+                    ));
+                }
+            }, 20L); // Retrasar 1 segundo
         }
     }
     
@@ -473,14 +489,52 @@ public class StaminaSystem implements Listener {
         if (maxStaminaModifiers.containsKey(playerId)) {
             maxStamina += maxStaminaModifiers.get(playerId);
         }
+        
         // Integración con AuraSkills: sumar modificador de capacidad si está habilitada
         if (auraSkillsIntegration != null && auraSkillsIntegration.isEnabled()) {
-            maxStamina += auraSkillsIntegration.calculateStaminaCapacityModifier(player);
+            maxStamina += auraSkillsIntegration.getStaminaCapacityModifier(player);
         }
+        
+        // Registrar en la consola para depuración
+        if (plugin.isDebugMode() && (maxStaminaModifiers.containsKey(playerId) || 
+                (auraSkillsIntegration != null && auraSkillsIntegration.isEnabled()))) {
+            Bukkit.getConsoleSender().sendMessage(MiniMessage.miniMessage().deserialize(
+                plugin.PREFIX + " <aqua>Cálculo de estamina máxima para " + player.getName() + 
+                ": Base=" + BASE_MAX_STAMINA + 
+                ", Modificador local=" + maxStaminaModifiers.getOrDefault(playerId, 0) + 
+                ", Modificador AuraSkills=" + (auraSkillsIntegration != null && auraSkillsIntegration.isEnabled() ? 
+                    auraSkillsIntegration.getStaminaCapacityModifier(player) : 0) + 
+                ", Total=" + maxStamina
+            ));
+        }
+        
         return Math.max(1, maxStamina); // Asegurar que siempre sea al menos 1
     }
     
     /**
+     * Establece un modificador de estamina máxima para un jugador
+     * @param player Jugador
+     * @param system Sistema al que pertenece el modificador
+     * @param modifier Valor del modificador (puede ser positivo o negativo)
+     */
+    public void setMaxStaminaModifier(Player player, String system, int modifier) {
+        if (player == null) return;
+        
+        UUID playerId = player.getUniqueId();
+        maxStaminaModifiers.put(playerId, modifier);
+        
+        // Ajustar el nivel actual si excede el nuevo máximo
+        if (staminaLevel.containsKey(playerId)) {
+            int currentLevel = staminaLevel.get(playerId);
+            int maxStamina = getMaxStamina(player);
+            
+            if (currentLevel > maxStamina) {
+                staminaLevel.put(playerId, maxStamina);
+            }
+        }
+    }
+
+        /**
      * Establece un modificador de estamina máxima para un jugador
      * @param player Jugador
      * @param modifier Valor del modificador (puede ser positivo o negativo)
@@ -501,17 +555,26 @@ public class StaminaSystem implements Listener {
             }
         }
     }
+
     
     /**
      * Obtiene el modificador de estamina máxima de un jugador
      * @param player Jugador
+     * @param system Sistema al que pertenece el modificador
      * @return Valor del modificador
      */
-    public int getMaxStaminaModifier(Player player) {
+    public int getMaxStaminaModifier(Player player, String system) {
         if (player == null) return 0;
-        
+        if (system == null) return 0;
         UUID playerId = player.getUniqueId();
-        return maxStaminaModifiers.getOrDefault(playerId, 0);
+        
+        if (system.equals("savage")) {
+            return maxStaminaModifiers.getOrDefault(playerId, 0);
+        } else if (system.equals("auraskills")) {
+            AuraSkillsApi api = AuraSkillsApi.get();
+            return (int) api.getUser(playerId).getTraitModifier("internal-stamina_capacity").value();
+        }
+        return 0;
     }
     
     /**
@@ -524,40 +587,83 @@ public class StaminaSystem implements Listener {
         
         UUID playerId = player.getUniqueId();
         double baseRate = staminaRecoveryRate;
+        double localModifier = 0.0;
+        double auraSkillsModifier = 0.0;
         
         // Aplicar modificador local si existe
         if (recoveryRateModifiers.containsKey(playerId)) {
-            baseRate += recoveryRateModifiers.get(playerId);
+            localModifier = recoveryRateModifiers.get(playerId);
+            baseRate += localModifier;
         }
+        
         // Integración con AuraSkills: sumar modificador de recuperación si está habilitada
         if (auraSkillsIntegration != null && auraSkillsIntegration.isEnabled()) {
-            baseRate += auraSkillsIntegration.calculateStaminaRecoveryModifier(player);
+            auraSkillsModifier = auraSkillsIntegration.calculateStaminaRecoveryModifier(player);
+            baseRate += auraSkillsModifier;
         }
+        
+        // Registrar en la consola para depuración
+        if (plugin.isDebugMode() && (recoveryRateModifiers.containsKey(playerId) || 
+                (auraSkillsIntegration != null && auraSkillsIntegration.isEnabled()))) {
+            Bukkit.getConsoleSender().sendMessage(MiniMessage.miniMessage().deserialize(
+                plugin.PREFIX + " <aqua>Cálculo de tasa de recuperación para " + player.getName() + 
+                ": Base=" + staminaRecoveryRate + 
+                ", Modificador local=" + localModifier + 
+                ", Modificador AuraSkills=" + auraSkillsModifier + 
+                ", Total=" + Math.max(0.0, Math.min(1.0, baseRate))
+            ));
+        }
+        
         return Math.max(0.0, Math.min(1.0, baseRate)); // Limitar entre 0 y 1
     }
     
     /**
      * Establece un modificador de tasa de recuperación para un jugador
      * @param player Jugador
+     * @param system Sistema al que pertenece el modificador
      * @param modifier Valor del modificador (puede ser positivo o negativo)
      */
-    public void setRecoveryRateModifier(Player player, double modifier) {
+    public void setRecoveryRateModifier(Player player, String system, double modifier) {
         if (player == null) return;
+        if (system == null) return;
         
         UUID playerId = player.getUniqueId();
-        recoveryRateModifiers.put(playerId, modifier);
+
+        if (system == "savage") {
+            recoveryRateModifiers.put(playerId, modifier);
+
+        } else if (system == "auraskills") {
+            AuraSkillsApi api = AuraSkillsApi.get();
+            SkillsUser user = api.getUser(playerId);
+            user.removeTraitModifier("internal-stamina_recovery");
+
+            TraitModifier staminaRecoveryModifier = new TraitModifier("internal-stamina_recovery", CustomTraits.staminaRecovery, modifier, Operation.ADD);
+            user.addTraitModifier(staminaRecoveryModifier);
+        }
     }
     
     /**
      * Obtiene el modificador de tasa de recuperación de un jugador
      * @param player Jugador
+     * @param system Sistema al que pertenece el modificador
      * @return Valor del modificador
      */
-    public double getRecoveryRateModifier(Player player) {
+    public double getRecoveryRateModifier(Player player, String system) {
         if (player == null) return 0.0;
-        
+        if (system == null) return 0.0;
         UUID playerId = player.getUniqueId();
-        return recoveryRateModifiers.getOrDefault(playerId, 0.0);
+        
+        if (system == "savage") {
+            return recoveryRateModifiers.getOrDefault(playerId, 0.0);
+        } else if (system == "auraskills") {
+            AuraSkillsApi api = AuraSkillsApi.get();
+            SkillsUser user = api.getUser(playerId);
+            TraitModifier modifier = user.getTraitModifier("internal-stamina_recovery");
+            if (modifier != null) {
+                return modifier.value();
+            }
+        }
+        return 0.0;
     }
     
     /**

@@ -9,6 +9,7 @@ import dev.aurelium.auraskills.api.item.ItemContext;
 import dev.aurelium.auraskills.api.registry.NamespacedId;
 import dev.aurelium.auraskills.api.registry.NamespacedRegistry;
 import dev.aurelium.auraskills.api.stat.CustomStat;
+import dev.aurelium.auraskills.api.stat.Stat;
 
 import java.io.File;
 import java.util.HashMap;
@@ -63,10 +64,19 @@ public class CustomStats {
                                             .build();
 
     public CustomStat getStat(String name) {
-        return stats.get(name);
+        AuraSkillsApi api = AuraSkillsApi.get();
+        CustomStat stat = (CustomStat) api.getGlobalRegistry().getStat(NamespacedId.of("savage-frontier", name));
+        if (stat == null) {
+            throw new IllegalArgumentException("Stat not found: " + name);
+        }
+        return stat;
     }
 
     public Map<String, CustomStat> getStats() {
+        AuraSkillsApi api = AuraSkillsApi.get();
+        for (Stat stat : api.getGlobalRegistry().getStats()) {
+            stats.put(stat.getId().getKey(), (CustomStat) stat);
+        }
         return stats;
     }
 }

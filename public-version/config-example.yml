@@ -65,6 +65,9 @@ stamina:
   update_interval: 20
   recovery_rate: 0.3
   decrease_rate: 0.5
+  # Intervalo en minutos para verificar y corregir automáticamente los traits de estamina
+  # Establece a 0 para deshabilitar la verificación periódica
+  verify-traits-interval: 15
 
 # Sistema de temperatura
 temperature:

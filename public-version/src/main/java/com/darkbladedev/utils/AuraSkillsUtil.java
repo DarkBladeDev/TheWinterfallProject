@@ -6,13 +6,26 @@ import dev.aurelium.auraskills.api.registry.NamespacedRegistry;
 import dev.aurelium.auraskills.api.registry.GlobalRegistry;
 import dev.aurelium.auraskills.api.stat.CustomStat;
 import dev.aurelium.auraskills.api.trait.CustomTrait;
+import dev.aurelium.auraskills.api.trait.Trait;
 import dev.aurelium.auraskills.api.user.SkillsUser;
+import net.kyori.adventure.text.minimessage.MiniMessage;
+
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
+import com.darkbladedev.SavageFrontierMain;
+import com.darkbladedev.mechanics.auraskills.stats.CustomStats;
+
+import com.darkbladedev.mechanics.*;
+
 /**
- * Utilidad para consultar niveles de stats personalizados de AuraSkills de forma segura.
+ * Utilidad para consultar valores custom de AuraSkills de forma segura.
  */
 public class AuraSkillsUtil {
+    private static SavageFrontierMain plugin = SavageFrontierMain.getInstance();
+    private static AuraSkillsApi api = plugin.getAuraSkillsApi();
+    private static StaminaSystem staminaSystem = plugin.getStaminaSystem();
+    
     /**
      * Obtiene el nivel de un stat personalizado de AuraSkills para un jugador.
      * @param player Jugador
@@ -21,7 +34,6 @@ public class AuraSkillsUtil {
      */
     public static int getCustomStatLevel(Player player, String statKey) {
         try {
-            AuraSkillsApi api = AuraSkillsApi.get();
             if (api == null || player == null) return 0;
             SkillsUser user = api.getUserManager().getUser(player.getUniqueId());
             if (user == null) return 0;
@@ -34,6 +46,62 @@ public class AuraSkillsUtil {
             return 0;
         }
     }
+
+
+    public boolean verifyPlayerTraits(Player player, CustomStat stat) {
+        if (!plugin.getStaminaAuraSkillsIntegration().isEnabled() || api == null || player == null) {
+            return false;
+        }
+        
+        try {
+            SkillsUser user = api.getUserManager().getUser(player.getUniqueId());
+            if (user == null) {
+                Bukkit.getConsoleSender().sendMessage(MiniMessage.miniMessage().deserialize(
+                    plugin.PREFIX + " <red>No se pudo obtener el usuario de AuraSkills para " + player.getName()
+                ));
+                return false;
+            }
+            
+            // Obtener los modificadores de estamina directamente desde AuraSkills
+            double capacityModifier = user.getTraitModifier("savage-frontier:stamina_capacity").value();
+            double recoveryModifier = user.getTraitModifier("savage-frontier:stamina_recovery").value();
+            
+            // Obtener el nivel de resistencia personalizado
+            int enduranceLevel = (int) user.getStatLevel(CustomStats.Endurance);
+            
+            // Verificar si los modificadores están aplicados en el sistema de estamina
+            double appliedCapacity = staminaSystem.getMaxStaminaModifier(player, "auraskills");
+            double appliedRecovery = staminaSystem.getRecoveryRateModifier(player, "auraskills");
+            
+            StringBuilder statusMessage = new StringBuilder();
+            statusMessage.append(plugin.PREFIX).append(" <yellow>Resumen de ").append(player.getName()).append(":\n");
+            statusMessage.append("  <gray>- <green>Stat: ").append(stat.name()).append("\n");
+            for (Trait trait : stat.getTraits()) {
+                statusMessage.append("    <gray>- <light_purple>Atributo</light_purple> <gray>(Trait): ").append(trait.name()).append("<gray>(Lvl. ").append(user.getEffectiveTraitLevel(trait)).append(")").append("\n");
+            }
+            statusMessage.append("<gray>---------------------------------------------------------------------");
+
+            Bukkit.getConsoleSender().sendMessage(MiniMessage.miniMessage().deserialize(statusMessage.toString()));
+            
+            // Verificar si hay discrepancias significativas
+            boolean capacityMatch = (Math.abs(capacityModifier - appliedCapacity) < 0.1) || 
+                                   (enduranceLevel > 0 && appliedCapacity > 0);
+            boolean recoveryMatch = (Math.abs(recoveryModifier - appliedRecovery) < 0.01) || 
+                                   (enduranceLevel > 0 && appliedRecovery > 0);
+            
+            return capacityMatch && recoveryMatch;
+        } catch (Exception e) {
+            Bukkit.getConsoleSender().sendMessage(MiniMessage.miniMessage().deserialize(
+                plugin.PREFIX + " <red>Error al verificar traits para " + player.getName() + ": " + e.getMessage()
+            ));
+            if (plugin.isDebugMode()) {
+                e.printStackTrace();
+            }
+            return false;
+        }
+    }
+    
+
     /**
      * Obtiene el nivel de un stat personalizado de AuraSkills para un jugador (usando CustomStat).
      * @param player Jugador

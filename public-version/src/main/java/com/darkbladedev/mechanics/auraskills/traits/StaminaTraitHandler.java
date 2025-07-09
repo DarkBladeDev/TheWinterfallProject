@@ -97,10 +97,10 @@ public class StaminaTraitHandler implements BukkitTraitHandler, Listener {
      */
     private void applyStaminaModifiers(Player player, int maxStaminaModifier, double recoveryRateModifier) {
         // Aplicar modificador de estamina máxima
-        staminaSystem.setMaxStaminaModifier(player, maxStaminaModifier);
+        staminaSystem.setMaxStaminaModifier(player, "auraskills", maxStaminaModifier);
         
         // Aplicar modificador de tasa de recuperación
-        staminaSystem.setRecoveryRateModifier(player, recoveryRateModifier);
+        staminaSystem.setRecoveryRateModifier(player, "auraskills", recoveryRateModifier);
     }
     
     /**

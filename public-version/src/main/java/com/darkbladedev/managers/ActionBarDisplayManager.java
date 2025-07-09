@@ -38,7 +38,7 @@ public class ActionBarDisplayManager implements Listener {
     public ActionBarDisplayManager(SavageFrontierMain plugin, int maxSlots) {
         this.plugin = plugin;
         this.maxSlots = maxSlots;
-        this.auraSkillsIntegration = new AuraSkillsIntegration(plugin);
+        this.auraSkillsIntegration = new AuraSkillsIntegration(plugin, plugin.getAuraSkillsApi());
         this.actionBarCombiner = new ActionBarCombiner(plugin, this, auraSkillsIntegration);
         Bukkit.getPluginManager().registerEvents(this, plugin);
         startActionBarUpdater();
