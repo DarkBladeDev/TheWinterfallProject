@@ -10,12 +10,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import com.darkbladedev.SavageFrontierMain;
-import com.mojang.brigadier.arguments.StringArgumentType;
-import com.mojang.brigadier.builder.LiteralArgumentBuilder;
-
-import io.papermc.paper.command.brigadier.CommandSourceStack;
-import io.papermc.paper.command.brigadier.Commands;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,11 +19,13 @@ public class CheckCustomContentCommand implements CommandExecutor, TabCompleter 
     private final SavageFrontierMain plugin;
     @SuppressWarnings("unused")
     private final String permissionReq = "savage.admin.check_custom_content";
+    private static Player player;
 
     public CheckCustomContentCommand(SavageFrontierMain plugin) {
         this.plugin = plugin;
     }
 
+    /* 
     public void build() {
         @SuppressWarnings("unused")
         LiteralArgumentBuilder<CommandSourceStack> root = Commands.literal("savage")
@@ -37,22 +33,35 @@ public class CheckCustomContentCommand implements CommandExecutor, TabCompleter 
                 .then(Commands.literal("check-custom-content")
                     .then(Commands.literal("skills")
                         .then(Commands.argument("player", StringArgumentType.word())
-                            .executes(context -> {
-                                String playerArg = context.getArgument("player", String.class);
-                                // Lógica para verificar si existe la habilidad
-                                Player player = Bukkit.getPlayerExact(playerArg);
+                            .executes(ctx -> {
+                                String playerArg = ctx.getArgument("player", String.class);
+                                CommandSender sender = ctx.getSource().getSender(); 
+                                player = Bukkit.getPlayerExact(playerArg);
                                 if (player == null) {
-                                    ((CommandSender) context.getSource()).sendMessage("El jugador no se ha encontrado.");
+                                    sender.sendMessage("El jugador no se ha encontrado.");
                                     return 0;
-                                } else {
-                                    
                                 }
+                                return 1;
+                            })
+                            .then(Commands.argument("skill", StringArgumentType.word())
+                                .executes(ctx -> {
+                                    String skillArg = ctx.getArgument("skill", String.class);
+                                    CommandSender sender = ctx.getSource().getSender();
+                                    AuraSkillsApi api = AuraSkillsApi.get();
+                                    CustomSkill skill =  (CustomSkill) api.getGlobalRegistry().getSkill(NamespacedId.of("savage-frontier", skillArg));
+                                    
+                                    if (player == null) {
+                                        sender.sendMessage("El jugador no se ha encontrado.");
+                                        return 0;
+                                    } else {
+                                        sender.sendMessage(AuraSkillsUtil.verifyPlayerSkills(player, skill));
+                                    }
 
-                                return 1; // Devuelve 1 para indicar éxito
-                            })))
+                                    return 1; // Devuelve 1 para indicar éxito
+                                }))))
                     .then(Commands.literal("stats"))
                     .then(Commands.literal("traits"))
-                )
+                    )
             );
                 
             // )
@@ -62,9 +71,25 @@ public class CheckCustomContentCommand implements CommandExecutor, TabCompleter 
             //     .then(Commands.literal("zombies"))
 
     }
+    */
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
+        if (args.length == 0) {
+            sender.sendMessage("Uso: /savage admin check-custom-content <player> <skill|stat|trait>");
+            return true;
+        }
+        if (args.length == 1) {
+            sender.sendMessage("Uso: /savage admin check-custom-content <player> <skill|stat|trait>");
+            return true;
+        }
+        if (args.length == 2) {
+            player = Bukkit.getPlayerExact(args[0]);
+            if (player == null) {
+                sender.sendMessage("El jugador no se ha encontrado.");
+                return false;
+            }
+        }
         return false;
     }
 

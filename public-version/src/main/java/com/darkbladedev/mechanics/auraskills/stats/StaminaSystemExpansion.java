@@ -475,7 +475,7 @@ public class StaminaSystemExpansion implements Listener {
             if (user == null) return 0.0;
             
             // Usar el ID completo con namespace para evitar errores
-            return user.getTraitModifier("savage-frontier:stamina_capacity").value();
+            return user.getTraitModifier("internal-stamina_capacity").value();
         } catch (Exception e) {
             if (plugin.isDebugMode()) {
                 Bukkit.getConsoleSender().sendMessage(MiniMessage.miniMessage().deserialize(

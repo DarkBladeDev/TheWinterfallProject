@@ -2,6 +2,7 @@ package com.darkbladedev.mechanics;
 
 import com.darkbladedev.SavageFrontierMain;
 import com.darkbladedev.CustomTypes.CustomDamageTypes;
+import com.darkbladedev.mechanics.events.limb.PlayerLimbDamageEvent;
 import com.darkbladedev.utils.AuraSkillsUtil;
 
 import net.kyori.adventure.text.Component;
@@ -17,6 +18,7 @@ import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.jetbrains.annotations.NotNull;
+import org.bukkit.Bukkit;
 import org.bukkit.attribute.Attribute;
 
 import java.util.HashMap;
@@ -267,9 +269,15 @@ public class LimbDamageSystem implements Listener {
         if (oldState != newState) {
             if (plugin.getUserPreferencesManager().hasStatusMessages(player)) {
                 player.sendMessage(MiniMessage.miniMessage().deserialize("<red>Tu " + limbType.getDisplayName() + " <red>está ahora " + newState.getDisplayName()));
-                player.sendActionBar(MiniMessage.miniMessage().deserialize("<red>Tu " + limbType.getDisplayName() + " <red>está ahora " + newState.getDisplayName()));
+                //player.sendActionBar(MiniMessage.miniMessage().deserialize("<red>Tu " + limbType.getDisplayName() + " <red>está ahora " + newState.getDisplayName()));
             }
-            applyEffectsForLimbDamage(player, limbType, newState);
+            try {
+                applyEffectsForLimbDamage(player, limbType, newState);
+                Bukkit.getPluginManager().callEvent(new PlayerLimbDamageEvent(player, limbType, oldState, newState));
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
         }
     }
     

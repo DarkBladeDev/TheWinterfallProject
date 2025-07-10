@@ -3,6 +3,7 @@ package com.darkbladedev.utils;
 import dev.aurelium.auraskills.api.AuraSkillsApi;
 import dev.aurelium.auraskills.api.registry.NamespacedId;
 import dev.aurelium.auraskills.api.registry.NamespacedRegistry;
+import dev.aurelium.auraskills.api.skill.CustomSkill;
 import dev.aurelium.auraskills.api.registry.GlobalRegistry;
 import dev.aurelium.auraskills.api.stat.CustomStat;
 import dev.aurelium.auraskills.api.trait.CustomTrait;
@@ -14,9 +15,6 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
 import com.darkbladedev.SavageFrontierMain;
-import com.darkbladedev.mechanics.auraskills.stats.CustomStats;
-
-import com.darkbladedev.mechanics.*;
 
 /**
  * Utilidad para consultar valores custom de AuraSkills de forma segura.
@@ -24,7 +22,6 @@ import com.darkbladedev.mechanics.*;
 public class AuraSkillsUtil {
     private static SavageFrontierMain plugin = SavageFrontierMain.getInstance();
     private static AuraSkillsApi api = plugin.getAuraSkillsApi();
-    private static StaminaSystem staminaSystem = plugin.getStaminaSystem();
     
     /**
      * Obtiene el nivel de un stat personalizado de AuraSkills para un jugador.
@@ -48,9 +45,9 @@ public class AuraSkillsUtil {
     }
 
 
-    public boolean verifyPlayerTraits(Player player, CustomStat stat) {
+    public static String verifyPlayerTraits(Player player, CustomStat stat) {
         if (!plugin.getStaminaAuraSkillsIntegration().isEnabled() || api == null || player == null) {
-            return false;
+            return "El plugin AuraSkills no está habilitado o no se puede acceder a su API.";
         }
         
         try {
@@ -59,19 +56,9 @@ public class AuraSkillsUtil {
                 Bukkit.getConsoleSender().sendMessage(MiniMessage.miniMessage().deserialize(
                     plugin.PREFIX + " <red>No se pudo obtener el usuario de AuraSkills para " + player.getName()
                 ));
-                return false;
+                return "No se pudo obtener el usuario de AuraSkills.";
             }
-            
-            // Obtener los modificadores de estamina directamente desde AuraSkills
-            double capacityModifier = user.getTraitModifier("savage-frontier:stamina_capacity").value();
-            double recoveryModifier = user.getTraitModifier("savage-frontier:stamina_recovery").value();
-            
-            // Obtener el nivel de resistencia personalizado
-            int enduranceLevel = (int) user.getStatLevel(CustomStats.Endurance);
-            
-            // Verificar si los modificadores están aplicados en el sistema de estamina
-            double appliedCapacity = staminaSystem.getMaxStaminaModifier(player, "auraskills");
-            double appliedRecovery = staminaSystem.getRecoveryRateModifier(player, "auraskills");
+        
             
             StringBuilder statusMessage = new StringBuilder();
             statusMessage.append(plugin.PREFIX).append(" <yellow>Resumen de ").append(player.getName()).append(":\n");
@@ -81,15 +68,10 @@ public class AuraSkillsUtil {
             }
             statusMessage.append("<gray>---------------------------------------------------------------------");
 
-            Bukkit.getConsoleSender().sendMessage(MiniMessage.miniMessage().deserialize(statusMessage.toString()));
-            
-            // Verificar si hay discrepancias significativas
-            boolean capacityMatch = (Math.abs(capacityModifier - appliedCapacity) < 0.1) || 
-                                   (enduranceLevel > 0 && appliedCapacity > 0);
-            boolean recoveryMatch = (Math.abs(recoveryModifier - appliedRecovery) < 0.01) || 
-                                   (enduranceLevel > 0 && appliedRecovery > 0);
-            
-            return capacityMatch && recoveryMatch;
+            //Bukkit.getConsoleSender().sendMessage(MiniMessage.miniMessage().deserialize(statusMessage.toString()));
+            return statusMessage.toString();
+
+
         } catch (Exception e) {
             Bukkit.getConsoleSender().sendMessage(MiniMessage.miniMessage().deserialize(
                 plugin.PREFIX + " <red>Error al verificar traits para " + player.getName() + ": " + e.getMessage()
@@ -97,10 +79,48 @@ public class AuraSkillsUtil {
             if (plugin.isDebugMode()) {
                 e.printStackTrace();
             }
-            return false;
+            return "Error al verificar traits.";
         }
     }
     
+    public static String verifyPlayerSkills(Player player, CustomSkill[] skills) {
+        if (!plugin.getStaminaAuraSkillsIntegration().isEnabled() || api == null || player == null) {
+            return "El plugin AuraSkills no está habilitado o no se puede acceder a su API.";
+        }
+        
+        try {
+            SkillsUser user = api.getUserManager().getUser(player.getUniqueId());
+            if (user == null) {
+                Bukkit.getConsoleSender().sendMessage(MiniMessage.miniMessage().deserialize(
+                    plugin.PREFIX + " <red>No se pudo obtener el usuario de AuraSkills para " + player.getName()
+                ));
+                return "No se pudo obtener el usuario de AuraSkills.";
+            }
+        
+            StringBuilder statusMessage = new StringBuilder();
+            statusMessage.append(plugin.PREFIX).append(" <yellow>Resumen de ").append(player.getName()).append(":\n");
+            for (CustomSkill skill : skills) {
+                statusMessage.append("  <gray>- <green>Skill: ").append(skill.name()).append("\n");            
+                statusMessage.append("    <gray>- <light_purple>Nivel</light_purple> <gray>(skill): <white>").append(user.getSkillLevel(skill)).append("<gray>/<white>").append(skill.getMaxLevel()).append("\n");
+                statusMessage.append("    <gray>- <light_purple>Exp</light_purple> <gray>(skill): <white>").append(user.getSkillXp(skill)).append("\n");
+            }
+            statusMessage.append("<gray>---------------------------------------------------------------------");
+
+            return statusMessage.toString();
+
+
+        } catch (Exception e) {
+            Bukkit.getConsoleSender().sendMessage(MiniMessage.miniMessage().deserialize(
+                plugin.PREFIX + " <red>Error al verificar traits para " + player.getName() + ": " + e.getMessage()
+            ));
+            if (plugin.isDebugMode()) {
+                e.printStackTrace();
+            }
+            return "Error al verificar traits.";
+        }
+    }
+    
+
 
     /**
      * Obtiene el nivel de un stat personalizado de AuraSkills para un jugador (usando CustomStat).

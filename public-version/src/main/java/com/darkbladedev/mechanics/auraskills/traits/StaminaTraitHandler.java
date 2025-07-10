@@ -72,11 +72,16 @@ public class StaminaTraitHandler implements BukkitTraitHandler, Listener {
         try {
             SkillsUser user = auraSkillsApi.getUser(player.getUniqueId());
             if (user == null) return;
+            double staminaCapacityLevel = 1;
+            double staminaRecoveryLevel = 1;
             
             // Obtener el nivel de los traits para el jugador
-            double staminaCapacityLevel = user.getEffectiveTraitLevel(user.getTraitModifier("savagefrontier:stamina_capacity").trait());
-            double staminaRecoveryLevel = user.getEffectiveTraitLevel(user.getTraitModifier("savagefrontier:stamina_recovery").trait());
-            
+            if (user.getTraitModifier("internal-stamina_capacity") != null) {
+                staminaCapacityLevel = user.getEffectiveTraitLevel(user.getTraitModifier("internal-stamina_capacity").trait());
+            }
+            if (user.getTraitModifier("internal-stamina_recovery") != null) {
+                staminaRecoveryLevel = user.getEffectiveTraitLevel(user.getTraitModifier("internal-stamina_recovery").trait());
+            }
             // Calcular los modificadores basados en los niveles de los traits
             int maxStaminaModifier = (int) Math.floor(staminaCapacityLevel);
             double recoveryRateModifier = staminaRecoveryLevel * 0.01; // Convertir a porcentaje (0.01 = 1%)

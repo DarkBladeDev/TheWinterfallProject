@@ -18,6 +18,7 @@ import com.darkbladedev.mechanics.auraskills.skills.CustomSkills;
 import com.darkbladedev.mechanics.auraskills.stats.CustomStats;
 import com.darkbladedev.mechanics.auraskills.stats.StaminaSystemExpansion;
 import com.darkbladedev.mechanics.auraskills.traits.CustomTraits;
+import com.darkbladedev.utils.AuraSkillsUtil;
 import com.darkbladedev.utils.CustomDebuffEffects;
 
 import dev.aurelium.auraskills.api.AuraSkillsApi;
@@ -36,6 +37,7 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.List;
+import java.util.Map;
 
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.text.minimessage.MiniMessage;
@@ -60,6 +62,7 @@ public class SavageFrontierMain extends JavaPlugin {
     private CustomDebuffEffects customDebuffEffects;
 
     private AuraSkillsApi auraSkillsApi;
+    private AuraSkillsUtil auraSkillsUtil;
     private CustomTraits customTraits;
     private CustomSkills customSkills;
     private CustomStats customStats;
@@ -73,7 +76,7 @@ public class SavageFrontierMain extends JavaPlugin {
     // Configuración de protección para nuevos jugadores
     private boolean newPlayerProtectionEnabled;
     private long newPlayerProtectionDuration; // en minutos
-    private java.util.Map<String, Boolean> protectedSystems;
+    private Map<String, Boolean> protectedSystems;
     private ActionBarDisplayManager actionBarDisplayManager;
 
     @SuppressWarnings("unused")
@@ -613,5 +616,11 @@ public class SavageFrontierMain extends JavaPlugin {
 
     public boolean isDebugMode() {
         return getConfig().getBoolean("debug");
+    }
+
+
+
+    public AuraSkillsUtil getAuraSkillsUtil() {
+        return auraSkillsUtil;
     }
 }

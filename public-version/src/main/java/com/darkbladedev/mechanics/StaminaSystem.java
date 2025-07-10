@@ -521,7 +521,14 @@ public class StaminaSystem implements Listener {
         if (player == null) return;
         
         UUID playerId = player.getUniqueId();
-        maxStaminaModifiers.put(playerId, modifier);
+
+        if (system.equals("savage")) {
+            maxStaminaModifiers.put(playerId, modifier);
+            
+        } else if (system.equals("auraskills")) {
+            AuraSkillsApi api = AuraSkillsApi.get();
+            api.getUser(playerId).getTraitModifier("internal-stamina_capacity").value();
+        };
         
         // Ajustar el nivel actual si excede el nuevo máximo
         if (staminaLevel.containsKey(playerId)) {

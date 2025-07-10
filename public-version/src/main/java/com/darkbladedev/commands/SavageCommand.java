@@ -1,6 +1,11 @@
 package com.darkbladedev.commands;
 
 import com.darkbladedev.SavageFrontierMain;
+import com.darkbladedev.utils.AuraSkillsUtil;
+
+import dev.aurelium.auraskills.api.AuraSkillsApi;
+import dev.aurelium.auraskills.api.skill.CustomSkill;
+import dev.aurelium.auraskills.api.user.SkillsUser;
 
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
@@ -26,6 +31,8 @@ import java.util.List;
 public class SavageCommand implements CommandExecutor, TabCompleter {
 
     private final SavageFrontierMain plugin;
+    private AuraSkillsApi auraSkillsApi;
+
     
     /**
      * Constructor del manejador de comandos
@@ -94,23 +101,8 @@ public class SavageCommand implements CommandExecutor, TabCompleter {
                 handleReloadCommand(sender, args);
                 break;
                 
-            // Mantener compatibilidad con comandos antiguos
-            case "hydrationrate":
-                ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<yellow>Este comando está obsoleto. Usa /savage config hydration-rate en su lugar."));
-                String[] newArgs = new String[args.length + 1];
-                newArgs[0] = "config";
-                newArgs[1] = "hydration-rate";
-                System.arraycopy(args, 1, newArgs, 2, args.length - 1);
-                handleConfigCommand(sender, newArgs);
-                break;
-                
-            case "nutritionrate":
-                ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<yellow>Este comando está obsoleto. Usa /savage config nutrition-rate en su lugar."));
-                String[] newArgs2 = new String[args.length + 1];
-                newArgs2[0] = "config";
-                newArgs2[1] = "nutrition-rate";
-                System.arraycopy(args, 1, newArgs2, 2, args.length - 1);
-                handleConfigCommand(sender, newArgs2);
+            case "check-custom-content":
+                handleCheckCustomContentCommand(sender, args);
                 break;
                 
             case "enchantment":
@@ -125,6 +117,35 @@ public class SavageCommand implements CommandExecutor, TabCompleter {
         return true;
     }
     
+    private void handleCheckCustomContentCommand(CommandSender sender, String[] args) {
+        auraSkillsApi = AuraSkillsApi.get();
+        Player player = Bukkit.getPlayerExact(args[2]);
+        String type = args[3];
+        @SuppressWarnings("unused")
+        SkillsUser user = auraSkillsApi.getUser(player.getUniqueId());
+        
+        if (args.length < 2) {
+            sender.sendMessage("Uso: /savage check-custom-content <player> <skills|stats|traits>");
+            return;
+        }
+        if (args.length == 2) {
+            if (player == null) {
+                sender.sendMessage("El jugador no se ha encontrado.");
+                return;
+            }
+            if (!type.equalsIgnoreCase("skills") && !type.equalsIgnoreCase("stats") && !type.equalsIgnoreCase("traits")) {
+                sender.sendMessage("Uso: /savage check-custom-content <player> <skills|stats|traits>");
+                return;
+            }
+        } else if (type.equalsIgnoreCase("skills")) {
+            CustomSkill[] skills = auraSkillsApi.getGlobalRegistry().getSkills().toArray(new CustomSkill[0]);
+
+            if (skills != null) {
+                sender.sendMessage(MiniMessage.miniMessage().deserialize(AuraSkillsUtil.verifyPlayerSkills(player, skills)));
+            }
+        }
+    }
+
     /**
      * Muestra la ayuda del plugin
      * @param sender Remitente del comando
