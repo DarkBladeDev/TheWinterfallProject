@@ -3,6 +3,7 @@ package com.darkbladedev.mechanics;
 import com.darkbladedev.SavageFrontierMain;
 import com.darkbladedev.CustomTypes.CustomDamageTypes;
 import com.darkbladedev.mechanics.auraskills.skilltrees.SkillTreeManager;
+import com.darkbladedev.mechanics.events.nutrition.PlayerGainNutrientsEvent;
 import com.darkbladedev.utils.AuraSkillsUtil;
 import com.darkbladedev.mechanics.auraskills.skills.nutrition.EfficientEaterSkill;
 import com.darkbladedev.mechanics.auraskills.skills.nutrition.MetabolicBoostSkill;
@@ -62,6 +63,7 @@ public class NutritionSystem implements Listener {
     
     // Stat de nutrición personalizado (debe inicializarse igual que en StaminaSystemExpansion)
     private CustomStat nutritionStat;
+
     @SuppressWarnings("unused")
 	private void ensureHydrationStatLoaded() {
         if (nutritionStat == null) {
@@ -386,7 +388,13 @@ public class NutritionSystem implements Listener {
                 int currentLevel = playerNutrientLevels.get(type);
                 int nutritionValue = foodNutrientValues.get(type);
                 int added = (int) Math.round(nutritionValue * nutritionMultiplier);
+                
                 playerNutrientLevels.put(type, Math.min(MAX_NUTRIENT_LEVEL, currentLevel + added));
+                PlayerGainNutrientsEvent eventToCast = new PlayerGainNutrientsEvent(player, type, added);
+                Bukkit.getPluginManager().callEvent(eventToCast);
+                if (eventToCast.isCancelled()) {
+                    return;
+                }
             }
         }
         // IronStomachSkill: Reduce efectos negativos de comida podrida

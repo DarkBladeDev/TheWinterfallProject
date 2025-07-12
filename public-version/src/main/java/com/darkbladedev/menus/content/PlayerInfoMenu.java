@@ -12,11 +12,14 @@ import gg.saki.zaiko.placeables.Placeable;
 import gg.saki.zaiko.placeables.impl.Icon;
 import gg.saki.zaiko.templates.impl.OuterFill;
 import gg.saki.zaiko.utils.ItemBuilder;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 
 public class PlayerInfoMenu extends Menu {
+    private static final String INFO_MENU_TITLE = MessageUtils.mmToLegacy("<white><bold>Estado de salud");
+    private static final MiniMessage mm = MiniMessage.miniMessage();
 
     public PlayerInfoMenu(@NotNull Zaiko api) {
-        super(api, MessageUtils.stringToMmString("<white><bold>Estado de salud"), 6 * 9);
+        super(api, INFO_MENU_TITLE, 6 * 9);
 
 
         Placeable fill1 = new Icon(new ItemBuilder(Material.CYAN_STAINED_GLASS_PANE).name(" ").build());
@@ -39,12 +42,12 @@ public class PlayerInfoMenu extends Menu {
         // HEAD
         Icon Head = Icon.builder()
             .item(new ItemBuilder(Material.PLAYER_HEAD)
-                .name(MessageUtils.stringToMmString("<white>Cabeza"))
+                .name("Cabeza")
                 .owner(player.getName())
                 .lore(
-                    MessageUtils.stringToMmString("<gray><i>Extremidad"),
+                    MessageUtils.mmToLegacy("<gray><i>Extremidad"),
                     "",
-                    MessageUtils.stringToMmString("<white>Estado: %savage-frontier_limb_head%")
+                    MessageUtils.mmToLegacy("<white>Estado: %savage-frontier_limb_head%")
                 )
                 .build())
             .draggable(false)
@@ -54,11 +57,11 @@ public class PlayerInfoMenu extends Menu {
         // SUPERIOR PARTS
         Icon Torso = Icon.builder()
             .item(new ItemBuilder(Material.IRON_CHESTPLATE)
-                .name(MessageUtils.stringToMmString("<white>Torso"))
+                .name(("Torso"))
                 .lore(
-                    MessageUtils.stringToMmString("<gray><i>Extremidad"),
+                    MessageUtils.mmToLegacy("<gray><i>Extremidad"),
                     "",
-                    MessageUtils.stringToMmString("<white>Estado: %savage-frontier_limb_torso%")
+                    MessageUtils.mmToLegacy("<white>Estado: %savage-frontier_limb_torso%")
                 )
                 .build())
             .draggable(false)
@@ -67,11 +70,11 @@ public class PlayerInfoMenu extends Menu {
 
         Icon RightArm = Icon.builder()
             .item(new ItemBuilder(Material.BONE)
-                .name(MessageUtils.stringToMmString("Brazo derecho"))
+                .name(("Brazo derecho"))
                 .lore(
-                    MessageUtils.stringToMmString("<gray><i>Extremidad"),
+                    MessageUtils.mmToLegacy("<gray><i>Extremidad"),
                     "",
-                    MessageUtils.stringToMmString("<white>Estado: %savage-frontier_limb_right_arm%")
+                    MessageUtils.mmToLegacy("<white>Estado: %savage-frontier_limb_right_arm%")
                 )
                 .build())
             .draggable(false)
@@ -80,11 +83,11 @@ public class PlayerInfoMenu extends Menu {
 
         Icon LeftArm = Icon.builder()
             .item(new ItemBuilder(Material.BONE)
-                .name(MessageUtils.stringToMmString("Brazo izquierdo"))
+                .name(("Brazo izquierdo"))
                 .lore(
-                    MessageUtils.stringToMmString("<gray><i>Extremidad"),
+                    MessageUtils.mmToLegacy("<gray><i>Extremidad"),
                     "",
-                    MessageUtils.stringToMmString("<white>Estado: %savage-frontier_limb_left_arm%")
+                    MessageUtils.mmToLegacy("<white>Estado: %savage-frontier_limb_left_arm%")
                 )
                 .build())
             .draggable(false)
@@ -94,11 +97,11 @@ public class PlayerInfoMenu extends Menu {
         // INFERIOR PARTS
         Icon Legs = Icon.builder()
             .item(new ItemBuilder(Material.IRON_LEGGINGS)
-                .name(MessageUtils.stringToMmString("Piernas"))
+                .name(("Piernas"))
                 .lore(
-                    MessageUtils.stringToMmString("<gray><i>Extremidad"),
+                    MessageUtils.mmToLegacy("<gray><i>Extremidad"),
                     "",
-                    MessageUtils.stringToMmString("<white>Estado: %savage-frontier_limb_legs%")
+                    MessageUtils.mmToLegacy("<white>Estado: %savage-frontier_limb_legs%")
                 )
                 .build())
             .draggable(false)
@@ -107,11 +110,11 @@ public class PlayerInfoMenu extends Menu {
 
         Icon LeftLeg = Icon.builder()
             .item(new ItemBuilder(Material.BONE)
-                .name(MessageUtils.stringToMmString("Pierna izquierda"))
+                .name(("Pierna izquierda"))
                 .lore(
-                    MessageUtils.stringToMmString("<gray><i>Extremidad"),
+                    MessageUtils.mmToLegacy("<gray><i>Extremidad"),
                     "",
-                    MessageUtils.stringToMmString("<white>Estado: %savage-frontier_limb_left_leg%")
+                    MessageUtils.mmToLegacy("<white>Estado: %savage-frontier_limb_left_leg%")
                 )
                 .build())
             .draggable(false)
@@ -120,11 +123,11 @@ public class PlayerInfoMenu extends Menu {
     
         Icon RightLeg = Icon.builder()
             .item(new ItemBuilder(Material.BONE)
-                .name(MessageUtils.stringToMmString("Pierna derecha"))
+                .name(("Pierna derecha"))
                 .lore(
-                    MessageUtils.stringToMmString("<gray><i>Extremidad"),
+                    MessageUtils.mmToLegacy("<gray><i>Extremidad"),
                     "",
-                    MessageUtils.stringToMmString("<white>Estado: %savage-frontier_limb_right_leg%")
+                    MessageUtils.mmToLegacy("<white>Estado: %savage-frontier_limb_right_leg%")
 
                 )
                 .build())
@@ -135,11 +138,11 @@ public class PlayerInfoMenu extends Menu {
         // FEET
         Icon LeftFeet = Icon.builder()
             .item(new ItemBuilder(Material.BLACK_WOOL)
-                .name(MessageUtils.stringToMmString("Pie izquierdo"))
+                .name(("Pie izquierdo"))
                 .lore(
-                    MessageUtils.stringToMmString("<gray><i>Extremidad"),
+                    MessageUtils.mmToLegacy("<gray><i>Extremidad"),
                     "",
-                    MessageUtils.stringToMmString("<white>Estado: %savage-frontier_limb_left_foot%")
+                    MessageUtils.mmToLegacy("<white>Estado: %savage-frontier_limb_left_foot%")
                 )
                 .build())
             .draggable(false)
@@ -148,11 +151,11 @@ public class PlayerInfoMenu extends Menu {
     
         Icon RightFeet = Icon.builder()
             .item(new ItemBuilder(Material.BLACK_WOOL)
-                .name(MessageUtils.stringToMmString("Pie derecho"))
+                .name(("Pie derecho"))
                 .lore(
-                    MessageUtils.stringToMmString("<gray><i>Extremidad"),
+                    MessageUtils.mmToLegacy("<gray><i>Extremidad"),
                     "",
-                    MessageUtils.stringToMmString("<white>Estado: %savage-frontier_limb_right_foot%")
+                    MessageUtils.mmToLegacy("<white>Estado: %savage-frontier_limb_right_foot%")
 
                 )
                 .build())

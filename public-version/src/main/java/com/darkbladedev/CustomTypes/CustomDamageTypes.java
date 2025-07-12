@@ -27,10 +27,11 @@ public class CustomDamageTypes {
     public static final Key FREEZING_KEY = Key.key("savage-frontier:freezing");
     public static final Key HYPOTHERMIA_KEY = Key.key("savage-frontier:hypothermia");
     public static final Key HYPERTHERMIA_KEY = Key.key("savage-frontier:hyperthermia");
+    public static final Key FAT_DAMAGE_KEY = Key.key("savage-frontier:fat_damage");
     
 
         /**
-     * Crea una fuente de daño de sangrado
+     * Crea una fuente de daño custom
      * @param source La entidad que causa el daño (puede ser null)
      * @param target La entidad que recibe el daño
      * @param key La clave del damageType custom
@@ -66,7 +67,8 @@ public class CustomDamageTypes {
         DEHYDRATION(Key.key("savage-frontier:dehydration"), "<red>%player% ha muerto por deshidratación"),
         DESNUTRITION(Key.key("savage-frontier:desnutrition"), "<red>%player% ha muerto por desnutrición"),
         BLEEDING(Key.key("savage-frontier:bleeding"), "<red>%player% ha muerto desangrado"),
-        FREEZING(Key.key("savage-frontier:freezing"), "<red>%player% ha muerto congelado");
+        FREEZING(Key.key("savage-frontier:freezing"), "<red>%player% ha muerto congelado"),
+        FAT_DAMAGE(Key.key("savage-frontier:fat_damage"), "<red>%player% ha muerto por un paro cardíaco");
 
         CustomDamageDeathMessage(Key key, String messageID) {
             this.key = key;

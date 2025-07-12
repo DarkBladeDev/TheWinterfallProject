@@ -299,6 +299,15 @@ public class BleedingSystem implements Listener {
         
         LivingEntity entity = (LivingEntity) event.getEntity();
         double damage = event.getFinalDamage();
+        Player player = (Player) event.getEntity();
+        DamageSource source = event.getDamageSource();
+
+        if (source == CustomDamageTypes.DamageSourceBuilder(player, player, CustomDamageTypes.HYPERTHERMIA_KEY) ||
+        source == CustomDamageTypes.DamageSourceBuilder(player, player, CustomDamageTypes.HYPOTHERMIA_KEY) ||
+        source == CustomDamageTypes.DamageSourceBuilder(player, player, CustomDamageTypes.FREEZING_KEY) ||
+        source == CustomDamageTypes.DamageSourceBuilder(player, player, CustomDamageTypes.DEHYDRATION_KEY)) {
+            return; // No aplicar daño
+        }
         
         // Probabilidad de sangrado basada en el daño
         // Más daño = mayor probabilidad y severidad

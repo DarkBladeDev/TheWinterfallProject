@@ -80,6 +80,16 @@ public class Bootstraps implements PluginBootstrap {
                     .messageId(CustomDamageTypes.CustomDamageDeathMessage.HYPERTHERMIA.getMessageID())
                     .damageScaling(DamageScaling.NEVER)
             );
+
+            event.registry().register(
+                DamageTypeKeys.create(CustomDamageTypes.FAT_DAMAGE_KEY),
+                b -> b.exhaustion(0.0F)
+                    .deathMessageType(DeathMessageType.DEFAULT)
+                    .damageEffect(DamageEffect.HURT)
+                    .messageId(CustomDamageTypes.CustomDamageDeathMessage.FAT_DAMAGE.getMessageID())
+                    .damageScaling(DamageScaling.NEVER)
+            );
+
         }));
 
         // Register Enchantments handler

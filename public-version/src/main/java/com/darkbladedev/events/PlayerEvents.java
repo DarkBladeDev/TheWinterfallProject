@@ -16,8 +16,11 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
 import com.darkbladedev.CustomTypes.CustomEnchantments;
+import com.darkbladedev.mechanics.NutritionSystem.NutrientType;
+import com.darkbladedev.mechanics.events.nutrition.PlayerGainNutrientsEvent;
 import com.destroystokyo.paper.event.player.PlayerJumpEvent;
 
+import org.bukkit.attribute.Attribute;
 import org.bukkit.damage.DamageSource;
 import org.bukkit.damage.DamageType;
 import net.kyori.adventure.text.minimessage.MiniMessage;
@@ -155,6 +158,20 @@ public class PlayerEvents implements Listener {
             if (plugin.getFreezingSystem().isFrozen(player)) {
                 event.setCancelled(true); // Cancela el salto del jugador congelado
                 return;
+            }
+        }
+    }
+
+    @EventHandler
+    public void onPlayerGainNutrients(PlayerGainNutrientsEvent event) {
+        Player player = event.getPlayer();
+        NutrientType nutrient = event.getNutrient();
+        int currentLevel = plugin.getNutritionSystem().getNutrientLevel(player, nutrient);
+        DamageSource damageType = CustomDamageTypes.DamageSourceBuilder(player, player, CustomDamageTypes.FAT_DAMAGE_KEY);
+
+        if (nutrient == NutrientType.FAT) {
+            if (currentLevel <= 98) {
+                player.damage(player.getAttribute(Attribute.MAX_HEALTH).getValue(), damageType);
             }
         }
     }
