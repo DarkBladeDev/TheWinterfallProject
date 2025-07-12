@@ -5,6 +5,7 @@ api-version: 1.21
 description: Aumenta la dificultad de tu survival con Savage Frontier.
 author: DarkBladeDev
 depend: [PlaceholderAPI]
+softdepend: [AuraSkills, BodyHealth]
 commands:
   savage:
     description: Comando principal

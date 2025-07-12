@@ -5,6 +5,8 @@ import com.darkbladedev.CustomTypes.CustomDamageTypes;
 import com.darkbladedev.mechanics.events.limb.PlayerLimbDamageEvent;
 import com.darkbladedev.utils.AuraSkillsUtil;
 
+import bodyhealth.api.BodyHealthAPI;
+import bodyhealth.core.BodyPart;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -32,34 +34,58 @@ import java.util.UUID;
 public class LimbDamageSystem implements Listener {
 
     private final SavageFrontierMain plugin;
+
     private final Map<UUID, Map<LimbType, Integer>> limbDamage;
     private boolean isActive;
     
     // Tipos de extremidades
     public enum LimbType {
-        HEAD("Cabeza"),
-        LEFT_ARM("Brazo Izquierdo"),
-        RIGHT_ARM("Brazo Derecho"),
-        LEFT_LEG("Pierna Izquierda"),
-        RIGHT_LEG("Pierna Derecha");
+        HEAD("Cabeza", BodyPart.HEAD),
+        TORSO("Torso", BodyPart.BODY),
+        LEFT_ARM("Brazo Izquierdo", BodyPart.ARM_LEFT),
+        RIGHT_ARM("Brazo Derecho", BodyPart.ARM_RIGHT),
+        LEFT_LEG("Pierna Izquierda", BodyPart.LEG_LEFT),
+        RIGHT_LEG("Pierna Derecha", BodyPart.LEG_RIGHT),
+        LEFT_FOOT("Pie Izquierdo", BodyPart.FOOT_LEFT),
+        RIGHT_FOOT("Pie Derecho", BodyPart.FOOT_RIGHT);
         
         private final String displayName;
+        private final BodyPart bodyPart;
         
-        LimbType(String displayName) {
+        LimbType(String displayName, BodyPart bodyPart) {
             this.displayName = displayName;
+            this.bodyPart = bodyPart;
         }
         
         public String getDisplayName() {
             return displayName;
         }
+        
+        public BodyPart getBodyPart() {
+            return bodyPart;
+        }
+        
+        /**
+         * Convierte un BodyPart a LimbType
+         * @param bodyPart El BodyPart a convertir
+         * @return El LimbType correspondiente o null si no hay correspondencia
+         */
+        public static LimbType fromBodyPart(BodyPart bodyPart) {
+            for (LimbType type : values()) {
+                if (type.getBodyPart() == bodyPart) {
+                    return type;
+                }
+            }
+            return null;
+        }
     }
-    
+
     // Estados de daño
     public enum DamageState {
         HEALTHY(0, "<green>" + "Sano"),
         DAMAGED(1, "<yellow>" + "Herido"),
         CRITICAL(2, "<red>" + "Crítico"),
-        BROKEN(3, "<dark_red>" + "Roto");
+        BROKEN(3, "<gray>" + "Roto");
         
         private final int level;
         private final String displayName;
@@ -169,12 +195,12 @@ public class LimbDamageSystem implements Listener {
         }
         
         // Determinar qué extremidad dañar según el tipo de daño
-        LimbType targetLimb = null;
+        BodyPart targetBodyPart = null;
         
         switch (cause) {
             case FALL:
                 // Daño de caída afecta a las piernas
-                targetLimb = Math.random() < 0.5 ? LimbType.LEFT_LEG : LimbType.RIGHT_LEG;
+                targetBodyPart = Math.random() < 0.5 ? BodyPart.LEG_LEFT : BodyPart.LEG_RIGHT;
                 break;
                 
             case ENTITY_ATTACK:
@@ -183,61 +209,81 @@ public class LimbDamageSystem implements Listener {
                 // Ataques pueden afectar cualquier extremidad
                 double random = Math.random();
                 if (random < 0.2) {
-                    targetLimb = LimbType.HEAD;
+                    targetBodyPart = BodyPart.HEAD;
                 } else if (random < 0.4) {
-                    targetLimb = LimbType.LEFT_ARM;
+                    targetBodyPart = BodyPart.ARM_LEFT;
                 } else if (random < 0.6) {
-                    targetLimb = LimbType.RIGHT_ARM;
+                    targetBodyPart = BodyPart.ARM_RIGHT;
                 } else if (random < 0.8) {
-                    targetLimb = LimbType.LEFT_LEG;
+                    targetBodyPart = BodyPart.LEG_LEFT;
                 } else {
-                    targetLimb = LimbType.RIGHT_LEG;
+                    targetBodyPart = BodyPart.LEG_RIGHT;
                 }
                 break;
                 
             case BLOCK_EXPLOSION:
             case ENTITY_EXPLOSION:
                 // Explosiones pueden dañar múltiples extremidades
-                for (LimbType limb : LimbType.values()) {
+                for (BodyPart bodyPart : BodyPart.values()) {
                     if (Math.random() < 0.4) { // 40% de probabilidad para cada extremidad
-                        applyDamageToLimb(player, limb, damage);
+                        // Aplicar modificadores de daño antes de usar la API
+                        double modifiedDamage = applyDamageModifiers(player, bodyPart, damage);
+                        // Usar la API de BodyHealth para aplicar el daño
+                        BodyHealthAPI.damagePlayerWithConfig(player, cause, modifiedDamage, bodyPart);
                     }
                 }
                 return; // Ya aplicamos el daño a múltiples extremidades
                 
             default:
                 // Otros tipos de daño afectan una extremidad aleatoria
-                targetLimb = LimbType.values()[(int) (Math.random() * LimbType.values().length)];
+                BodyPart[] bodyParts = BodyPart.values();
+                targetBodyPart = bodyParts[(int) (Math.random() * bodyParts.length)];
                 break;
         }
         
         // Aplicar daño a la extremidad seleccionada
-        if (targetLimb != null) {
-            applyDamageToLimb(player, targetLimb, damage);
+        if (targetBodyPart != null) {
+            // Aplicar modificadores de daño antes de usar la API
+            double modifiedDamage = applyDamageModifiers(player, targetBodyPart, damage);
+            // Usar la API de BodyHealth para aplicar el daño
+            BodyHealthAPI.damagePlayerWithConfig(player, cause, modifiedDamage, targetBodyPart);
+            
+            // Obtener el LimbType correspondiente para mantener compatibilidad con eventos personalizados
+            LimbType targetLimb = LimbType.fromBodyPart(targetBodyPart);
+            if (targetLimb != null) {
+                // Disparar evento personalizado para mantener compatibilidad con otros sistemas
+                DamageState oldState = getLimbDamageState(player, targetLimb);
+                // Calcular nuevo estado basado en la salud actual del BodyPart
+                double healthPercent = BodyHealthAPI.getHealth(player, targetBodyPart);
+                DamageState newState = getDamageStateFromHealthPercent(healthPercent);
+                
+                if (oldState != newState) {
+                    Bukkit.getPluginManager().callEvent(new PlayerLimbDamageEvent(player, targetLimb, oldState, newState));
+                }
+            }
         }
     }
     
     /**
-     * Aplica daño a una extremidad específica
+     * Aplica modificadores de daño basados en habilidades y stats del jugador
      * @param player Jugador afectado
-     * @param limbType Tipo de extremidad
-     * @param damage Cantidad de daño
+     * @param bodyPart Parte del cuerpo afectada
+     * @param damage Cantidad de daño base
+     * @return Daño modificado
      */
-    public void applyDamageToLimb(Player player, LimbType limbType, double damage) {
+    private double applyDamageModifiers(Player player, BodyPart bodyPart, double damage) {
         // Verificar si el jugador está protegido como nuevo jugador
         if (plugin.isPlayerProtectedFromSystem(player, "limb_damage")) {
-            return; // No aplicar daño si el jugador está protegido
+            return 0; // No aplicar daño si el jugador está protegido
         }
-        // INTEGRACIÓN AURASKILLS: Puedes consultar aquí el stat de fortaleza para modificar la severidad del daño
+        
+        // INTEGRACIÓN AURASKILLS: Consultar stat de fortaleza para modificar la severidad del daño
         int fortitudeLevel = AuraSkillsUtil.getCustomStatLevel(player, "fortitude");
-        // Ejemplo: Si el jugador tiene la habilidad ColdResistanceSkill, podrías reducir el daño a las piernas por congelación, etc.
-        // Lógica de skills: Modificar el daño recibido según el nivel de fortaleza (fortitude)
-        // Por ejemplo, cada nivel de fortaleza reduce el daño en un 2% (máx 40%)
+        // Cada nivel de fortaleza reduce el daño en un 2% (máx 40%)
         double fortitudeReduction = Math.min(0.02 * fortitudeLevel, 0.4);
         damage = damage * (1.0 - fortitudeReduction);
         
         // INTEGRACIÓN AURASKILLS: Reducción de daño por PainToleranceSkill
-        // Si el jugador tiene la habilidad, reduce el daño recibido en extremidades un 30%
         Map<String, Integer> stats = new HashMap<>();
         stats.put("vitality", AuraSkillsUtil.getCustomStatLevel(player, "vitality"));
         boolean hasPainTolerance = com.darkbladedev.mechanics.auraskills.skilltrees.SkillTreeManager.getInstance()
@@ -246,30 +292,63 @@ public class LimbDamageSystem implements Listener {
             damage = damage * 0.7; // Reduce el daño en un 30%
         }
         
-        UUID playerId = player.getUniqueId();
+        return damage;
+    }
+    
+    /**
+     * Convierte un porcentaje de salud a un estado de daño
+     * @param healthPercent Porcentaje de salud (0-100)
+     * @return Estado de daño correspondiente
+     */
+    private DamageState getDamageStateFromHealthPercent(double healthPercent) {
+        if (healthPercent > 70) {
+            return DamageState.HEALTHY;
+        } else if (healthPercent > 40) {
+            return DamageState.DAMAGED;
+        } else if (healthPercent > 10) {
+            return DamageState.CRITICAL;
+        } else {
+            return DamageState.BROKEN;
+        }
+    }
+    
+    /**
+     * Aplica daño a una extremidad específica del jugador
+     * @param player Jugador afectado
+     * @param limbType Tipo de extremidad
+     * @param damage Cantidad de daño base
+     * @deprecated Usar directamente bodyHealthAPI.damagePlayerWithConfig()
+     */
+    @Deprecated
+    public void applyDamageToLimb(Player player, LimbType limbType, double damage) {
+        // Verificar si el jugador está protegido como nuevo jugador
+        if (plugin.isPlayerProtectedFromSystem(player, "limb_damage")) {
+            return; // No aplicar daño si el jugador está protegido
+        }
         
-        // Inicializar mapa de daño para el jugador si no existe
-        limbDamage.putIfAbsent(playerId, new HashMap<>());
-        Map<LimbType, Integer> playerLimbDamage = limbDamage.get(playerId);
+        // Convertir LimbType a BodyPart
+        BodyPart bodyPart = limbType.getBodyPart();
+        if (bodyPart == null) {
+            return; // No se pudo convertir
+        }
         
-        // Inicializar daño para la extremidad si no existe
-        playerLimbDamage.putIfAbsent(limbType, 0);
+        // Aplicar modificadores de daño
+        double modifiedDamage = applyDamageModifiers(player, bodyPart, damage);
         
-        // Calcular nuevo nivel de daño
-        int currentDamage = playerLimbDamage.get(limbType);
-        int damageToAdd = (int) Math.ceil(damage / 4.0); // Convertir daño a niveles de daño de extremidad
+        // Obtener estado anterior para comparación
+        DamageState oldState = getLimbDamageState(player, limbType);
         
-        int newDamage = Math.min(currentDamage + damageToAdd, DamageState.BROKEN.getLevel());
-        playerLimbDamage.put(limbType, newDamage);
+        // Usar la API de BodyHealth para aplicar el daño
+        BodyHealthAPI.damagePlayerWithConfig(player, DamageCause.CUSTOM, modifiedDamage, bodyPart);
         
-        // Notificar al jugador si el estado de la extremidad ha cambiado
-        DamageState oldState = DamageState.fromLevel(currentDamage);
-        DamageState newState = DamageState.fromLevel(newDamage);
+        // Obtener el nuevo estado basado en la salud actual
+        double healthPercent = BodyHealthAPI.getHealth(player, bodyPart);
+        DamageState newState = getDamageStateFromHealthPercent(healthPercent);
         
+        // Si el estado cambió, notificar al jugador y aplicar efectos
         if (oldState != newState) {
             if (plugin.getUserPreferencesManager().hasStatusMessages(player)) {
                 player.sendMessage(MiniMessage.miniMessage().deserialize("<red>Tu " + limbType.getDisplayName() + " <red>está ahora " + newState.getDisplayName()));
-                //player.sendActionBar(MiniMessage.miniMessage().deserialize("<red>Tu " + limbType.getDisplayName() + " <red>está ahora " + newState.getDisplayName()));
             }
             try {
                 applyEffectsForLimbDamage(player, limbType, newState);
@@ -277,7 +356,6 @@ public class LimbDamageSystem implements Listener {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-
         }
     }
     
@@ -342,6 +420,14 @@ public class LimbDamageSystem implements Listener {
                     player.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 2400, 3));
                 }
                 break;
+            case LEFT_FOOT:
+                break;
+            case RIGHT_FOOT:
+                break;
+            case TORSO:
+                break;
+            default:
+                break;
         }
     }
     
@@ -352,20 +438,14 @@ public class LimbDamageSystem implements Listener {
      * @return Estado de daño de la extremidad
      */
     public DamageState getLimbDamageState(Player player, LimbType limbType) {
-        UUID playerId = player.getUniqueId();
-        
-        if (!limbDamage.containsKey(playerId)) {
-            return DamageState.HEALTHY;
+        BodyPart bodyPart = limbType.getBodyPart();
+        if (bodyPart == null) {
+            return DamageState.HEALTHY; // Valor por defecto si no se puede convertir
         }
         
-        Map<LimbType, Integer> playerLimbDamage = limbDamage.get(playerId);
-        
-        if (!playerLimbDamage.containsKey(limbType)) {
-            return DamageState.HEALTHY;
-        }
-        
-        int damage = playerLimbDamage.get(limbType);
-        return DamageState.fromLevel(damage);
+        // Obtener salud actual del BodyPart usando la API
+        double healthPercent = BodyHealthAPI.getHealth(player, bodyPart);
+        return getDamageStateFromHealthPercent(healthPercent);
     }
     
     /**
@@ -374,24 +454,21 @@ public class LimbDamageSystem implements Listener {
      * @param limbType Tipo de extremidad
      */
     public void healLimb(Player player, LimbType limbType) {
-        UUID playerId = player.getUniqueId();
-        
-        if (!limbDamage.containsKey(playerId)) {
-            return;
+        BodyPart bodyPart = limbType.getBodyPart();
+        if (bodyPart == null) {
+            return; // No se pudo convertir
         }
         
-        Map<LimbType, Integer> playerLimbDamage = limbDamage.get(playerId);
+        // Usar la API de BodyHealth para curar la parte del cuerpo
+        BodyHealthAPI.setHealth(player, 100.0, bodyPart); // Establecer salud al 100%
         
-        if (playerLimbDamage.containsKey(limbType)) {
-            playerLimbDamage.put(limbType, 0);
-            if (plugin.getUserPreferencesManager().hasStatusMessages(player)) {
-                player.sendMessage(MiniMessage.miniMessage().deserialize("<green>Tu " + limbType.getDisplayName() + " ha sido curada."));
-                player.sendActionBar(MiniMessage.miniMessage().deserialize("<green>Tu " + limbType.getDisplayName() + " ha sido curada."));
-            }
-            
-            // Actualizar la salud máxima del jugador después de curar
-            updatePlayerMaxHealth(player);
+        if (plugin.getUserPreferencesManager().hasStatusMessages(player)) {
+            player.sendMessage(MiniMessage.miniMessage().deserialize("<green>Tu " + limbType.getDisplayName() + " ha sido curada."));
+            player.sendActionBar(MiniMessage.miniMessage().deserialize("<green>Tu " + limbType.getDisplayName() + " ha sido curada."));
         }
+        
+        // Actualizar la salud máxima del jugador después de curar
+        updatePlayerMaxHealth(player);
     }
     
     /**
@@ -399,26 +476,18 @@ public class LimbDamageSystem implements Listener {
      * @param player Jugador a curar
      */
     public void healAllLimbs(Player player) {
-        UUID playerId = player.getUniqueId();
-        
-        if (!limbDamage.containsKey(playerId)) {
-            return;
+        // Usar la API de BodyHealth para curar todas las partes del cuerpo
+        for (BodyPart bodyPart : BodyPart.values()) {
+            BodyHealthAPI.setHealth(player, 100.0, bodyPart); // Establecer salud al 100%
         }
         
-        Map<LimbType, Integer> playerLimbDamage = limbDamage.get(playerId);
-        
-        for (LimbType limbType : LimbType.values()) {
-            playerLimbDamage.put(limbType, 0);
-        }
+        // Actualizar salud máxima del jugador
+        updatePlayerMaxHealth(player);
         
         if (plugin.getUserPreferencesManager().hasStatusMessages(player)) {
             player.sendMessage(MiniMessage.miniMessage().deserialize("<green>Todas tus extremidades han sido curadas."));
             player.sendActionBar(MiniMessage.miniMessage().deserialize("<green>Todas tus extremidades han sido curadas."));
         }
-        
-        // Restaurar la salud máxima del jugador después de curar todas las extremidades
-        player.getAttribute(Attribute.MAX_HEALTH).setBaseValue(20.0);
-        
     }
     
     /**
@@ -457,20 +526,23 @@ public class LimbDamageSystem implements Listener {
         // Asegurar que el nivel de daño esté en el rango válido
         damageLevel = Math.max(0, Math.min(100, damageLevel));
         
-        UUID playerId = player.getUniqueId();
-        
-        // Inicializar el mapa de daño si no existe
-        if (!limbDamage.containsKey(playerId)) {
-            limbDamage.put(playerId, new java.util.HashMap<>());
+        // Convertir LimbType a BodyPart
+        BodyPart bodyPart = limbType.getBodyPart();
+        if (bodyPart == null) {
+            return DamageState.HEALTHY; // No se pudo convertir
         }
         
-        Map<LimbType, Integer> playerLimbDamage = limbDamage.get(playerId);
+        // Convertir nivel de daño a porcentaje de salud (invertido)
+        // 0 daño = 100% salud, 100 daño = 0% salud
+        double healthPercent = 100.0 - damageLevel;
         
-        // Establecer el nivel de daño
-        playerLimbDamage.put(limbType, damageLevel);
+        // Usar la API de BodyHealth para establecer la salud
+        BodyHealthAPI.setHealth(player, healthPercent, bodyPart);
+        
+        // Obtener nuevo estado basado en el nivel de daño
+        DamageState newState = getDamageStateFromHealthPercent(healthPercent);
         
         // Aplicar efectos basados en el nuevo nivel de daño
-        DamageState newState = getDamageState(damageLevel);
         applyEffectsForLimbDamage(player, limbType, newState);
         
         // Actualizar la salud máxima del jugador
@@ -501,15 +573,15 @@ public class LimbDamageSystem implements Listener {
      * @param damageLevel Nivel de daño (0-100)
      * @return Estado de daño correspondiente
      */
-    private DamageState getDamageState(int damageLevel) {
+    public DamageState getDamageState(int damageLevel) {
         if (damageLevel < 30) {
             return DamageState.HEALTHY;
         } else if (damageLevel < 60) {
             return DamageState.DAMAGED;
         } else if (damageLevel < 90) {
-            return DamageState.BROKEN;
-        } else {
             return DamageState.CRITICAL;
+        } else {
+            return DamageState.BROKEN;
         }
     }
     
@@ -524,15 +596,17 @@ public class LimbDamageSystem implements Listener {
             return 0;
         }
         
-        UUID playerId = player.getUniqueId();
-        
-        if (!limbDamage.containsKey(playerId)) {
-            return 0;
+        BodyPart bodyPart = limbType.getBodyPart();
+        if (bodyPart == null) {
+            return 0; // No se pudo convertir
         }
         
-        Map<LimbType, Integer> playerLimbDamage = limbDamage.get(playerId);
+        // Obtener salud actual del BodyPart usando la API
+        double healthPercent = BodyHealthAPI.getHealth(player, bodyPart);
         
-        return playerLimbDamage.getOrDefault(limbType, 0);
+        // Convertir porcentaje de salud a nivel de daño (invertido)
+        // 100% salud = 0 daño, 0% salud = 100 daño
+        return (int) Math.round(100.0 - healthPercent);
     }
     
     /**
@@ -545,27 +619,37 @@ public class LimbDamageSystem implements Listener {
             return null;
         }
         
-        UUID playerId = player.getUniqueId();
-        
-        if (!limbDamage.containsKey(playerId)) {
-            Map<LimbType, Integer> newDamageMap = new HashMap<>();
-            for (LimbType type : LimbType.values()) {
-                newDamageMap.put(type, 0);
-            }
-            return newDamageMap;
+        Map<LimbType, Integer> damageMap = new HashMap<>();
+         
+         // Obtener niveles de daño para cada extremidad usando la API de BodyHealth
+         for (LimbType limbType : LimbType.values()) {
+             BodyPart bodyPart = limbType.getBodyPart();
+             if (bodyPart != null) {
+                 // Obtener salud y convertir a nivel de daño
+                 double healthPercent = BodyHealthAPI.getHealth(player, bodyPart);
+                 int damageLevel = (int) Math.round(100.0 - healthPercent);
+                 damageMap.put(limbType, damageLevel);
+             } else {
+                 // Si no hay equivalente en BodyPart, establecer como saludable
+                 damageMap.put(limbType, 0);
+             }
+         }
+         
+        return damageMap;
+    }
+    
+    /**
+     * Verifica todos los niveles de daño para un jugador
+     * @param player Jugador a verificar
+     * @return Mapa con los niveles de daño para cada extremidad
+     */
+    public Map<LimbType, Integer> checkAllLimbDamageLevels(Player player) {
+        if (player == null) {
+            return null;
         }
         
-        // Crear una copia del mapa para evitar modificaciones externas
-        Map<LimbType, Integer> result = new HashMap<>(limbDamage.get(playerId));
-        
-        // Asegurar que todas las extremidades estén incluidas
-        for (LimbType type : LimbType.values()) {
-            if (!result.containsKey(type)) {
-                result.put(type, 0);
-            }
-        }
-        
-        return result;
+        // Usar el método getAllLimbDamageLevels que ya está actualizado para usar BodyHealth API
+        return getAllLimbDamageLevels(player);
     }
     
     /**
@@ -578,26 +662,25 @@ public class LimbDamageSystem implements Listener {
             return;
         }
         
-        UUID playerId = player.getUniqueId();
-        
-        // Crear un nuevo mapa para almacenar los valores
-        Map<LimbType, Integer> newDamageMap = new HashMap<>();
-        
-        // Copiar y validar cada nivel de daño
-        for (LimbType type : LimbType.values()) {
-            int level = damageLevels.containsKey(type) ? damageLevels.get(type) : 0;
-            newDamageMap.put(type, Math.max(0, Math.min(100, level)));
-        }
-        
-        // Actualizar todos los niveles
-        limbDamage.put(playerId, newDamageMap);
-        
-        // Aplicar efectos para cada extremidad si es necesario
-        for (LimbType type : LimbType.values()) {
-            int level = newDamageMap.get(type);
-            if (level > 0) {
-                DamageState state = getDamageState(level);
-                applyEffectsForLimbDamage(player, type, state);
+        // Aplicar cada nivel de daño usando la API de BodyHealth
+        for (Map.Entry<LimbType, Integer> entry : damageLevels.entrySet()) {
+            LimbType limbType = entry.getKey();
+            int damageLevel = Math.max(0, Math.min(100, entry.getValue())); // Validar rango
+            
+            // Convertir LimbType a BodyPart
+            BodyPart bodyPart = limbType.getBodyPart();
+            if (bodyPart != null) {
+                // Convertir nivel de daño a porcentaje de salud (invertido)
+                double healthPercent = 100.0 - damageLevel;
+                
+                // Usar la API de BodyHealth para establecer la salud
+                BodyHealthAPI.setHealth(player, healthPercent, bodyPart);
+                
+                // Aplicar efectos si es necesario
+                if (damageLevel > 0) {
+                    DamageState state = getDamageStateFromHealthPercent(healthPercent);
+                    applyEffectsForLimbDamage(player, limbType, state);
+                }
             }
         }
         
@@ -614,23 +697,17 @@ public class LimbDamageSystem implements Listener {
             return;
         }
         
-        UUID playerId = player.getUniqueId();
-        
-        if (!limbDamage.containsKey(playerId)) {
-            // Si no hay datos de daño, restaurar la salud máxima por defecto
-            player.getAttribute(Attribute.MAX_HEALTH).setBaseValue(20.0);
-            return;
-        }
-        
-        Map<LimbType, Integer> playerLimbDamage = limbDamage.get(playerId);
         int brokenLimbs = 0;
         
-        // Contar extremidades rotas (estado BROKEN o CRITICAL)
+        // Contar extremidades rotas (estado BROKEN o CRITICAL) usando BodyHealth API
         for (LimbType type : LimbType.values()) {
-            int damageLevel = playerLimbDamage.getOrDefault(type, 0);
-            DamageState state = getDamageState(damageLevel);
-            if (state == DamageState.BROKEN || state == DamageState.CRITICAL) {
-                brokenLimbs++;
+            BodyPart bodyPart = type.getBodyPart();
+            if (bodyPart != null) {
+                double healthPercent = BodyHealthAPI.getHealth(player, bodyPart);
+                DamageState state = getDamageStateFromHealthPercent(healthPercent);
+                if (state == DamageState.BROKEN || state == DamageState.CRITICAL) {
+                    brokenLimbs++;
+                }
             }
         }
         

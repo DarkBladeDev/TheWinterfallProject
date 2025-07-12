@@ -1,11 +1,13 @@
 package com.darkbladedev.commands;
 
 import com.darkbladedev.SavageFrontierMain;
+import com.darkbladedev.menus.content.PlayerInfoMenu;
 import com.darkbladedev.utils.AuraSkillsUtil;
 
 import dev.aurelium.auraskills.api.AuraSkillsApi;
 import dev.aurelium.auraskills.api.skill.CustomSkill;
 import dev.aurelium.auraskills.api.user.SkillsUser;
+import gg.saki.zaiko.Menu;
 
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
@@ -119,25 +121,30 @@ public class SavageCommand implements CommandExecutor, TabCompleter {
     
     private void handleCheckCustomContentCommand(CommandSender sender, String[] args) {
         auraSkillsApi = AuraSkillsApi.get();
-        Player player = Bukkit.getPlayerExact(args[2]);
-        String type = args[3];
-        @SuppressWarnings("unused")
-        SkillsUser user = auraSkillsApi.getUser(player.getUniqueId());
-        
-        if (args.length < 2) {
+
+        // Validar argumentos antes de acceder
+        if (args.length < 4) {
             sender.sendMessage("Uso: /savage check-custom-content <player> <skills|stats|traits>");
             return;
         }
-        if (args.length == 2) {
-            if (player == null) {
-                sender.sendMessage("El jugador no se ha encontrado.");
-                return;
-            }
-            if (!type.equalsIgnoreCase("skills") && !type.equalsIgnoreCase("stats") && !type.equalsIgnoreCase("traits")) {
-                sender.sendMessage("Uso: /savage check-custom-content <player> <skills|stats|traits>");
-                return;
-            }
-        } else if (type.equalsIgnoreCase("skills")) {
+
+        Player player = Bukkit.getPlayerExact(args[2]);
+        String type = args[3];
+
+        if (player == null) {
+            sender.sendMessage("El jugador no se ha encontrado.");
+            return;
+        }
+
+        if (!type.equalsIgnoreCase("skills") && !type.equalsIgnoreCase("stats") && !type.equalsIgnoreCase("traits")) {
+            sender.sendMessage("Uso: /savage check-custom-content <player> <skills|stats|traits>");
+            return;
+        }
+
+        @SuppressWarnings("unused")
+        SkillsUser user = auraSkillsApi.getUser(player.getUniqueId());
+
+        if (type.equalsIgnoreCase("skills")) {
             CustomSkill[] skills = auraSkillsApi.getGlobalRegistry().getSkills().toArray(new CustomSkill[0]);
 
             if (skills != null) {
@@ -668,6 +675,10 @@ public class SavageCommand implements CommandExecutor, TabCompleter {
         
         // Mostrar estado del jugador
         displayPlayerStatus(sender, target);
+        
+        // Menu format
+        Menu statusMenu = new PlayerInfoMenu(plugin.getMenuApi());
+        statusMenu.open(target);
     }
     
     /**
@@ -773,7 +784,7 @@ public class SavageCommand implements CommandExecutor, TabCompleter {
         }
         
         // Estado de extremidades
-        if (plugin.getLimbDamageSystem().isActive()) {
+        if (plugin.getLimbDamageSystem() != null && plugin.getLimbDamageSystem().isActive()) {
             // Mostrar estado de cada extremidad
             Component limbStatus = plugin.getLimbDamageSystem().getLimbStatusMessage(target);
             sender.sendMessage(limbStatus);
@@ -1057,9 +1068,9 @@ public class SavageCommand implements CommandExecutor, TabCompleter {
             return;
         }
         
-        // Verificar si el sistema está activo
-        if (!plugin.getLimbDamageSystem().isActive()) {
-            ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>El sistema de daño de extremidades está desactivado."));
+        // Verificar si el sistema está disponible y activo
+        if (plugin.getLimbDamageSystem() == null || !plugin.getLimbDamageSystem().isActive()) {
+            ((Audience) sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>El sistema de daño de extremidades no está disponible o está desactivado."));
             return;
         }
         

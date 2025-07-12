@@ -40,8 +40,8 @@ public class CustomAbilities {
     // STAMINA SYSTEM ABILITIES
     public static final CustomAbility StaminaRegen = CustomAbility.builder(NamespacedId.of("savage-frontier", "stamina_regen"))
                                             .displayName("Regeneración de stamina")
-                                            .description("Regenera {value} de stamina por segundo")
-                                            .info("+{value} Regen. de stamina")
+                                            .description("Regenera {value} de stamina extra por segundo")
+                                            .info("+{value} Regen. de stamina extra")
                                             .baseValue(1.0) // Value when at level 1
                                             .valuePerLevel(0.5) // Value added per ability level
                                             .unlock(5) // Skill level ability unlocks at

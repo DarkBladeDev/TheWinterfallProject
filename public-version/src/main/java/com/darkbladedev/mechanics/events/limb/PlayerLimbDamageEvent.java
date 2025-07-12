@@ -38,7 +38,8 @@ public class PlayerLimbDamageEvent extends Event implements Cancellable {
 
     @Override public boolean isCancelled() { return cancelled; }
 
-    @Override public void setCancelled(boolean cancel) { this.cancelled = cancel; }
+    @Override public void setCancelled(boolean cancelled) { this.cancelled = cancelled; }
+
 
     @Override public HandlerList getHandlers() { return HANDLERS; }
 

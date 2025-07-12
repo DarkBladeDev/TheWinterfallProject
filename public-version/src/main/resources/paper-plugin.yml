@@ -16,4 +16,10 @@ dependencies:
       load: BEFORE
       required: false
       join-classpath: true
+
+    BodyHealth:
+      load: BEFORE
+      required: false
+      join-classpath: true
+
     

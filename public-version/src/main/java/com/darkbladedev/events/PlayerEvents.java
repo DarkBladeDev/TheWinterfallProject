@@ -73,7 +73,7 @@ public class PlayerEvents implements Listener {
         Player player = event.getPlayer();
         
         // Curar todas las extremidades al reaparecer
-        if (plugin.getLimbDamageSystem().isActive()) {
+        if (plugin.getLimbDamageSystem() != null && plugin.getLimbDamageSystem().isActive()) {
             plugin.getLimbDamageSystem().healAllLimbs(player);
         }
     }

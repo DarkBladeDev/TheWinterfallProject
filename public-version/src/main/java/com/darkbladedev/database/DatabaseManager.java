@@ -1,6 +1,7 @@
 package com.darkbladedev.database;
 
 import com.darkbladedev.SavageFrontierMain;
+import com.darkbladedev.mechanics.LimbDamageSystem;
 import com.darkbladedev.mechanics.NutritionSystem.NutrientType;
 
 import org.bukkit.Bukkit;
@@ -311,6 +312,11 @@ public class DatabaseManager {
      * @param playerId UUID del jugador
      */
     private void saveLimbDamageData(UUID playerId) throws SQLException {
+        // Verificar si el sistema de daño por extremidades está disponible
+        if (plugin.getLimbDamageSystem() == null) {
+            return; // No guardar datos si el sistema no está disponible
+        }
+        
         // Eliminar datos antiguos
         PreparedStatement deleteStatement = connection.prepareStatement(
             "DELETE FROM limb_damage WHERE uuid = ?;"
@@ -320,7 +326,7 @@ public class DatabaseManager {
         deleteStatement.close();
         
         // Insertar datos actuales
-        for (com.darkbladedev.mechanics.LimbDamageSystem.LimbType limbType : com.darkbladedev.mechanics.LimbDamageSystem.LimbType.values()) {
+        for (LimbDamageSystem.LimbType limbType : LimbDamageSystem.LimbType.values()) {
             int damageLevel = plugin.getLimbDamageSystem().getLimbDamageLevel(Bukkit.getPlayer(playerId), limbType);
             
             PreparedStatement insertStatement = connection.prepareStatement(
@@ -435,6 +441,11 @@ public class DatabaseManager {
      * @param playerId UUID del jugador
      */
     private void loadLimbDamageData(UUID playerId) throws SQLException {
+        // Verificar si el sistema de daño por extremidades está disponible
+        if (plugin.getLimbDamageSystem() == null) {
+            return; // No cargar datos si el sistema no está disponible
+        }
+        
         // Verificar que la conexión esté inicializada
         if (connection == null) {
             ((Audience) Bukkit.getConsoleSender()).sendMessage(MiniMessage.miniMessage().deserialize(plugin.PREFIX + " <red>Error: La conexión a la base de datos no está inicializada"));
@@ -462,7 +473,9 @@ public class DatabaseManager {
                 try {
                     com.darkbladedev.mechanics.LimbDamageSystem.LimbType limbType = 
                         com.darkbladedev.mechanics.LimbDamageSystem.LimbType.valueOf(limbTypeName);
-                    plugin.getLimbDamageSystem().setLimbDamage(player, limbType, damageLevel);
+                    if (plugin.getLimbDamageSystem() != null) {
+                        plugin.getLimbDamageSystem().setLimbDamage(player, limbType, damageLevel);
+                    }
                 } catch (IllegalArgumentException e) {
                     ((Audience) Bukkit.getConsoleSender()).sendMessage(MiniMessage.miniMessage().deserialize(plugin.PREFIX + " <red>Tipo de extremidad desconocido: " + limbTypeName));
                 }

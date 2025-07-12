@@ -21,14 +21,18 @@ import com.darkbladedev.mechanics.auraskills.traits.CustomTraits;
 import com.darkbladedev.utils.AuraSkillsUtil;
 import com.darkbladedev.utils.CustomDebuffEffects;
 
+import bodyhealth.api.BodyHealthAPI;
 import dev.aurelium.auraskills.api.AuraSkillsApi;
 import dev.aurelium.auraskills.api.registry.NamespacedRegistry;
+import gg.saki.zaiko.Zaiko;
 
 import com.darkbladedev.mechanics.FreezingSystem;
 
 import org.bukkit.Bukkit;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.jetbrains.annotations.NotNull;
 import org.bukkit.command.CommandSender;
 
 import java.io.File;
@@ -66,6 +70,9 @@ public class SavageFrontierMain extends JavaPlugin {
     private CustomTraits customTraits;
     private CustomSkills customSkills;
     private CustomStats customStats;
+
+    @SuppressWarnings("unused")
+    private BodyHealthAPI bodyHealthApi;
 
     private StaminaSystemExpansion staminaAuraSkillsIntegration;
     
@@ -214,7 +221,16 @@ public class SavageFrontierMain extends JavaPlugin {
         // Inicializar sistemas de mecánicas
         bleedingSystem = new BleedingSystem(instance);
         radiationSystem = new RadiationSystem(instance);
-        limbDamageSystem = new LimbDamageSystem(instance);
+
+        Plugin bodyhealth = Bukkit.getPluginManager().getPlugin("BodyHealth");
+        if (bodyhealth != null && Bukkit.getPluginManager().isPluginEnabled("BodyHealth")) {
+            limbDamageSystem = new LimbDamageSystem(instance);
+        } else {
+            ((Audience) Bukkit.getConsoleSender()).sendMessage(MiniMessage.miniMessage().deserialize(
+                PREFIX + " <red>LimbDamageSystem no inicializado. BodyHealthAPI no detectado."
+            ));
+        }
+
         hydrationSystem = new HydrationSystem(instance);
         nutritionSystem = new NutritionSystem(instance);
         staminaSystem = new StaminaSystem(instance);
@@ -257,7 +273,9 @@ public class SavageFrontierMain extends JavaPlugin {
         // Activar sistemas
         bleedingSystem.initialize();
         radiationSystem.initialize();
-        limbDamageSystem.initialize();
+        if (limbDamageSystem != null) {
+            limbDamageSystem.initialize();
+        }
         hydrationSystem.initialize();
         nutritionSystem.initialize();
         staminaSystem.initialize();
@@ -615,12 +633,18 @@ public class SavageFrontierMain extends JavaPlugin {
 
 
     public boolean isDebugMode() {
-        return getConfig().getBoolean("debug");
+        return getConfig().getBoolean("debug", false);
     }
 
 
 
     public AuraSkillsUtil getAuraSkillsUtil() {
         return auraSkillsUtil;
+    }
+
+
+
+    public @NotNull Zaiko getMenuApi() {
+        return new Zaiko(instance);
     }
 }

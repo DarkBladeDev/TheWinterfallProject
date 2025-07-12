@@ -3,6 +3,8 @@ package com.darkbladedev.mechanics;
 import com.darkbladedev.SavageFrontierMain;
 import com.darkbladedev.mechanics.auraskills.stats.StaminaSystemExpansion;
 import com.darkbladedev.mechanics.auraskills.traits.CustomTraits;
+import com.darkbladedev.mechanics.events.stamina.PlayerFatigueEvent;
+import com.darkbladedev.mechanics.events.stamina.PlayerStaminaRegenEvent;
 
 import dev.aurelium.auraskills.api.AuraSkillsApi;
 import dev.aurelium.auraskills.api.trait.TraitModifier;
@@ -143,13 +145,15 @@ public class StaminaSystem implements Listener {
                     } else {
                         // Recuperar estamina si no está corriendo y ha pasado tiempo suficiente
                         Long lastSprint = lastSprintTime.getOrDefault(playerId, 0L);
-                        long currentTime = System.currentTimeMillis();
+                        Long currentTime = System.currentTimeMillis();
+                        Long lastSprintTime = currentTime - lastSprint;
                         
                         // Recuperar estamina después de 2 segundos sin correr
                         if (currentTime - lastSprint > 2000 && currentLevel < getMaxStamina(player)) {
                             // Usar la tasa de recuperación personalizada del jugador
                             if (Math.random() < getPlayerStaminaRecoveryRate(player)) {
                                 increaseStamina(player, STAMINA_RECOVERY_AMOUNT);
+                                Bukkit.getPluginManager().callEvent(new PlayerStaminaRegenEvent(player, currentLevel, getPlayerStaminaRecoveryRate(player), lastSprintTime));
                             }
                         }
                     }
@@ -160,7 +164,7 @@ public class StaminaSystem implements Listener {
                     }
                 }
             }
-        }.runTaskTimer(plugin, UPDATE_INTERVAL, UPDATE_INTERVAL); // Ejecutar según el intervalo configurado
+        }.runTaskTimer(plugin, 0L, UPDATE_INTERVAL); // Ejecutar según el intervalo configurado
     }
     
     /**
@@ -352,6 +356,7 @@ public class StaminaSystem implements Listener {
                 (plugin.isPlayerProtectedFromSystem(player, "stamina") && getStaminaLevel(player) <= STAMINA_EFFECT_THRESHOLD)) {
                 // Cancelar el sprint
                 event.setCancelled(true);
+                Bukkit.getPluginManager().callEvent(new PlayerFatigueEvent(player, getStaminaLevel(player)));
                 
                 // Informar al jugador si tiene estamina 0
                 if (getStaminaLevel(player) <= 0 && Math.random() < 0.3 && plugin.getUserPreferencesManager().hasStatusMessages(player)) {

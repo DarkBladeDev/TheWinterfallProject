@@ -173,7 +173,7 @@ public class PlaceholderAPIExpansion extends PlaceholderExpansion {
         }
 
         // Placeholders de daño de extremidades
-        if (identifier.startsWith("limb_")) {
+        if (identifier.startsWith("limb_") && limbDamageSystem != null) {
             String fullIdentifier = identifier.substring(5);
             String[] parts = fullIdentifier.split("_");
             
@@ -185,6 +185,9 @@ public class PlaceholderAPIExpansion extends PlaceholderExpansion {
             switch (limbTypeStr) {
                 case "head":
                     type = LimbDamageSystem.LimbType.HEAD;
+                    break;
+                case "torso":
+                    type = LimbDamageSystem.LimbType.TORSO;
                     break;
                 case "left_arm":
                 case "leftarm":
@@ -202,6 +205,15 @@ public class PlaceholderAPIExpansion extends PlaceholderExpansion {
                 case "rightleg":
                     type = LimbDamageSystem.LimbType.RIGHT_LEG;
                     break;
+                case "left_foot":
+                case "leftfoot":
+                    type = LimbDamageSystem.LimbType.LEFT_FOOT;
+                    break;
+                case "right_foot":
+                case "rightfoot":
+                    type = LimbDamageSystem.LimbType.RIGHT_FOOT;
+                    break;
+
                 default:
                     return "";
             }
@@ -217,6 +229,9 @@ public class PlaceholderAPIExpansion extends PlaceholderExpansion {
                 }
             }
             return "";
+        } else if (identifier.startsWith("limb_")) {
+            // Si el sistema de daño por extremidades no está disponible, devolver un valor por defecto
+            return "N/A";
         }
 
         // Placeholders de temperatura

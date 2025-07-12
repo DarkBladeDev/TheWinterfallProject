@@ -1,6 +1,7 @@
 package com.darkbladedev.mechanics.auraskills.abilities;
 
 import com.darkbladedev.mechanics.events.limb.PlayerLimbDamageEvent;
+import com.darkbladedev.mechanics.events.stamina.PlayerStaminaRegenEvent;
 import com.darkbladedev.mechanics.LimbDamageSystem.DamageState;
 import dev.aurelium.auraskills.api.AuraSkillsApi;
 import dev.aurelium.auraskills.api.user.SkillsUser;
@@ -42,6 +43,28 @@ public class CustomAbilitiesHandler implements Listener {
 
             event.setNewState(reducedState);
 
+        }
+    }
+
+    @EventHandler
+    public void onPlayerStaminaRegen(PlayerStaminaRegenEvent event) {
+        if (event.isCancelled()) return;
+
+        SkillsUser user = api.getUser(event.getPlayer().getUniqueId());
+        if (user == null) return;
+
+        double athleticLevel = user.getAbilityLevel(CustomAbilities.Atlethic);
+        double stamina = event.getStamina();
+
+        if (stamina <= 0) return;
+
+        // Get sprint duration from event
+        long sprintDuration = event.getSprintDuration();
+
+        // Only recover stamina if player has been sprinting for 5+ seconds
+        if (sprintDuration >= 5000) { // 5000ms = 5s
+            double staminaRecovered = athleticLevel * 0.5;
+            event.setStamina(stamina + staminaRecovered);
         }
     }
 }
